@@ -22,6 +22,8 @@ brief assumed. Update the brief in the same change.
 | [0011](0011-settings-endpoint.md) | The client reads its settings from `GET /settings` | Accepted |
 | [0012](0012-file-cursor-per-machine-stream.md) | The files cursor holds one position per machine stream; record ids are base64url | Accepted |
 | [0013](0013-files-native-dialect-is-the-core-viewers.md) | The files source's native dialect is the core Log Viewer's own Serilog.Expressions setup | Accepted |
+| [0014](0014-package-api-json-and-query-errors.md) | The package API formats JSON with `LogJson`; malformed queries return `invalid_query` | Accepted |
+| [0015](0015-results-list-virtual-window.md) | The results list virtualises with its own fixed-height row window | Accepted |
 
 ## Template
 

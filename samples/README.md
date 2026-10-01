@@ -28,6 +28,16 @@ For client work, keep `bun run watch` running in `src/Umbraco.Community.LogExplo
 refresh the backoffice after each rebuild. Static web asset folders are discovered when the site
 starts, so restart the site once after the very first client build on a fresh clone.
 
+## Sample sources
+
+`appsettings.Development.json` configures two `Fake` sources (in-memory sample data, UI brief §12)
+next to whatever else is set up:
+
+| Alias | Data | Use |
+| --- | --- | --- |
+| `sample` | The prototype's sample hour (238 entries), ending now | Everyday UI work |
+| `sample-48h` | The same hour repeated 48 times (11,424 entries); `Settings: { "SampleHours": "48" }` | Volume checks such as scrolling 10,000 rows: open `...?src=sample-48h&range=7d` |
+
 ## Log generator
 
 Both sites compile in `samples/Shared/LogGenerator` (BRIEF Appendix C), which writes realistic

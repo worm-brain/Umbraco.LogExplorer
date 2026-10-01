@@ -1,3 +1,4 @@
+using System.Globalization;
 using Umbraco.Community.LogExplorer.Core.Fake;
 using Umbraco.Community.LogExplorer.Core.Sources;
 
@@ -32,6 +33,7 @@ internal sealed class FakeLogSourceFactory(TimeProvider clock) : ILogSourceFacto
                 ? definition.Alias
                 : definition.DisplayName,
             Sensitive = definition.Sensitive,
+            SampleHours = SampleHours(definition),
         };
 
         return new RefreshingLogSource(
@@ -39,5 +41,24 @@ internal sealed class FakeLogSourceFactory(TimeProvider clock) : ILogSourceFacto
             clock,
             RefreshInterval
         );
+    }
+
+    // Optional "SampleHours" setting (a whole number, at least 1) for volume testing; the registry
+    // reports a bad value as a configuration error for this source only.
+    private static int SampleHours(LogSourceDefinition definition)
+    {
+        if (!definition.Settings.TryGetValue("SampleHours", out string? value))
+        {
+            return 1;
+        }
+
+        return
+            int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int hours)
+            && hours >= 1
+            ? hours
+            : throw new ArgumentException(
+                $"Setting 'SampleHours' of source '{definition.Alias}' must be a whole number of at least 1, not '{value}'.",
+                nameof(definition)
+            );
     }
 }

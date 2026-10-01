@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Cms.Api.Common.DependencyInjection;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Community.LogExplorer.Core.Json;
 
 namespace Umbraco.Community.LogExplorer.Infrastructure.Api;
 
@@ -23,6 +25,17 @@ public sealed class LogExplorerApiComposer : IComposer
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.Services.AddScoped<IUserContextAccessor, BackOfficeUserContextAccessor>();
+
+        // Named JSON options for the package's controllers (see LogExplorerApiControllerBase):
+        // the backoffice options cannot read the Core contracts (no IReadOnlySet<string>
+        // converter, and they require FilterNode's "kind" to come first).
+        builder
+            .Services.AddControllers()
+            .AddJsonOptions(
+                LogExplorerApi.Name,
+                options => LogJson.Apply(options.JsonSerializerOptions)
+            );
+
         LogExplorerApiDocument.Register(builder);
     }
 }

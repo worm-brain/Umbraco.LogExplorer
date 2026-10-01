@@ -40,16 +40,33 @@ public sealed class FakeLogSource : LogSourceBase
     /// Source of "now" for the data and for relative ranges; <see cref="TimeProvider.System"/> when
     /// null. Ignored when <see cref="FakeLogSourceOptions.FixedNow"/> is set.
     /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <see cref="FakeLogSourceOptions.SampleHours"/> is less than 1.
+    /// </exception>
     public FakeLogSource(FakeLogSourceOptions? options = null, TimeProvider? clock = null)
     {
         _options = options ?? new FakeLogSourceOptions();
+        ArgumentOutOfRangeException.ThrowIfLessThan(_options.SampleHours, 1, nameof(options));
         _clock = _options.FixedNow is { } fixedNow
             ? new FixedTimeProvider(fixedNow)
             : clock ?? TimeProvider.System;
 
-        Records = FakeLogData
-            .Generate(_clock.GetUtcNow())
-            .Select(record => record with { SourceAlias = _options.Alias })
+        // Oldest hour first, so Records stays in timestamp order.
+        DateTimeOffset now = _clock.GetUtcNow();
+        Records = Enumerable
+            .Range(0, _options.SampleHours)
+            .Reverse()
+            .SelectMany(hoursAgo =>
+                FakeLogData
+                    .Generate(now.AddHours(-hoursAgo))
+                    .Select(record =>
+                        record with
+                        {
+                            Id = hoursAgo == 0 ? record.Id : $"h{hoursAgo}.{record.Id}",
+                            SourceAlias = _options.Alias,
+                        }
+                    )
+            )
             .ToArray();
         Capabilities = new LogSourceCapabilities(
             _options.Features,

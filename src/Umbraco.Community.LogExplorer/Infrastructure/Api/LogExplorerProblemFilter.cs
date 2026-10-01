@@ -14,9 +14,11 @@ namespace Umbraco.Community.LogExplorer.Infrastructure.Api;
 /// <remarks>
 /// Mapping: <see cref="KeyNotFoundException"/> -> 404 <c>source_not_found</c>;
 /// <see cref="ForbiddenSourceException"/> -> 403 <c>forbidden_source</c>;
-/// <see cref="NotSupportedException"/> -> 400 <c>unsupported_feature</c>. Further codes
-/// (<c>invalid_native_query</c>, <c>range_too_large</c>, <c>upstream_error</c>, <c>throttled</c>)
-/// are added with the endpoints that raise them.
+/// <see cref="NotSupportedException"/> -> 400 <c>unsupported_feature</c>;
+/// <see cref="RangeTooLargeException"/> -> 400 <c>range_too_large</c>;
+/// any other <see cref="ArgumentException"/> (a bad range, cursor, page size or regex in the
+/// query) -> 400 <c>invalid_query</c>. Further codes (<c>invalid_native_query</c>,
+/// <c>upstream_error</c>, <c>throttled</c>) are added with the endpoints that raise them.
 /// </remarks>
 internal sealed class LogExplorerProblemFilter(ProblemDetailsFactory problemDetailsFactory)
     : IExceptionFilter
@@ -40,6 +42,14 @@ internal sealed class LogExplorerProblemFilter(ProblemDetailsFactory problemDeta
             NotSupportedException => (
                 StatusCodes.Status400BadRequest,
                 LogExplorerApi.ProblemCodes.UnsupportedFeature
+            ),
+            RangeTooLargeException => (
+                StatusCodes.Status400BadRequest,
+                LogExplorerApi.ProblemCodes.RangeTooLarge
+            ),
+            ArgumentException => (
+                StatusCodes.Status400BadRequest,
+                LogExplorerApi.ProblemCodes.InvalidQuery
             ),
             _ => null,
         };

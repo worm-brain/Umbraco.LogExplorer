@@ -22,6 +22,8 @@ public class LogExplorerProblemFilterTests
     [InlineData(typeof(KeyNotFoundException), 404, "source_not_found")]
     [InlineData(typeof(ForbiddenSourceException), 403, "forbidden_source")]
     [InlineData(typeof(NotSupportedException), 400, "unsupported_feature")]
+    [InlineData(typeof(ArgumentException), 400, "invalid_query")]
+    [InlineData(typeof(ArgumentOutOfRangeException), 400, "invalid_query")]
     public void OnException_KnownException_WritesProblemDetailsWithTheCode(
         Type exceptionType,
         int status,
@@ -37,6 +39,23 @@ public class LogExplorerProblemFilterTests
         // Assert
         var details = (ProblemDetails)((ObjectResult)context.Result!).Value!;
         Assert.Equal((status, code), (details.Status!.Value, (string)details.Extensions["code"]!));
+    }
+
+    [Fact]
+    public void OnException_RangeTooLarge_WritesRangeTooLargeWithItsMessage()
+    {
+        // Arrange
+        ExceptionContext context = Context(new RangeTooLargeException("At most 4 hours."));
+
+        // Act
+        _filter.OnException(context);
+
+        // Assert
+        var details = (ProblemDetails)((ObjectResult)context.Result!).Value!;
+        Assert.Equal(
+            (400, "range_too_large", "At most 4 hours."),
+            (details.Status!.Value, (string)details.Extensions["code"]!, details.Detail)
+        );
     }
 
     [Fact]

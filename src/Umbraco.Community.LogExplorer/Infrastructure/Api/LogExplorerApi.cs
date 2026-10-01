@@ -20,5 +20,14 @@ public static class LogExplorerApi
 
         /// <summary>The source does not support the requested feature or operator.</summary>
         public const string UnsupportedFeature = "unsupported_feature";
+
+        /// <summary>The time range is longer than the source allows.</summary>
+        public const string RangeTooLarge = "range_too_large";
+
+        /// <summary>
+        /// The query is malformed: an unknown relative range, <c>From</c> not before <c>To</c>, a
+        /// cursor from another source, a page size below 1 or an invalid regular expression.
+        /// </summary>
+        public const string InvalidQuery = "invalid_query";
     }
 }

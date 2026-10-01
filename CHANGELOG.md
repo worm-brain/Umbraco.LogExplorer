@@ -8,6 +8,10 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Added
 
+- Results list on the Search view: the latest entries newest first (toggle with the Time header), each row showing time with milliseconds, a level badge, the message with its values highlighted and the short source. More entries load as you scroll, or with "Load 60 more"; scrolling stays smooth with thousands of rows loaded. Loading, empty and error states (with Retry) are shown in the panel.
+- `POST /umbraco/log-explorer/api/v1/sources/{alias}/search` returns a page of entries for a query. Errors are ProblemDetails with a `code`: `source_not_found`, `forbidden_source`, `unsupported_feature`, `range_too_large`, or `invalid_query` for a malformed range, cursor, page size or regex.
+- `Fake` sources accept a `SampleHours` setting to generate more than one hour of sample data.
+
 - Log Explorer item under Settings > Advanced with an empty Search, Patterns and Overview workspace.
 - Simple search syntax parser in Core: `field:value`, `-field:value`, wildcards, comparisons, `has:field`, field aliases and `level:`/`level=` turn search box input into filter chips and a level set, with a plain-text fallback for an unbalanced quote.
 - English localization dictionary for every Log Explorer string; other backoffice languages fall back to it.

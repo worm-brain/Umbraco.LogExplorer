@@ -94,6 +94,53 @@ public class FakeLogSourceTests
     }
 
     [Fact]
+    public void Records_ThreeSampleHours_HasThreeHoursOfEntriesWithUniqueIds()
+    {
+        // Act
+        IReadOnlyList<LogRecord> records = CreateSource(
+            new FakeLogSourceOptions { SampleHours = 3 }
+        ).Records;
+
+        // Assert
+        Assert.Equal(
+            (238 * 3, 238 * 3),
+            (records.Count, records.Select(record => record.Id).Distinct().Count())
+        );
+    }
+
+    [Fact]
+    public void Records_ThreeSampleHours_StartThreeHoursAgoInTimestampOrder()
+    {
+        // Act
+        IReadOnlyList<LogRecord> records = CreateSource(
+            new FakeLogSourceOptions { SampleHours = 3 }
+        ).Records;
+
+        // Assert
+        Assert.Equal(
+            (true, true),
+            (
+                records[0].Timestamp >= Now.AddHours(-3) && records[0].Timestamp < Now.AddHours(-2),
+                records
+                    .Zip(records.Skip(1))
+                    .All(pair => pair.First.Timestamp <= pair.Second.Timestamp)
+            )
+        );
+    }
+
+    [Fact]
+    public void Constructor_ZeroSampleHours_Throws()
+    {
+        // Act
+        Exception? thrown = Record.Exception(() =>
+            CreateSource(new FakeLogSourceOptions { SampleHours = 0 })
+        );
+
+        // Assert
+        Assert.IsType<ArgumentOutOfRangeException>(thrown);
+    }
+
+    [Fact]
     public void Records_InjectedClock_EndsTheHourAtItsNow()
     {
         // Arrange

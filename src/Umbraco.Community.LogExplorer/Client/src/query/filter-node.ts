@@ -1,32 +1,18 @@
+import type { AndNode, ConditionNode, FilterOperator, NotNode, OrNode, TextNode } from "../api/index.js";
+
+export type { AndNode, ConditionNode, FilterOperator, NotNode, OrNode, TextNode };
+
 /**
- * Client mirror of the Core filter tree (`Core/Query/FilterNode.cs`, BRIEF §8.2) in its camelCase
- * JSON shape, with `kind` as the discriminator.
- *
- * Hand-written for now because no endpoint returns a `FilterNode` yet, so the generated client
- * has no such type. Replace these with the generated types once `/parse` and `/search` are in the
- * OpenAPI document (#38, #39).
+ * The Core filter tree (`Core/Query/FilterNode.cs`, BRIEF §8.2) in its camelCase JSON shape, with
+ * `kind` as the discriminator. The node types come from the generated client; the API document
+ * has no named type for the union itself, only `oneOf` the nodes wherever a node is expected.
  */
 export type FilterNode = AndNode | OrNode | NotNode | ConditionNode | TextNode;
 
-/** Matches when every child matches; an empty list matches everything. */
-export interface AndNode {
-  kind: "and";
-  children: Array<FilterNode>;
-}
-
-/** Matches when any child matches; an empty list matches nothing. */
-export interface OrNode {
-  kind: "or";
-  children: Array<FilterNode>;
-}
-
-/** Matches when the child does not. */
-export interface NotNode {
-  kind: "not";
-  child: FilterNode;
-}
-
-/** The comparison operators, as the server serialises `FilterOperator` (camelCase strings). */
+/**
+ * Every `FilterOperator` at runtime, for validating untrusted input. The `satisfies` check plus
+ * {@link AllOperatorsListed} fail type-checking when the generated union gains or loses a member.
+ */
 export const FILTER_OPERATORS = [
   "equals",
   "notEquals",
@@ -41,31 +27,12 @@ export const FILTER_OPERATORS = [
   "exists",
   "notExists",
   "matches",
-] as const;
+] as const satisfies ReadonlyArray<FilterOperator>;
 
-/** One of {@link FILTER_OPERATORS}. */
-export type FilterOperator = (typeof FILTER_OPERATORS)[number];
-
-/** A JSON value, kept with its kind (BRIEF §8.1: attributes are typed, not flattened to strings). */
-export type JsonValue = string | number | boolean | null | Array<JsonValue> | { [key: string]: JsonValue };
-
-/** A comparison of one field (portable `@field` or attribute path) against a typed value. */
-export interface ConditionNode {
-  kind: "condition";
-  field: string;
-  op: FilterOperator;
-  /** An array for `in`; ignored (usually `null`) for `exists` and `notExists`. */
-  value?: JsonValue;
-  /** Defaults to `true` on the server when omitted. */
-  caseInsensitive?: boolean;
-}
-
-/** Free-text search over the body and exception message; `phrase` requires one exact substring. */
-export interface TextNode {
-  kind: "text";
-  text: string;
-  phrase?: boolean;
-}
+/** Compile-time proof that {@link FILTER_OPERATORS} lists every generated operator. */
+type AllOperatorsListed = Exclude<FilterOperator, (typeof FILTER_OPERATORS)[number]> extends never ? true : never;
+const allOperatorsListed: AllOperatorsListed = true;
+void allOperatorsListed;
 
 /**
  * Checks that an untrusted value (for example decoded from a URL) is a well-formed filter tree.

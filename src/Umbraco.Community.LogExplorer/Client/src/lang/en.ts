@@ -21,7 +21,6 @@ export default {
     tabOverview: "Overview",
 
     // Empty views, until each view is built.
-    searchEmpty: "No entries to show yet. Search, the histogram and the fields panel arrive here.",
     patternsEmpty: "No patterns to show yet. Message templates grouped by count arrive here.",
     overviewEmpty: "Nothing to summarise yet. Counts by level, frequent messages and exception types arrive here.",
 
@@ -62,6 +61,10 @@ export default {
     resultsShowing: (shown: string, total: string) => `Showing ${shown} of ${total}`,
     resultsLoadMore: "Load 60 more",
     resultsEmpty: "No entries match. Remove a filter or widen the time range.",
+    resultsOpenEntry: (time: string, level: string) => `Open entry ${time} ${level}`,
+    resultsError: (message: string) => `Could not load entries: ${message}`,
+    resultsSortNewestFirst: "Time, newest first. Select to show oldest first",
+    resultsSortOldestFirst: "Time, oldest first. Select to show newest first",
 
     // Entry detail drawer and the around banner (UI brief §4.10, §4.11).
     detailMessageTemplate: "Message template",
