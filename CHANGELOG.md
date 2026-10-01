@@ -8,6 +8,8 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Added
 
+- `POST /umbraco/log-explorer/api/v1/sources/{alias}/compile` translates a query into the source's native language, one clause per line, and lists the filters it cannot express; `POST /sources/{alias}/validate` (`{ native }`) checks a native query and reports the error with its position. `GET /sources` adds `allowNativeQuery`, and a source configured with `AllowNativeQuery: false` refuses native queries with `unsupported_feature`.
+- `Fake` sources accept an `Operators` setting (for example `equals,notEquals`) to model a source that cannot run every filter, and check native queries for unclosed quotes and brackets.
 - Search box aliases `status:` (for `StatusCode`) and `machine:` (for `MachineName`), so `-status:200` filters out successful requests.
 - Histogram on the Search view: entry volume over time with bars stacked by level and a tooltip of counts per bar. Its level toggles (TRACE to FATAL) are the level filter and keep showing how many entries each hidden level holds. Clicking a bar zooms to five minutes around it and dragging across bars zooms to any range; the zoom shows as a "Time: 00:40 to 00:45" chip, is kept in the URL (`zf`, `zt`) and is cleared by the chip's remove button or by choosing a new time range.
 - `POST /umbraco/log-explorer/api/v1/sources/{alias}/histogram` counts entries per time bucket and level for a query (`{ query, targetBuckets }`, 1 to 1000 buckets); the level counts ignore the query's level set.
