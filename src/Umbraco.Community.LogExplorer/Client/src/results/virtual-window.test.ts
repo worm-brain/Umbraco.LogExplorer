@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rowWindow, scrollTopToReveal } from "./virtual-window.js";
+import { nextRowIndex, rowWindow, scrollTopToReveal } from "./virtual-window.js";
 
 describe("rowWindow", () => {
   it("renders the visible rows plus the overscan below at the top of the list", () => {
@@ -28,6 +28,36 @@ describe("rowWindow", () => {
 
   it("treats overscroll above the top as the top", () => {
     expect(rowWindow(-200, 400, 40, 1000, 0)).toEqual({ first: 0, end: 10 });
+  });
+});
+
+describe("nextRowIndex", () => {
+  it("moves down one row", () => {
+    expect(nextRowIndex(4, 1, 100, 0)).toBe(5);
+  });
+
+  it("moves up one row", () => {
+    expect(nextRowIndex(4, -1, 100, 0)).toBe(3);
+  });
+
+  it("stops at the last row", () => {
+    expect(nextRowIndex(99, 1, 100, 0)).toBeUndefined();
+  });
+
+  it("stops at the first row", () => {
+    expect(nextRowIndex(0, -1, 100, 0)).toBeUndefined();
+  });
+
+  it("focuses the start row without stepping when no row has focus", () => {
+    expect(nextRowIndex(undefined, -1, 100, 40)).toBe(40);
+  });
+
+  it("clamps a start row past the end to the last row", () => {
+    expect(nextRowIndex(undefined, 1, 10, 25)).toBe(9);
+  });
+
+  it("does nothing without rows", () => {
+    expect(nextRowIndex(undefined, 1, 0, 0)).toBeUndefined();
   });
 });
 

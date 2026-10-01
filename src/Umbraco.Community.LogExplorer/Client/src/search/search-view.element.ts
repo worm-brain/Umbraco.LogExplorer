@@ -12,6 +12,8 @@ import "../show-query/show-query-button.element.js";
 import "../show-query/show-query-panel.element.js";
 import "../time-range/time-range-picker.element.js";
 import "./search-box.element.js";
+import type { LogExplorerSearchBoxElement } from "./search-box.element.js";
+import { SearchViewKeyboard } from "./view-keyboard.js";
 
 /**
  * The Search workspace view of the Log Explorer workspace (UI brief §3).
@@ -22,7 +24,8 @@ import "./search-box.element.js";
  * view fills the workspace body and never scrolls itself; only the fields panel and the results
  * list do (UI brief §2). Opening a row shows the entry detail drawer over the right of the view
  * (UI brief §4.11); the view owns which entry is open and moves focus between the row and the
- * drawer. The workspace editor renders it when its "Search" tab is active; every child reads and
+ * drawer. It also owns the keyboard shortcuts (`/`, `j`/`k`, Escape; {@link SearchViewKeyboard}).
+ * The workspace editor renders it when its "Search" tab is active; every child reads and
  * writes `LogExplorerQueryContext`, which `log-explorer-workspace` provides.
  *
  * Bound by the `Umbraco.Community.LogExplorer.WorkspaceView.Search` manifest.
@@ -41,6 +44,23 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
   @query("log-explorer-entry-detail")
   private _drawer?: LogExplorerEntryDetailElement;
 
+  @query("log-explorer-search-box")
+  private _searchBox?: LogExplorerSearchBoxElement;
+
+  constructor() {
+    super();
+    // `/`, `j`/`k` and Escape across the view (BRIEF §6.15); Enter on a row needs nothing, rows
+    // being native buttons.
+    new SearchViewKeyboard(this, {
+      focusSearch: () => this._searchBox?.focus(),
+      searchHasText: () => this._searchBox?.hasText ?? false,
+      clearSearch: () => this._searchBox?.clearText(),
+      moveRowFocus: (step) => void this._results?.moveRowFocus(step),
+      drawerOpen: () => this._openRecord !== undefined,
+      closeDrawer: (restoreFocus) => void this.#close(restoreFocus),
+    });
+  }
+
   /** Opening another row while the drawer is open replaces its content. */
   async #onOpen(event: LogExplorerEntryOpenEvent): Promise<void> {
     this._openRecord = event.record;
@@ -48,20 +68,15 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
     await this._drawer?.focusHeading();
   }
 
-  /** Closes the drawer and returns focus to the row that was open (UI brief §7). */
-  #close = async (): Promise<void> => {
+  /**
+   * Closes the drawer and, by default, returns focus to the row that was open (UI brief §7).
+   * Escape pressed in the search box or a facet closes it without pulling focus away from there.
+   */
+  #close = async (restoreFocus = true): Promise<void> => {
     const id = this._openRecord?.id;
     this._openRecord = undefined;
-    if (id) await this._results?.focusRow(id);
+    if (id && restoreFocus) await this._results?.focusRow(id);
   };
-
-  /** Escape on a results row closes the drawer too, not only Escape inside it (BRIEF §6.15). */
-  #onResultsKeydown(event: KeyboardEvent): void {
-    if (event.key === "Escape" && this._openRecord && !event.defaultPrevented) {
-      event.preventDefault();
-      void this.#close();
-    }
-  }
 
   /**
    * Renders the query bar, the show-query panel, the histogram, the fields panel beside the
@@ -85,14 +100,13 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
         <log-explorer-results
           .selectedId=${this._openRecord?.id}
           @log-explorer-entry-open=${this.#onOpen}
-          @keydown=${this.#onResultsKeydown}
         ></log-explorer-results>
       </div>
       ${
         this._openRecord
           ? html`<log-explorer-entry-detail
               .record=${this._openRecord}
-              @log-explorer-entry-close=${this.#close}
+              @log-explorer-entry-close=${() => this.#close()}
             ></log-explorer-entry-detail>`
           : nothing
       }
@@ -112,7 +126,10 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
         gap: var(--uui-size-space-4);
         height: 100%;
         box-sizing: border-box;
-        padding: var(--uui-size-layout-1);
+        /* Tighter top and bottom than the backoffice's usual layout-1, which is what fits 12
+           result rows at 1440 x 900 (UI brief §2). The sides keep layout-1: the breakpoints in
+           the results and histogram subtract it. */
+        padding: var(--uui-size-space-5) var(--uui-size-layout-1);
       }
 
       /* About a third of the view, but never too narrow to read; the whole width below the
@@ -145,10 +162,14 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
         }
       }
 
+      /* A definite height (UUI's standard control height): the square icon buttons size
+         themselves from the bar's height (height: 100%; aspect-ratio: 1), which without one
+         resolves against their own content and stretches the whole bar to about 54 px. */
       .query-bar {
         display: flex;
         align-items: stretch;
         gap: var(--uui-size-space-3);
+        height: var(--uui-size-11);
       }
 
       log-explorer-search-box {

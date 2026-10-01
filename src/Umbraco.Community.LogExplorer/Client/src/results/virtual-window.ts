@@ -51,3 +51,27 @@ export function scrollTopToReveal(index: number, rowHeight: number, scrollTop: n
   if (bottom > scrollTop + viewportHeight) return Math.max(0, bottom - viewportHeight);
   return scrollTop;
 }
+
+/**
+ * The row index `j`/`k` should focus next.
+ *
+ * @param current - Index of the focused row, or `undefined` when no row has focus.
+ * @param step - `1` for `j` (down), `-1` for `k` (up).
+ * @param count - Number of loaded rows.
+ * @param start - Where to start when no row has focus: the open entry's row, else the first
+ *   visible one. That row is focused as is, without stepping, so the first press lands on what
+ *   the user can see.
+ * @returns The index to focus, or `undefined` at either end of the list (focus stays put) and
+ *   when there are no rows.
+ */
+export function nextRowIndex(
+  current: number | undefined,
+  step: 1 | -1,
+  count: number,
+  start: number,
+): number | undefined {
+  if (count <= 0) return undefined;
+  if (current === undefined) return Math.min(count - 1, Math.max(0, start));
+  const next = current + step;
+  return next >= 0 && next < count ? next : undefined;
+}

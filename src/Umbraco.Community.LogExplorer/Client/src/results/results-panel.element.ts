@@ -26,7 +26,7 @@ import {
   type SearchFn,
 } from "./results-loader.js";
 import { formatRowTime, formatShowing, levelOf, shortenSource } from "./row-format.js";
-import { rowWindow, scrollTopToReveal, type RowWindow } from "./virtual-window.js";
+import { nextRowIndex, rowWindow, scrollTopToReveal, type RowWindow } from "./virtual-window.js";
 
 /** How close (in rows) to the end of the loaded rows scrolling must get to fetch the next page. */
 const LOAD_MORE_THRESHOLD = 15;
@@ -256,6 +256,40 @@ export class LogExplorerResultsElement extends UmbLitElement {
     return row !== undefined;
   }
 
+  /**
+   * Moves focus one row down or up, for the `j`/`k` shortcuts (BRIEF §6.15). Works across the
+   * whole loaded list, not only the rendered window: the target is found by index and revealed
+   * through {@link focusRow}. With no row focused, the first press focuses the open entry's row,
+   * else the first fully visible row, without stepping. Nearing the end of the loaded rows
+   * fetches the next page as scrolling does, so `j` carries on once it arrives.
+   *
+   * @param step - `1` for down, `-1` for up.
+   * @returns `true` when a row was focused; `false` at either end or with no rows.
+   */
+  async moveRowFocus(step: 1 | -1): Promise<boolean> {
+    const records = this._results.records;
+    const list = this._list;
+    if (!list) return false;
+
+    // The focused row's data-id names the entry it shows now; rows are reused positionally
+    // (ADR 0015), so the element itself says nothing about the index.
+    const focused = this.shadowRoot?.activeElement;
+    const focusedId =
+      focused instanceof HTMLElement && focused.classList.contains("row") ? focused.dataset.id : undefined;
+    const current = focusedId === undefined ? -1 : records.findIndex((record) => record.id === focusedId);
+    const selected = this.selectedId === undefined ? -1 : records.findIndex((record) => record.id === this.selectedId);
+    const firstVisible = Math.ceil(list.scrollTop / this.#rowHeight);
+
+    const target = nextRowIndex(
+      current === -1 ? undefined : current,
+      step,
+      records.length,
+      selected === -1 ? firstVisible : selected,
+    );
+    const record = target === undefined ? undefined : records[target];
+    return record ? this.focusRow(record.id) : false;
+  }
+
   #renderRow(record: LogRecord, index: number) {
     const time = formatRowTime(record.timestamp);
     const level = levelOf(record.severityNumber);
@@ -385,7 +419,7 @@ export class LogExplorerResultsElement extends UmbLitElement {
             </uui-button>
             <span>${this.localize.term("logExplorer_columnLevel")}</span>
             <span>${this.localize.term("logExplorer_columnMessage")}</span>
-            <span>${this.localize.term("logExplorer_columnSource")}</span>
+            <span class="source-heading">${this.localize.term("logExplorer_columnSource")}</span>
           </div>
           ${this.#renderBody()} ${this.#renderFooter()}
         </div>
@@ -438,7 +472,10 @@ export class LogExplorerResultsElement extends UmbLitElement {
         padding: var(--uui-size-space-2) var(--uui-size-space-4);
       }
 
+      /* No block padding: the sort button is already a full control height (UI brief §2's
+         twelve rows at 1440 x 900 need the space). */
       .header {
+        padding-block: 0;
         align-items: center;
         font-weight: bold;
         font-size: var(--uui-type-small-size);
@@ -594,7 +631,9 @@ export class LogExplorerResultsElement extends UmbLitElement {
         align-items: center;
         justify-content: flex-end;
         gap: var(--uui-size-space-4);
-        padding: var(--uui-size-space-2) var(--uui-size-space-4);
+        /* One control height, like the header, whether or not "Load 60 more" is showing. */
+        min-height: var(--uui-size-11);
+        padding: 0 var(--uui-size-space-4);
         border-top: 1px solid var(--uui-color-border);
         font-size: var(--uui-type-small-size);
       }
@@ -602,6 +641,19 @@ export class LogExplorerResultsElement extends UmbLitElement {
       .footer .error {
         flex-basis: 100%;
         margin: 0;
+      }
+
+      /* Medium and narrow workspaces (under about 1100 px) drop the Source column to give the
+         message the width (UI brief §2.1). The nearest size container is the Search view, whose
+         content box is its padding (2 x 24 px) narrower than the workspace, hence 1051 px. */
+      @container (max-width: 1051px) {
+        :host {
+          --log-explorer-results-columns: 12ch 10ch minmax(0, 1fr);
+        }
+        .source,
+        .source-heading {
+          display: none;
+        }
       }
     `,
   ];
