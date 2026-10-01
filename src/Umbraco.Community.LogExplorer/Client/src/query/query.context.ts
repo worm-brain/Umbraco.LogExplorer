@@ -3,6 +3,7 @@ import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState, mergeObservables } from "@umbraco-cms/backoffice/observable-api";
 import { NativeQueryService, type SettingsResponseModel, type SourceResponseModel } from "../api/index.js";
+import { DEFAULT_CORRELATION_FIELDS } from "../entry-detail/same-request.js";
 import { loadSettings } from "../settings/settings.js";
 import { canShowQuery } from "../show-query/native-mode.js";
 import {
@@ -35,6 +36,8 @@ export interface LogExplorerQueryContextOptions {
   loadDefaultTimeRange?: () => Promise<string | undefined>;
   /** Supplies `DefaultSource`; defaults to `GET /settings`. A failure means "no default". */
   loadDefaultSource?: () => Promise<string | undefined>;
+  /** Supplies `CorrelationFields`; defaults to `GET /settings`. A failure keeps the BRIEF §13 defaults. */
+  loadCorrelationFields?: () => Promise<ReadonlyArray<string> | undefined>;
   /** Fetches the visible sources; defaults to `GET /sources`. */
   loadSources?: () => Promise<SourcesState>;
   /** Compiles a query for "Show query"; defaults to `POST /sources/{alias}/compile`. */
@@ -84,6 +87,7 @@ export class LogExplorerQueryContext extends UmbContextBase {
   #defaultSource = new UmbBasicState<string | null | undefined>(undefined);
   #compiled = new UmbObjectState<CompileState>(INITIAL_COMPILE_STATE);
   #compiler: QueryCompiler;
+  #correlationFields = new UmbBasicState<ReadonlyArray<string>>(DEFAULT_CORRELATION_FIELDS);
 
   /** The whole view state. */
   readonly state = this.#state.asObservable();
@@ -115,6 +119,12 @@ export class LogExplorerQueryContext extends UmbContextBase {
 
   /** The latest "Show query" translation of the view state for the active source. */
   readonly compiled = this.#compiled.asObservable();
+
+  /**
+   * `CorrelationFields` (BRIEF §13) in priority order, for the drawer's Same request: the BRIEF
+   * defaults until `/settings` answers, and when it fails or answers with an empty list.
+   */
+  readonly correlationFields = this.#correlationFields.asObservable();
 
   /**
    * Positions (in {@link LogExplorerViewState.chips}) of the chips the active source cannot run,
@@ -155,6 +165,7 @@ export class LogExplorerQueryContext extends UmbContextBase {
     const settings = () => (settingsRequest ??= loadSettings());
     const loadDefaultTimeRange = options.loadDefaultTimeRange ?? (async () => (await settings())?.defaultTimeRange);
     const loadDefaultSource = options.loadDefaultSource ?? (async () => (await settings())?.defaultSource);
+    const loadCorrelationFields = options.loadCorrelationFields ?? (async () => (await settings())?.correlationFields);
     this.#loadSources = options.loadSources ?? (() => loadSources());
     this.#compiler = new QueryCompiler(
       options.compile ?? compileWithClient,
@@ -171,6 +182,12 @@ export class LogExplorerQueryContext extends UmbContextBase {
     void loadDefaultSource().then(
       (alias) => this.#defaultSource.setValue(alias || null),
       () => this.#defaultSource.setValue(null),
+    );
+    void loadCorrelationFields().then(
+      (fields) => {
+        if (fields?.length) this.#correlationFields.setValue(fields);
+      },
+      () => {},
     );
     void this.reloadSources();
   }
@@ -258,6 +275,33 @@ export class LogExplorerQueryContext extends UmbContextBase {
    */
   removeChip(index: number): void {
     this.update({ chips: removeChipAt(this.getState().chips, index) });
+  }
+
+  /**
+   * Same request (BRIEF §6.8, UI brief §4.11): replaces every filter (chips and the native query),
+   * the level set and the time zoom with the one correlation chip, and leaves Around-this mode, so
+   * the results list shows every entry of that request in the picker's range. Source, range and
+   * sort are kept.
+   *
+   * @param chip - The correlation chip, from `sameRequestTarget`.
+   */
+  showSameRequest(chip: FilterNode): void {
+    this.update({ chips: [chip], native: undefined, levels: null, zoom: undefined, around: undefined });
+  }
+
+  /**
+   * Switches the results list to Around-this mode for one entry (UI brief §4.10). Filters, levels
+   * and zoom are kept, so {@link clearAround} returns to exactly the filtered list.
+   *
+   * @param recordId - `LogRecord.id` of the anchor.
+   */
+  showAround(recordId: string): void {
+    this.update({ around: recordId });
+  }
+
+  /** Leaves Around-this mode ("Back to filtered results"); the rest of the state is unchanged. */
+  clearAround(): void {
+    this.update({ around: undefined });
   }
 
   /** @returns The latest compile; see {@link compiled}. */

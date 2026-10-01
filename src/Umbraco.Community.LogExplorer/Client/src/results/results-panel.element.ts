@@ -12,7 +12,8 @@ import {
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { SearchService, type LogRecord } from "../api/index.js";
+import { ContextService, SearchService, type LogRecord } from "../api/index.js";
+import { AroundLoader, INITIAL_AROUND_STATE, type AroundState, type ContextFn } from "../around/around-loader.js";
 import { toLogQuery } from "../query/log-query.js";
 import { LOG_EXPLORER_QUERY_CONTEXT, type LogExplorerQueryContext } from "../query/query.context.js";
 import type { LogExplorerViewState } from "../query/view-state.js";
@@ -40,6 +41,10 @@ const ESTIMATED_ROW_HEIGHT = 48;
 /** The default request: the generated client, which carries the backoffice token. */
 const searchWithClient: SearchFn = (alias, query, signal) =>
   SearchService.search({ path: { alias }, body: query, signal });
+
+/** The default Around-this request, through the generated client. */
+const contextWithClient: ContextFn = (alias, id, count, signal) =>
+  ContextService.getContext({ path: { alias, id }, query: { before: count, after: count }, signal });
 
 /**
  * Fired when the user activates a results row; the entry detail drawer (#41) listens for it.
@@ -81,6 +86,12 @@ export class LogExplorerEntryOpenEvent extends Event {
  * - **States** (UI brief §4.15): a `uui-loader-bar` while a request runs, with the previous rows
  *   dimmed during a first-page load; the copy-deck empty text; an error banner with the
  *   ProblemDetails message and Retry.
+ * - **Around this** (UI brief §4.10): while the view state has `around`, the list shows the
+ *   anchor and the entries either side of it from `GET /records/{id}/context`, ignoring every
+ *   filter, in the list's sort direction, with the anchor highlighted and a warning-tinted banner
+ *   whose "Back to filtered results" clears `around`. The filtered page stays loaded underneath,
+ *   so Back shows it again without a request unless the query changed meanwhile. A stale id (an
+ *   old link) shows the error banner; Back still works.
  *
  * Log text is rendered as text nodes only.
  *
@@ -106,6 +117,10 @@ export class LogExplorerResultsElement extends UmbLitElement {
   @property({ attribute: false })
   selectedId: string | undefined;
 
+  /** The Around-this loader's state; `idle` outside Around-this mode. */
+  @state()
+  private _around: AroundState = INITIAL_AROUND_STATE;
+
   /** The rows currently rendered; recomputed on scroll, resize and new results. */
   @state()
   private _window: RowWindow = { first: 0, end: 0 };
@@ -121,7 +136,13 @@ export class LogExplorerResultsElement extends UmbLitElement {
     }
     this._results = results;
   });
+  #aroundLoader = new AroundLoader(contextWithClient, (around) => {
+    // Bring the anchor into view once its neighbours arrive (UI brief §4.10).
+    if (around.status === "loaded" && this._around.status === "loading") this.#revealAnchor = true;
+    this._around = around;
+  });
   #scrollToTop = false;
+  #revealAnchor = false;
   #rowHeight = ESTIMATED_ROW_HEIGHT;
   #observedList?: HTMLElement;
   #resizeObserver = new ResizeObserver(() => this.#updateWindow());
@@ -178,7 +199,13 @@ export class LogExplorerResultsElement extends UmbLitElement {
       this.#scrollToTop = false;
       list.scrollTop = 0;
     }
-    if (changed.has("_results")) this.#updateWindow();
+    if (this.#revealAnchor) {
+      this.#revealAnchor = false;
+      const index = this._around.rows.findIndex((record) => record.id === this._around.anchorId);
+      // Centre the anchor so the entries either side of it are both in view.
+      if (index !== -1) list.scrollTop = Math.max(0, (index + 0.5) * this.#rowHeight - list.clientHeight / 2);
+    }
+    if (changed.has("_results") || changed.has("_around")) this.#updateWindow();
   }
 
   override disconnectedCallback(): void {
@@ -188,7 +215,18 @@ export class LogExplorerResultsElement extends UmbLitElement {
     // Nothing should land on a view the user has left; reconnecting queries again (the
     // context observers re-emit on reconnect).
     this.#loader.reset();
+    this.#aroundLoader.reset();
     this.#queryKey = undefined;
+  }
+
+  /** Whether the list shows Around-this rows rather than the filtered page. */
+  get #inAround(): boolean {
+    return this._around.status !== "idle";
+  }
+
+  /** The rows the list shows: the Around-this rows in that mode, otherwise the loaded pages. */
+  get #rows(): ReadonlyArray<LogRecord> {
+    return this.#inAround ? this._around.rows : this._results.records;
   }
 
   /**
@@ -199,9 +237,19 @@ export class LogExplorerResultsElement extends UmbLitElement {
   #requery(): void {
     if (!this.#alias || !this.#viewState) {
       this.#loader.reset();
+      this.#aroundLoader.reset();
       this.#queryKey = undefined;
       return;
     }
+
+    // Around this replaces the list but not the filtered query: it is left as it is (not reset)
+    // so Back shows it again, and a query changed meanwhile loads when Around this ends.
+    const around = this.#viewState.around;
+    if (around) {
+      this.#aroundLoader.load(this.#alias, around, this.#viewState.sort);
+      return;
+    }
+    this.#aroundLoader.reset();
 
     const query = toLogQuery(this.#viewState, RESULTS_PAGE_SIZE);
     const key = JSON.stringify([this.#alias, query]);
@@ -220,12 +268,12 @@ export class LogExplorerResultsElement extends UmbLitElement {
    */
   #updateWindow = (): void => {
     const list = this._list;
-    const count = this._results.records.length;
+    const count = this.#rows.length;
     if (!list) return;
 
     const next = rowWindow(list.scrollTop, list.clientHeight, this.#rowHeight, count, OVERSCAN);
     if (next.first !== this._window.first || next.end !== this._window.end) this._window = next;
-    if (count > 0 && next.end >= count - LOAD_MORE_THRESHOLD) this.#loader.loadMore();
+    if (!this.#inAround && count > 0 && next.end >= count - LOAD_MORE_THRESHOLD) this.#loader.loadMore();
   };
 
   #open(record: LogRecord): void {
@@ -243,7 +291,7 @@ export class LogExplorerResultsElement extends UmbLitElement {
    *   example after the query changed).
    */
   async focusRow(id: string): Promise<boolean> {
-    const index = this._results.records.findIndex((record) => record.id === id);
+    const index = this.#rows.findIndex((record) => record.id === id);
     const list = this._list;
     if (index === -1 || !list) return false;
 
@@ -267,7 +315,8 @@ export class LogExplorerResultsElement extends UmbLitElement {
    * @returns `true` when a row was focused; `false` at either end or with no rows.
    */
   async moveRowFocus(step: 1 | -1): Promise<boolean> {
-    const records = this._results.records;
+    // The rows on screen: the Around-this rows in that mode.
+    const records = this.#rows;
     const list = this._list;
     if (!list) return false;
 
@@ -297,8 +346,13 @@ export class LogExplorerResultsElement extends UmbLitElement {
     return html`
       <button
         type="button"
-        class=${classMap({ row: true, selected: record.id === this.selectedId })}
+        class=${classMap({
+          row: true,
+          selected: record.id === this.selectedId,
+          anchor: this.#inAround && record.id === this._around.anchorId,
+        })}
         data-id=${record.id}
+        aria-current=${this.#inAround && record.id === this._around.anchorId ? "true" : "false"}
         style=${styleMap({ transform: `translateY(${index * this.#rowHeight}px)` })}
         aria-label=${this.localize.term("logExplorer_resultsOpenEntry", time, levelText)}
         @click=${() => this.#open(record)}
@@ -318,10 +372,11 @@ export class LogExplorerResultsElement extends UmbLitElement {
   }
 
   #renderBody() {
+    if (this.#inAround) return this.#renderAroundBody();
     const { status, records, error, appending } = this._results;
 
     if (status === "error" && !appending) {
-      return this.#renderError(error);
+      return this.#renderError(this.localize.term("logExplorer_resultsError", error ?? ""), () => this.#loader.retry());
     }
     if (records.length === 0) {
       return status === "loaded"
@@ -330,16 +385,26 @@ export class LogExplorerResultsElement extends UmbLitElement {
     }
 
     // Dim the old rows only while they are about to be replaced, not while a page is appended.
-    const dimmed = status === "loading" && !appending;
+    return this.#renderList(records, status === "loading" && !appending, status === "loading");
+  }
+
+  /** The Around-this rows, or its error banner (a stale id), with no empty state: the anchor is always a row. */
+  #renderAroundBody() {
+    const { status, rows, error } = this._around;
+    if (status === "error") {
+      return this.#renderError(this.localize.term("logExplorer_aroundError", error ?? ""), () =>
+        this.#aroundLoader.retry(),
+      );
+    }
+    return rows.length === 0 ? nothing : this.#renderList(rows, false, status === "loading");
+  }
+
+  #renderList(records: ReadonlyArray<LogRecord>, dimmed: boolean, busy: boolean) {
     const { first, end } = this._window;
     // `map`, not `repeat`: Lit then reuses the rendered rows positionally and only updates
     // their bindings as the window slides, instead of creating and removing row parts.
     return html`
-      <div
-        class=${classMap({ list: true, dimmed })}
-        aria-busy=${status === "loading" ? "true" : "false"}
-        @scroll=${this.#updateWindow}
-      >
+      <div class=${classMap({ list: true, dimmed })} aria-busy=${busy ? "true" : "false"} @scroll=${this.#updateWindow}>
         <div class="spacer" style=${styleMap({ height: `${records.length * this.#rowHeight}px` })}>
           ${records.slice(first, end).map((record, offset) => this.#renderRow(record, first + offset))}
         </div>
@@ -347,23 +412,53 @@ export class LogExplorerResultsElement extends UmbLitElement {
     `;
   }
 
-  #renderError(message: string | undefined) {
+  #renderError(message: string, retry: () => void) {
     return html`
       <div class="error" role="alert">
-        <span>${this.localize.term("logExplorer_resultsError", message ?? "")}</span>
+        <span>${message}</span>
         <uui-button
           look="secondary"
           compact
           label=${this.localize.term("logExplorer_retry")}
-          @click=${() => this.#loader.retry()}
+          @click=${retry}
         ></uui-button>
+      </div>
+    `;
+  }
+
+  /**
+   * The Around-this banner (UI brief §4.10): the anchor's time once it has loaded, and the way
+   * back to the filtered list in every state, including a failed load.
+   *
+   * Back comes before the text, not after it: the entry drawer that offered Around this is
+   * usually still open over the right of the results panel, and would cover a trailing button.
+   */
+  #renderAroundBanner() {
+    const { anchor } = this._around;
+    return html`
+      <div class="around-banner">
+        <uui-icon name="icon-navigation-vertical"></uui-icon>
+        <uui-button
+          look="secondary"
+          compact
+          label=${this.localize.term("logExplorer_aroundBack")}
+          @click=${() => this.#context?.clearAround()}
+        ></uui-button>
+        <span class="around-text" role="status">
+          ${
+            anchor
+              ? this.localize.term("logExplorer_aroundBanner", formatRowTime(anchor.timestamp))
+              : this.localize.term("logExplorer_aroundBannerNoAnchor")
+          }
+        </span>
       </div>
     `;
   }
 
   #renderFooter() {
     const { status, records, nextCursor, totalCount, totalIsLowerBound, appending, error } = this._results;
-    if (records.length === 0) return nothing;
+    // Around this has no pages and no total; the banner says what is shown.
+    if (this.#inAround || records.length === 0) return nothing;
 
     const showing = formatShowing(
       records.length,
@@ -374,7 +469,11 @@ export class LogExplorerResultsElement extends UmbLitElement {
     );
     return html`
       <div class="footer">
-        ${status === "error" && appending ? this.#renderError(error) : nothing}
+        ${
+          status === "error" && appending
+            ? this.#renderError(this.localize.term("logExplorer_resultsError", error ?? ""), () => this.#loader.retry())
+            : nothing
+        }
         <span>${this.localize.term("logExplorer_resultsShowing", showing.shown, showing.total)}</span>
         ${
           nextCursor
@@ -397,11 +496,12 @@ export class LogExplorerResultsElement extends UmbLitElement {
    * @returns The template.
    */
   override render() {
-    const loading = this._results.status === "loading";
+    const loading = this.#inAround ? this._around.status === "loading" : this._results.status === "loading";
     return html`
       <uui-box>
         <div class="panel">
           ${loading ? html`<uui-loader-bar class="loader"></uui-loader-bar>` : nothing}
+          ${this.#inAround ? this.#renderAroundBanner() : nothing}
           <div class="header" role="presentation">
             <uui-button
               class="sort"
@@ -545,6 +645,30 @@ export class LogExplorerResultsElement extends UmbLitElement {
       .row.selected {
         background-color: color-mix(in srgb, var(--uui-color-interactive-emphasis) 12%, var(--uui-color-surface));
         border-left-color: var(--uui-color-interactive-emphasis);
+      }
+
+      /* The "around" anchor's warning tint (UI brief §4.9, prototype #fff7d6), mixed from the
+         warning colour like the accent tint above. Selected and anchor together keep the accent
+         bar on the left. */
+      .row.anchor {
+        background-color: color-mix(in srgb, var(--uui-color-warning) 25%, var(--uui-color-surface));
+      }
+
+      .around-banner {
+        display: flex;
+        align-items: center;
+        gap: var(--uui-size-space-3);
+        padding: var(--uui-size-space-2) var(--uui-size-space-4);
+        border-bottom: 1px solid var(--uui-color-warning-standalone);
+        background-color: color-mix(in srgb, var(--uui-color-warning) 25%, var(--uui-color-surface));
+        color: var(--uui-color-text);
+        flex-wrap: wrap;
+        font-size: var(--uui-type-small-size);
+      }
+
+      .around-text {
+        flex: 1;
+        min-width: 0;
       }
 
       .time {

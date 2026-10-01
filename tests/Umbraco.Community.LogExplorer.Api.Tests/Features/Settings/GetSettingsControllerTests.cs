@@ -64,4 +64,19 @@ public class GetSettingsControllerTests
         // Assert
         Assert.Equal(["StatusCode", "SourceContext"], settings.PinnedFacets);
     }
+
+    [Fact]
+    public void GetSettings_ConfiguredCorrelationFields_ReturnsThemInOrder()
+    {
+        // Arrange
+        var controller = new GetSettingsController(
+            Options.Create(new LogExplorerOptions { CorrelationFields = ["RequestId", "@traceId"] })
+        );
+
+        // Act
+        SettingsResponseModel settings = controller.GetSettings();
+
+        // Assert
+        Assert.Equal(["RequestId", "@traceId"], settings.CorrelationFields);
+    }
 }

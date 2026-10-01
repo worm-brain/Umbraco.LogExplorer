@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Umbraco.Community.LogExplorer.Core.Sources;
+using Umbraco.Community.LogExplorer.Features.Context;
 
 namespace Umbraco.Community.LogExplorer.Infrastructure.Api;
 
@@ -13,6 +14,7 @@ namespace Umbraco.Community.LogExplorer.Infrastructure.Api;
 /// </summary>
 /// <remarks>
 /// Mapping: <see cref="KeyNotFoundException"/> -> 404 <c>source_not_found</c>;
+/// <see cref="RecordNotFoundException"/> -> 404 <c>record_not_found</c>;
 /// <see cref="ForbiddenSourceException"/> -> 403 <c>forbidden_source</c>;
 /// <see cref="NotSupportedException"/> -> 400 <c>unsupported_feature</c>;
 /// <see cref="RangeTooLargeException"/> -> 400 <c>range_too_large</c>;
@@ -33,6 +35,10 @@ internal sealed class LogExplorerProblemFilter(ProblemDetailsFactory problemDeta
 
         (int status, string code)? mapped = context.Exception switch
         {
+            RecordNotFoundException => (
+                StatusCodes.Status404NotFound,
+                LogExplorerApi.ProblemCodes.RecordNotFound
+            ),
             KeyNotFoundException => (
                 StatusCodes.Status404NotFound,
                 LogExplorerApi.ProblemCodes.SourceNotFound

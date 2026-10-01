@@ -80,6 +80,16 @@ describe("encodeViewState / decodeViewState", () => {
     expect([encodeViewState(state, defaults).toString(), roundTrip(state).showQuery]).toEqual(["sq=1", true]);
   });
 
+  it("round-trips Around-this mode as around={record id}", () => {
+    const state = { ...defaults, chips, around: "aGVsbG8_d29ybGQ" };
+
+    expect([encodeViewState(state, defaults).get("around"), roundTrip(state)]).toEqual(["aGVsbG8_d29ybGQ", state]);
+  });
+
+  it("reads an empty around parameter as the normal list", () => {
+    expect(decodeViewState(new URLSearchParams("around="), defaults).around).toBeUndefined();
+  });
+
   it("keeps native mode with an empty native query across a reload", () => {
     expect(roundTrip({ ...defaults, native: "" }).native).toBe("");
   });
@@ -117,6 +127,7 @@ const EVERY_FIELD: Required<LogExplorerViewState> = {
   sort: "asc",
   zoom: { from: "2026-09-02T00:40:00.000Z", to: "2026-09-02T00:45:00.000Z" },
   showQuery: true,
+  around: "VW1icmFjb1RyYWNlTG9nLldPUk0uMjAyNjEwMDEuanNvbjozMjU2MzU",
 };
 
 describe("a shared link's view state", () => {

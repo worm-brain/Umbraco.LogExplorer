@@ -25,6 +25,7 @@ async function connectContext(options: LogExplorerQueryContextOptions = {}): Pro
   const context = new LogExplorerQueryContext(host, {
     loadDefaultTimeRange: async () => undefined,
     loadDefaultSource: async () => undefined,
+    loadCorrelationFields: async () => undefined,
     loadSources: async () => ({ status: "empty" }),
     ...options,
   });
@@ -164,6 +165,7 @@ describe("LogExplorerQueryContext", () => {
     const timeout: FilterNode = { kind: "text", text: "timeout" };
     const context = await connectContext({
       loadDefaultSource: async () => "sample",
+      loadCorrelationFields: async () => undefined,
       loadSources: async () => ({ status: "loaded", sources: [nativeSource("sample")] }),
       compile: async () => ({ data: { native: 'text("timeout")', unsupported: [pathApi] } }),
       compileDebounceMs: 0,
@@ -186,6 +188,7 @@ describe("LogExplorerQueryContext", () => {
     const compiledFilters: Array<unknown> = [];
     const context = await connectContext({
       loadDefaultSource: async () => "sample",
+      loadCorrelationFields: async () => undefined,
       loadSources: async () => ({ status: "loaded", sources: [nativeSource("sample")] }),
       compile: async (_, query) => {
         compiledFilters.push(query.filter);
@@ -210,6 +213,7 @@ describe("LogExplorerQueryContext", () => {
     let calls = 0;
     const context = await connectContext({
       loadDefaultSource: async () => "sample",
+      loadCorrelationFields: async () => undefined,
       loadSources: async () => ({ status: "loaded", sources: [source("sample")] }),
       compile: async () => {
         calls++;
@@ -263,6 +267,7 @@ function nativeSource(alias: string): SourceResponseModel {
 const twoSources: LogExplorerQueryContextOptions = {
   loadSources: async () => ({ status: "loaded", sources: [source("files"), source("sample")] }),
   loadDefaultSource: async () => "sample",
+  loadCorrelationFields: async () => undefined,
 };
 
 describe("LogExplorerQueryContext active source", () => {
@@ -372,5 +377,70 @@ describe("LogExplorerQueryContext chips", () => {
     context.removeChip(1);
 
     expect(context.getState().chips).toEqual([pathApi]);
+  });
+});
+
+describe("LogExplorerQueryContext Same request and Around this", () => {
+  const requestChip = { kind: "condition", field: "@traceId", op: "equals", value: "4bf92f35" } as const;
+
+  it("replaces every chip, the native query, the level set, the zoom and Around this with the request chip", async () => {
+    const context = await connectContext();
+    context.update({
+      chips: [{ kind: "text", text: "timeout" }],
+      native: "@Level = 'Error'",
+      levels: ["error"],
+      zoom: { from: "2026-09-02T00:40:00.000Z", to: "2026-09-02T00:45:00.000Z" },
+      around: "e5",
+      range: { relative: "24h" },
+    });
+
+    context.showSameRequest(requestChip);
+
+    expect(context.getState()).toMatchObject({
+      chips: [requestChip],
+      native: undefined,
+      levels: null,
+      zoom: undefined,
+      around: undefined,
+      range: { relative: "24h" },
+    });
+  });
+
+  it("records Around this in the URL and Back removes only that", async () => {
+    const context = await connectContext();
+    context.addChips([requestChip]);
+    const filtered = window.location.search;
+
+    context.showAround("e5");
+    const around = new URLSearchParams(window.location.search).get("around");
+    context.clearAround();
+
+    expect([around, window.location.search]).toEqual(["e5", filtered]);
+  });
+
+  it("restores Around this from the URL it opens on", async () => {
+    window.history.replaceState({}, "", `${SEARCH_PATH}?around=e5`);
+
+    const context = await connectContext();
+
+    expect(context.getState().around).toBe("e5");
+  });
+
+  it("uses the configured correlation fields", async () => {
+    const context = await connectContext({ loadCorrelationFields: async () => ["RequestId"] });
+    let fields: ReadonlyArray<string> | undefined;
+
+    context.correlationFields.subscribe((value) => (fields = value)).unsubscribe();
+
+    expect(fields).toEqual(["RequestId"]);
+  });
+
+  it("keeps the default correlation fields when settings fail", async () => {
+    const context = await connectContext({ loadCorrelationFields: () => Promise.reject(new Error("403")) });
+    let fields: ReadonlyArray<string> | undefined;
+
+    context.correlationFields.subscribe((value) => (fields = value)).unsubscribe();
+
+    expect(fields).toEqual(["@traceId", "RequestId", "HttpRequestId"]);
   });
 });

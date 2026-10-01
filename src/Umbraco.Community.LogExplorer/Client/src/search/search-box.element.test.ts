@@ -51,6 +51,7 @@ beforeEach(async () => {
   context = new LogExplorerQueryContext(workspace, {
     loadDefaultTimeRange: async () => undefined,
     loadDefaultSource: async () => undefined,
+    loadCorrelationFields: async () => undefined,
     loadSources: async () => ({ status: "empty" }),
   });
   box = new LogExplorerSearchBoxElement();
@@ -130,6 +131,7 @@ describe("log-explorer-search-box with a native-capable source", () => {
     context = new LogExplorerQueryContext(workspace, {
       loadDefaultTimeRange: async () => undefined,
       loadDefaultSource: async () => "sample",
+      loadCorrelationFields: async () => undefined,
       loadSources: async () => ({ status: "loaded", sources: [sample] }),
       compile: async () => ({ data: { native: null, unsupported: [] } }),
       compileDebounceMs: 0,
@@ -191,6 +193,7 @@ describe("log-explorer-search-box with a chip the source runs but cannot show", 
     context = new LogExplorerQueryContext(workspace, {
       loadDefaultTimeRange: async () => undefined,
       loadDefaultSource: async () => "sample",
+      loadCorrelationFields: async () => undefined,
       loadSources: async () => ({ status: "loaded", sources: [sample] }),
       compile: async () => ({ data: { native: 'text("timeout")', unsupported: [pathApi] } }),
       compileDebounceMs: 0,
