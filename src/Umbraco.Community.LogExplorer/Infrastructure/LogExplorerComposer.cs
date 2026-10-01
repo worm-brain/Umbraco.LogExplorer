@@ -6,6 +6,7 @@ using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Community.LogExplorer.Core.Sources;
 using Umbraco.Community.LogExplorer.Features.Sources;
 using Umbraco.Community.LogExplorer.Features.Sources.Fake;
+using Umbraco.Community.LogExplorer.Features.Sources.Files;
 
 namespace Umbraco.Community.LogExplorer.Infrastructure;
 
@@ -34,5 +35,14 @@ public sealed class LogExplorerComposer : IComposer
 
         // Built-in provider types; provider packages add their own factories the same way.
         builder.Services.AddSingleton<ILogSourceFactory, FakeLogSourceFactory>();
+        builder.Services.AddSingleton<ILogSourceFactory, UmbracoFilesLogSourceFactory>();
+
+        // The files provider's readers. The locator takes the log directory and file name format
+        // from Umbraco's ILoggingConfiguration; the aggregator's IMemoryCache is already
+        // registered by Umbraco (see FileAggregator).
+        builder.Services.AddSingleton<UmbracoLogFileLocator>();
+        builder.Services.AddSingleton<LogFilePager>();
+        builder.Services.AddSingleton<FileAggregator>();
+        builder.Services.AddSingleton<FileContextReader>();
     }
 }
