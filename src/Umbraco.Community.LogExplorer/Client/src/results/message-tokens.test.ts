@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { tokeniseMessage } from "./message-tokens.js";
+import { tokeniseMessage, tokeniseTemplate } from "./message-tokens.js";
 
 describe("tokeniseMessage", () => {
   it("marks each property value in the rendered body", () => {
@@ -65,5 +65,20 @@ describe("tokeniseMessage", () => {
 
   it("is empty without a body or a template", () => {
     expect(tokeniseMessage(null, null)).toEqual([]);
+  });
+});
+
+describe("tokeniseTemplate", () => {
+  it("marks each placeholder, keeping its operator and format", () => {
+    expect(tokeniseTemplate("Took {Elapsed:0.00} ms for {@Cart}")).toEqual([
+      { text: "Took " },
+      { text: "{Elapsed:0.00}", field: "Elapsed" },
+      { text: " ms for " },
+      { text: "{@Cart}", field: "Cart" },
+    ]);
+  });
+
+  it("keeps escaped braces and an unclosed brace as literal text", () => {
+    expect(tokeniseTemplate("Set {{literal}} to {")).toEqual([{ text: "Set {literal} to {" }]);
   });
 });

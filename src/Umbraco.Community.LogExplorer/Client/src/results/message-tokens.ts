@@ -8,8 +8,8 @@ export interface MessageToken {
   field?: string;
 }
 
-/** A parsed message template: literal text and `{Property}` holes, in order. */
-type TemplatePart = { literal: string } | { hole: string };
+/** A parsed message template: literal text and `{Property}` holes (with their source text), in order. */
+type TemplatePart = { literal: string } | { hole: string; raw: string };
 
 /**
  * Splits a rendered message into literal text and property values (UI brief §4.9, BRIEF §11.2
@@ -43,6 +43,23 @@ export function tokeniseMessage(
 }
 
 /**
+ * Splits a message template into literal text and `{Placeholder}` holes, for showing the
+ * template itself with its placeholders highlighted (the Patterns view, UI brief §4.12).
+ *
+ * A hole token keeps its source text, braces, operator and format included (`{@Cart}`,
+ * `{Elapsed:0.00}`), and sets `field` to the property name. Doubled braces are unescaped into
+ * the literal text, as Serilog renders them. Every token is plain text.
+ *
+ * @param template - The template text.
+ * @returns The tokens; an empty array for an empty template.
+ */
+export function tokeniseTemplate(template: string): Array<MessageToken> {
+  return parseTemplate(template).map((part) =>
+    "literal" in part ? { text: part.literal } : { text: part.raw, field: part.hole },
+  );
+}
+
+/**
  * Parses Serilog message-template syntax: `{Name}`, `{@Name}`, `{$Name}`, `{Name:format}`,
  * `{Name,alignment}`; `{{` and `}}` are literal braces. An unclosed `{` is literal text.
  */
@@ -64,7 +81,7 @@ function parseTemplate(template: string): Array<TemplatePart> {
       if (close !== -1 && name) {
         if (literal) parts.push({ literal });
         literal = "";
-        parts.push({ hole: name });
+        parts.push({ hole: name, raw: template.slice(i, close + 1) });
         i = close + 1;
         continue;
       }
