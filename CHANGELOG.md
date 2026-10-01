@@ -10,3 +10,5 @@ All notable user-visible changes to this project are documented here. The format
 
 - Log Explorer item under Settings > Advanced with an empty Search, Patterns and Overview workspace.
 - English localization dictionary for every Log Explorer string; other backoffice languages fall back to it.
+- `HideCoreLogViewer` (default `true`) now hides the core Settings > Log Viewer item; set it to `false` to show both.
+- `GET /umbraco/log-explorer/api/v1/settings` returns the client settings (`hideCoreLogViewer`, `defaultSource`, `defaultTimeRange`).

@@ -4,6 +4,12 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44370' | (string & {});
 };
 
+export type SettingsResponseModel = {
+    hideCoreLogViewer: boolean;
+    defaultSource: string;
+    defaultTimeRange: string;
+};
+
 export type SourceCapabilitiesResponseModel = {
     features: Array<string>;
     operators: Array<string>;
@@ -19,6 +25,29 @@ export type SourceResponseModel = {
     sensitive: boolean;
     capabilities: SourceCapabilitiesResponseModel;
 };
+
+export type GetSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/settings';
+};
+
+export type GetSettingsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetSettingsResponses = {
+    /**
+     * OK
+     */
+    200: SettingsResponseModel;
+};
+
+export type GetSettingsResponse = GetSettingsResponses[keyof GetSettingsResponses];
 
 export type GetSourcesData = {
     body?: never;

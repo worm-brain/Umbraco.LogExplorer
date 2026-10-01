@@ -19,6 +19,7 @@ brief assumed. Update the brief in the same change.
 | [0008](0008-core-contract-refinements.md) | Core contract refinements from Phase 0 | Accepted |
 | [0009](0009-package-api-route.md) | The package API lives at `/umbraco/log-explorer/api/v1` | Accepted |
 | [0010](0010-one-package-per-umbraco-major.md) | Build one package per Umbraco major from one source tree | Accepted |
+| [0011](0011-settings-endpoint.md) | The client reads its settings from `GET /settings` | Accepted |
 
 ## Template
 
