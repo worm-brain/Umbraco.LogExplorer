@@ -5,3 +5,7 @@ All notable user-visible changes to this project are documented here. The format
 [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+### Added
+
+- Log Explorer item under Settings > Advanced with an empty Search, Patterns and Overview workspace.
