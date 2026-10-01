@@ -37,6 +37,8 @@
     <PackageVersion Include="Serilog.Formatting.Compact" Version="3.0.0" />
     <!-- The files provider reads compact JSON with the same reader Umbraco 17 and 18 ship (4.0.0 from 17.0.0 to 18.2.0). -->
     <PackageVersion Include="Serilog.Formatting.Compact.Reader" Version="4.0.0" />
+    <!-- The core Log Viewer's filter dialect: Umbraco 17.0.0 to 18.2.0 all depend on 5.0.0 (ADR 0013). -->
+    <PackageVersion Include="Serilog.Expressions" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup Label="Testing">

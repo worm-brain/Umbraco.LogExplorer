@@ -21,6 +21,7 @@ brief assumed. Update the brief in the same change.
 | [0010](0010-one-package-per-umbraco-major.md) | Build one package per Umbraco major from one source tree | Accepted |
 | [0011](0011-settings-endpoint.md) | The client reads its settings from `GET /settings` | Accepted |
 | [0012](0012-file-cursor-per-machine-stream.md) | The files cursor holds one position per machine stream; record ids are base64url | Accepted |
+| [0013](0013-files-native-dialect-is-the-core-viewers.md) | The files source's native dialect is the core Log Viewer's own Serilog.Expressions setup | Accepted |
 
 ## Template
 
