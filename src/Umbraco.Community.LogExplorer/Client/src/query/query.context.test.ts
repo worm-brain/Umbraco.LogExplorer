@@ -53,6 +53,29 @@ describe("LogExplorerQueryContext", () => {
     expect(context.getState()).toMatchObject({ range: { relative: "24h" }, sort: "asc" });
   });
 
+  it("restores every field of a view from the URL another context wrote, as a shared link does", async () => {
+    const view: LogExplorerViewState = {
+      source: "sample",
+      range: { relative: "24h" },
+      chips: [{ kind: "not", child: { kind: "condition", field: "StatusCode", op: "equals", value: 200 } }],
+      levels: [],
+      native: "",
+      sort: "asc",
+      zoom: { from: "2026-09-02T00:40:00.000Z", to: "2026-09-02T00:45:00.000Z" },
+      showQuery: true,
+    };
+    window.history.replaceState({}, "", PATTERNS_PATH);
+    (await connectContext()).update(view);
+    const link = `${window.location.pathname}${window.location.search}`;
+    host.remove();
+    host = new TestHostElement();
+
+    window.history.replaceState({}, "", link);
+    const opened = await connectContext();
+
+    expect([window.location.pathname, opened.getState()]).toEqual([PATTERNS_PATH, view]);
+  });
+
   it("writes a changed range into the URL", async () => {
     const context = await connectContext();
 

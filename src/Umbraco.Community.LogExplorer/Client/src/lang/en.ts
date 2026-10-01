@@ -21,7 +21,6 @@ export default {
     tabOverview: "Overview",
 
     // Empty views, until each view is built.
-    overviewEmpty: "Nothing to summarise yet. Counts by level, frequent messages and exception types arrive here.",
 
     // Source picker (UI brief §4.1).
     sourcesLoading: "Loading log sources…",
@@ -170,11 +169,14 @@ export default {
     aroundBanner: (time: string) => `Showing 7 entries either side of ${time}, ignoring filters`,
     aroundBack: "Back to filtered results",
 
-    // Saved views and show query (UI brief §4.5, §4.6).
+    // Saved views, show query and share (UI brief §4.5, §4.6, §4.14).
     savedViewsCaption: "Saved views",
     savedViewsSaveCurrent: "Save current view…",
     showQueryEditAsNative: "Edit as native",
     showQueryButton: "Show generated query",
+    shareButton: "Copy link to this view",
+    shareCopied: "Link to this exact view copied",
+    shareCopyFailed: "Could not copy the link to the clipboard",
     showQueryLabel: (language: string) => `Generated ${language} query`,
     showQueryEmpty: "(no filter: every entry in the time range)",
     showQueryError: (message: string) => `Could not compile the query: ${message}`,
@@ -226,5 +228,15 @@ export default {
     overviewMinimumLevels: "Minimum levels (configuration)",
     overviewFrequentMessages: "Most frequent messages",
     overviewExceptionTypes: "Exception types",
+    overviewLevelHidden: (level: string) => `${level} entries are hidden by the level filter`,
+    overviewLevelsUnsupported: (source: string) => `${source} cannot count entries by level.`,
+    overviewLevelsError: (message: string) => `Could not count entries by level: ${message}`,
+    overviewMinimumLevelsError: (message: string) => `Could not read the minimum levels: ${message}`,
+    overviewFocusTemplate: (template: string, count: string) => `Show the ${count} entries of ${template} in Search`,
+    overviewMessagesEmpty: "No messages in the current results.",
+    overviewFocusException: (type: string, count: string) => `Show the ${count} ${type} entries in Search`,
+    overviewExceptionsUnsupported: (source: string) => `${source} cannot count exception types.`,
+    overviewExceptionsError: (message: string) => `Could not load exception types: ${message}`,
+    overviewExceptionsEmpty: "No exceptions in the current results.",
   },
 } satisfies UmbLocalizationDictionary;
