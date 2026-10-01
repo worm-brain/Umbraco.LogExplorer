@@ -3,6 +3,7 @@
     <Project Path="src/Umbraco.Community.LogExplorer.Core/Umbraco.Community.LogExplorer.Core.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Umbraco.Community.LogExplorer.ContractTests/Umbraco.Community.LogExplorer.ContractTests.csproj" />
     <Project Path="tests/Umbraco.Community.LogExplorer.Core.Tests/Umbraco.Community.LogExplorer.Core.Tests.csproj" />
   </Folder>
 </Solution>
