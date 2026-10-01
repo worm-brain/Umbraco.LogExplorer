@@ -141,6 +141,21 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
   }
 
   /** Aborts a parse or native check still running when the Search view goes away. */
+  /** Whether the input holds text not yet turned into chips (or run as a native query). */
+  get hasText(): boolean {
+    return this._value.length > 0;
+  }
+
+  /**
+   * Empties the input as Escape in it does, cancelling a parse in flight; chips are untouched.
+   * The Search view calls it for Escape pressed elsewhere in the view (BRIEF §6.15).
+   */
+  clearText(): void {
+    this.#submitter.abort();
+    this.#clearInput();
+    if (this.#nativeMode) this.#resetValidation();
+  }
+
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this.#submitter.abort();
@@ -238,11 +253,11 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
         this.#context?.removeChip(this._chips.length - 1);
         break;
       case "clear":
+        // Stopped as well as cancelled: Escape that clears the text must not also close the
+        // drawer (the Search view's Escape precedence, `viewKeyAction`).
         event.preventDefault();
         event.stopPropagation();
-        this.#submitter.abort();
-        this.#clearInput();
-        if (this.#nativeMode) this.#resetValidation();
+        this.clearText();
         break;
     }
   }
