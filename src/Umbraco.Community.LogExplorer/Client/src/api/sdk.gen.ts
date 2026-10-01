@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses } from './types.gen';
+import type { GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetPatternsData, GetPatternsErrors, GetPatternsResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -41,6 +41,20 @@ export class ParseService {
             headers: {
                 'Content-Type': 'application/json',
                 ...options?.headers
+            }
+        });
+    }
+}
+
+export class PatternsService {
+    public static getPatterns<ThrowOnError extends boolean = false>(options: Options<GetPatternsData, ThrowOnError>): RequestResult<GetPatternsResponses, GetPatternsErrors, ThrowOnError> {
+        return (options.client ?? client).post<GetPatternsResponses, GetPatternsErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/patterns',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
             }
         });
     }
