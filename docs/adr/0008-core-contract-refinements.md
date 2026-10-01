@@ -45,4 +45,4 @@ CA1711 (`LogException`), CA5351 (MD5 is a hash for grouping, not security).
 - Providers override `...Core` members only; the contract suite's declared-vs-undeclared tests hold
   for every provider without per-provider effort.
 - `FakeLogSource` generates its data once at construction; a long-running host needs a new instance
-  to keep data inside "last 1 hour" (the sample sites register it per request where that matters).
+  to keep data inside "last 1 hour". How the `Fake` source factory handles that is decided in #24.
