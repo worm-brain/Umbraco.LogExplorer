@@ -9,6 +9,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/LogExplorer.Samples.Tests/LogExplorer.Samples.Tests.csproj" />
+    <Project Path="tests/Umbraco.Community.LogExplorer.Api.Tests/Umbraco.Community.LogExplorer.Api.Tests.csproj" />
     <Project Path="tests/Umbraco.Community.LogExplorer.ContractTests/Umbraco.Community.LogExplorer.ContractTests.csproj" />
     <Project Path="tests/Umbraco.Community.LogExplorer.Core.Tests/Umbraco.Community.LogExplorer.Core.Tests.csproj" />
   </Folder>

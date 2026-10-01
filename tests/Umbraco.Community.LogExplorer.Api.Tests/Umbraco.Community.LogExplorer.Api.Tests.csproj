@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Tests for the package project: source registry, options and (from #27) the Management API. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Umbraco.Community.LogExplorer.Api.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Pin the Umbraco version we develop against (the package itself floats from the 17.0.0 floor). -->
+    <PackageReference Include="Umbraco.Cms.Web.Website" VersionOverride="17.7.0" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" VersionOverride="17.7.0" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Umbraco.Community.LogExplorer\Umbraco.Community.LogExplorer.csproj" />
+  </ItemGroup>
+</Project>
