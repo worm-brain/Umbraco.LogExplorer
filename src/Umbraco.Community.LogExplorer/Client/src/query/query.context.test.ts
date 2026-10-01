@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { UmbControllerHostElementMixin } from "@umbraco-cms/backoffice/controller-api";
 import type { SourceResponseModel } from "../api/index.js";
+import type { FilterNode } from "./filter-node.js";
+import type { LogExplorerViewState } from "./view-state.js";
 import { LogExplorerQueryContext, type LogExplorerQueryContextOptions } from "./query.context.js";
 
 const SEARCH_PATH = "/umbraco/section/settings/workspace/log-explorer/view/search";
@@ -134,6 +136,43 @@ describe("LogExplorerQueryContext", () => {
     expect(context.getState().range).toEqual({ relative: "1h" });
   });
 
+  it("leaves chips the compile reports unsupported out of the query state but keeps them in the view", async () => {
+    const pathApi: FilterNode = { kind: "condition", field: "RequestPath", op: "startsWith", value: "/api" };
+    const timeout: FilterNode = { kind: "text", text: "timeout" };
+    const context = await connectContext({
+      loadDefaultSource: async () => "sample",
+      loadSources: async () => ({ status: "loaded", sources: [nativeSource("sample")] }),
+      compile: async () => ({ data: { native: 'text("timeout")', unsupported: [pathApi] } }),
+      compileDebounceMs: 0,
+    });
+    let queryState: LogExplorerViewState | undefined;
+    context.queryState.subscribe((state) => (queryState = state));
+
+    context.addChips([pathApi, timeout]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await Promise.resolve();
+
+    expect([context.getState().chips, queryState?.chips]).toEqual([[pathApi, timeout], [timeout]]);
+  });
+
+  it("does not compile for a source without a native language", async () => {
+    let calls = 0;
+    const context = await connectContext({
+      loadDefaultSource: async () => "sample",
+      loadSources: async () => ({ status: "loaded", sources: [source("sample")] }),
+      compile: async () => {
+        calls++;
+        return { data: { native: null, unsupported: [] } };
+      },
+      compileDebounceMs: 0,
+    });
+
+    context.addChips([{ kind: "text", text: "a" }]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect([calls, context.getCompiled().status]).toEqual([0, "idle"]);
+  });
+
   it("stops following the URL once its host disconnects", async () => {
     const context = await connectContext();
     host.remove();
@@ -151,6 +190,22 @@ function source(alias: string): SourceResponseModel {
     type: "Fake",
     sensitive: false,
     capabilities: { features: [], operators: [], nativeLanguage: null, maxRangeSeconds: null, maxPageSize: 1000 },
+    allowNativeQuery: false,
+  };
+}
+
+/** A source with a native language that allows native queries and runs `startsWith` only. */
+function nativeSource(alias: string): SourceResponseModel {
+  const base = source(alias);
+  return {
+    ...base,
+    capabilities: {
+      ...base.capabilities,
+      features: ["nativeQuery"],
+      operators: ["startsWith"],
+      nativeLanguage: "Sample",
+    },
+    allowNativeQuery: true,
   };
 }
 

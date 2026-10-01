@@ -3,6 +3,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../histogram/histogram-panel.element.js";
 import "../histogram/zoom-chip.element.js";
 import "../results/results-panel.element.js";
+import "../show-query/show-query-button.element.js";
+import "../show-query/show-query-panel.element.js";
 import "../time-range/time-range-picker.element.js";
 import "./search-box.element.js";
 
@@ -10,8 +12,8 @@ import "./search-box.element.js";
  * The Search workspace view of the Log Explorer workspace (UI brief §3).
  *
  * Stacks the query bar (the time range picker, then the search box with the time-zoom chip and the
- * filter chips; the icon buttons of UI brief §4.5 follow it in later slices), the histogram and the
- * results list. The view fills the workspace body and never scrolls itself; only the results list
+ * filter chips, then the icon buttons of UI brief §4.5: "Show generated query" so far), the
+ * show-query panel when open, the histogram and the results list. The view fills the workspace body and never scrolls itself; only the results list
  * does (UI brief §2). The workspace editor renders it when its "Search" tab is active; every child
  * reads and writes `LogExplorerQueryContext`, which `log-explorer-workspace` provides.
  *
@@ -22,7 +24,7 @@ import "./search-box.element.js";
 @customElement("log-explorer-search-view")
 export class LogExplorerSearchViewElement extends UmbLitElement {
   /**
-   * Renders the query bar, the histogram and the results list.
+   * Renders the query bar, the show-query panel, the histogram and the results list.
    *
    * @returns The template.
    */
@@ -33,7 +35,9 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
         <log-explorer-search-box>
           <log-explorer-zoom-chip slot="before-chips"></log-explorer-zoom-chip>
         </log-explorer-search-box>
+        <log-explorer-show-query-button></log-explorer-show-query-button>
       </div>
+      <log-explorer-show-query-panel></log-explorer-show-query-panel>
       <log-explorer-histogram></log-explorer-histogram>
       <log-explorer-results></log-explorer-results>
     `;

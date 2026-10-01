@@ -47,7 +47,8 @@ export function toLogQuery(state: LogExplorerViewState, take: number, cursor?: s
     range: "relative" in range ? { relative: range.relative } : { from: range.from, to: range.to },
     levels: state.levels,
     filter: chipsToFilter(state.chips),
-    nativeQuery: state.native ?? null,
+    // Native mode with nothing typed yet runs as simple mode.
+    nativeQuery: state.native?.trim() ? state.native : null,
     take,
     cursor: cursor ?? null,
     sort: state.sort === "asc" ? "ascending" : "descending",

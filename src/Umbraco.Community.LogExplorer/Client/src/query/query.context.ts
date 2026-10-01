@@ -2,13 +2,22 @@ import { UmbContextBase } from "@umbraco-cms/backoffice/class-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState, mergeObservables } from "@umbraco-cms/backoffice/observable-api";
-import type { SettingsResponseModel, SourceResponseModel } from "../api/index.js";
+import { NativeQueryService, type SettingsResponseModel, type SourceResponseModel } from "../api/index.js";
 import { loadSettings } from "../settings/settings.js";
+import { canShowQuery, canUseNativeMode } from "../show-query/native-mode.js";
+import {
+  INITIAL_COMPILE_STATE,
+  QueryCompiler,
+  type CompileFn,
+  type CompileState,
+} from "../show-query/query-compiler.js";
+import { findUnsupportedChips, toQueryState } from "../show-query/unsupported-chips.js";
 import { findSource, resolveActiveSource } from "../sources/active-source.js";
 import { loadSources, type SourcesState } from "../sources/sources-loader.js";
 import { LOG_EXPLORER_ENTITY_TYPE } from "../workspace/constants.js";
 import { appendChips, removeChipAt, replaceChipAt } from "./chips.js";
 import type { FilterNode } from "./filter-node.js";
+import { toLogQuery } from "./log-query.js";
 import {
   createDefaultViewState,
   decodeViewState,
@@ -28,7 +37,15 @@ export interface LogExplorerQueryContextOptions {
   loadDefaultSource?: () => Promise<string | undefined>;
   /** Fetches the visible sources; defaults to `GET /sources`. */
   loadSources?: () => Promise<SourcesState>;
+  /** Compiles a query for "Show query"; defaults to `POST /sources/{alias}/compile`. */
+  compile?: CompileFn;
+  /** Wait before a compile is sent; tests pass 0. */
+  compileDebounceMs?: number;
 }
+
+/** The default compile request: the generated client, which carries the backoffice token. */
+const compileWithClient: CompileFn = (alias, query, signal) =>
+  NativeQueryService.compile({ path: { alias }, body: query, signal });
 
 /**
  * The explorer's shared view state (BRIEF §6.11, §11.2), two-way synced with the query string.
@@ -49,6 +66,10 @@ export interface LogExplorerQueryContextOptions {
  * The context also loads the visible sources and `DefaultSource`, and resolves the
  * {@link activeSource} from them and the `src` in the view state (see `resolveActiveSource`).
  *
+ * It also compiles the query for "Show query" whenever it changes and the source has a native
+ * language (see `QueryCompiler`), and from that answer works out which chips the source cannot
+ * run ({@link unsupportedChips}). Queries read {@link queryState}, which leaves those chips out.
+ *
  * Provided by `log-explorer-workspace`; consume it with {@link LOG_EXPLORER_QUERY_CONTEXT}.
  */
 export class LogExplorerQueryContext extends UmbContextBase {
@@ -59,6 +80,8 @@ export class LogExplorerQueryContext extends UmbContextBase {
   #loadSources: () => Promise<SourcesState>;
   /** `undefined` until `/settings` has answered; `null` when it answered with no usable default. */
   #defaultSource = new UmbBasicState<string | null | undefined>(undefined);
+  #compiled = new UmbObjectState<CompileState>(INITIAL_COMPILE_STATE);
+  #compiler: QueryCompiler;
 
   /** The whole view state. */
   readonly state = this.#state.asObservable();
@@ -88,6 +111,28 @@ export class LogExplorerQueryContext extends UmbContextBase {
     (previous, current) => previous?.alias === current?.alias,
   );
 
+  /** The latest "Show query" translation of the view state for the active source. */
+  readonly compiled = this.#compiled.asObservable();
+
+  /**
+   * Positions (in {@link LogExplorerViewState.chips}) of the chips the active source cannot run:
+   * the search box shows them disabled, and {@link queryState} leaves them out (BRIEF §6.3).
+   */
+  readonly unsupportedChips = mergeObservables(
+    [this.state, this.activeSource, this.compiled],
+    ([state, source, compiled]) => findUnsupportedChips(state.chips, source, compiled.unsupported),
+  );
+
+  /**
+   * The view state as queries should run it: {@link unsupportedChips} removed, and the native
+   * query removed when the active source does not allow native mode. Panels that query the
+   * source observe this rather than {@link state}.
+   */
+  readonly queryState = mergeObservables(
+    [this.state, this.activeSource, this.unsupportedChips],
+    ([state, source, unsupported]) => toQueryState(state, source, unsupported),
+  );
+
   /**
    * @param host - The workspace element that provides the context.
    * @param options - Optional overrides; see {@link LogExplorerQueryContextOptions}.
@@ -100,6 +145,16 @@ export class LogExplorerQueryContext extends UmbContextBase {
     const loadDefaultTimeRange = options.loadDefaultTimeRange ?? (async () => (await settings())?.defaultTimeRange);
     const loadDefaultSource = options.loadDefaultSource ?? (async () => (await settings())?.defaultSource);
     this.#loadSources = options.loadSources ?? (() => loadSources());
+    this.#compiler = new QueryCompiler(
+      options.compile ?? compileWithClient,
+      (compiled) => this.#compiled.setValue(compiled),
+      options.compileDebounceMs,
+    );
+    this.observe(
+      mergeObservables([this.state, this.activeSource], ([state, source]) => ({ state, source })),
+      ({ state, source }) => this.#compile(state, source),
+      "_observeCompile",
+    );
 
     void loadDefaultTimeRange().then((range) => this.#applyDefaults(createDefaultViewState(range)));
     void loadDefaultSource().then(
@@ -194,6 +249,11 @@ export class LogExplorerQueryContext extends UmbContextBase {
     this.update({ chips: removeChipAt(this.getState().chips, index) });
   }
 
+  /** @returns The latest compile; see {@link compiled}. */
+  getCompiled(): CompileState {
+    return this.#compiled.getValue();
+  }
+
   /** @returns The active source right now; see {@link activeSource}. */
   getActiveSource(): SourceResponseModel | undefined {
     return this.#resolve(this.#sources.getValue(), this.#defaultSource.getValue(), this.getState().source);
@@ -216,6 +276,20 @@ export class LogExplorerQueryContext extends UmbContextBase {
   update(partial: Partial<LogExplorerViewState>): void {
     this.#state.update(partial);
     this.#writeUrl("push");
+  }
+
+  /**
+   * Compiles the state for the source, unsupported chips included so the answer says which they
+   * are. A native query the source does not allow is left out, as {@link queryState} leaves it
+   * out of searches.
+   */
+  #compile(state: LogExplorerViewState, source: SourceResponseModel | undefined): void {
+    if (!source || !canShowQuery(source)) {
+      this.#compiler.reset();
+      return;
+    }
+    const native = canUseNativeMode(source) ? state.native : undefined;
+    this.#compiler.load(source.alias, toLogQuery({ ...state, native }, 1));
   }
 
   /** Arrow function so it can be added and removed as a listener with the same identity. */

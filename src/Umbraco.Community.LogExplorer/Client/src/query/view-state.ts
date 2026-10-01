@@ -36,7 +36,10 @@ export interface LogExplorerViewState {
   chips: Array<FilterNode>;
   /** The level set (ADR 0004); `null` means no level filter. Kept in {@link LEVELS} order. */
   levels: Array<Level> | null;
-  /** Native-mode query in the source's own language, if any. */
+  /**
+   * Native-mode query in the source's own language. `undefined` is simple mode; any string,
+   * including `""` (native mode with nothing typed yet), is native mode (BRIEF §6.2).
+   */
   native: string | undefined;
   /** `desc` is newest first. */
   sort: "desc" | "asc";
@@ -46,6 +49,8 @@ export interface LogExplorerViewState {
    * relative "last hour" and back keeps the range relative. `undefined` means not zoomed.
    */
   zoom?: AbsoluteRange;
+  /** Whether the show-query panel is open (UI brief §4.6). Absent means closed. */
+  showQuery?: boolean;
 }
 
 /** Fallback when the server's `DefaultTimeRange` is unknown or not a supported preset (BRIEF §6.5). */
@@ -55,7 +60,19 @@ export const FALLBACK_RELATIVE_RANGE: RelativeRange = "1h";
  * The query-string keys the view state owns. Other keys in the URL are left untouched, so the
  * backoffice or other extensions can use the query string too.
  */
-export const VIEW_STATE_KEYS = ["src", "range", "from", "to", "levels", "f", "native", "sort", "zf", "zt"] as const;
+export const VIEW_STATE_KEYS = [
+  "src",
+  "range",
+  "from",
+  "to",
+  "levels",
+  "f",
+  "native",
+  "sort",
+  "zf",
+  "zt",
+  "sq",
+] as const;
 
 /**
  * Builds the default view state.
@@ -81,7 +98,8 @@ export function createDefaultViewState(defaultTimeRange?: string): LogExplorerVi
  *
  * Keys: `src`; `range` (relative) or `from` + `to` (absolute ISO); `levels` (comma list, empty
  * value when every level is hidden); `f` (base64url JSON of the chips); `native`; `sort=asc`;
- * `zf` + `zt` (ISO) for the time zoom.
+ * `zf` + `zt` (ISO) for the time zoom; `sq=1` when the show-query panel is open. `native` is
+ * written even when empty, because an empty native query still means native mode.
  *
  * @param state - The state to encode.
  * @param defaults - The defaults to compare against.
@@ -104,12 +122,13 @@ export function encodeViewState(state: LogExplorerViewState, defaults: LogExplor
   if (levels !== null) params.set("levels", levels.join(","));
 
   if (state.chips.length > 0) params.set("f", toBase64Url(JSON.stringify(state.chips)));
-  if (state.native) params.set("native", state.native);
+  if (state.native !== undefined) params.set("native", state.native);
   if (state.sort !== defaults.sort) params.set("sort", state.sort);
   if (state.zoom) {
     params.set("zf", state.zoom.from);
     params.set("zt", state.zoom.to);
   }
+  if (state.showQuery) params.set("sq", "1");
   return params;
 }
 
@@ -128,9 +147,10 @@ export function decodeViewState(params: URLSearchParams, defaults: LogExplorerVi
     range: decodeRange(params) ?? defaults.range,
     chips: decodeChips(params.get("f")) ?? defaults.chips,
     levels: decodeLevels(params.get("levels"), defaults.levels),
-    native: params.get("native") || defaults.native,
+    native: params.get("native") ?? defaults.native,
     sort: params.get("sort") === "asc" ? "asc" : params.get("sort") === "desc" ? "desc" : defaults.sort,
     zoom: decodeAbsolute(params.get("zf"), params.get("zt")),
+    showQuery: params.get("sq") === "1" ? true : undefined,
   };
 }
 

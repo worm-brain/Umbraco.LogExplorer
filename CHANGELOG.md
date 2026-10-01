@@ -8,6 +8,7 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Added
 
+- "Show generated query" button in the query bar: opens a panel under it with the query in the source's own language, one clause per line, with a copy button (kept in the URL as `sq=1`). Filters the source cannot run are shown struck through with "Not supported by {source}" and left out of the search, never silently dropped. "Edit as native" moves the query into the search box in native mode, labelled with the language: the text is checked as you type and an invalid query is marked with its error and position; Enter runs it, ANDed with any chips, and the language tag's button returns to simple search. Native mode is hidden for sources with `AllowNativeQuery: false`.
 - `POST /umbraco/log-explorer/api/v1/sources/{alias}/compile` translates a query into the source's native language, one clause per line, and lists the filters it cannot express; `POST /sources/{alias}/validate` (`{ native }`) checks a native query and reports the error with its position. `GET /sources` adds `allowNativeQuery`, and a source configured with `AllowNativeQuery: false` refuses native queries with `unsupported_feature`.
 - `Fake` sources accept an `Operators` setting (for example `equals,notEquals`) to model a source that cannot run every filter, and check native queries for unclosed quotes and brackets.
 - Search box aliases `status:` (for `StatusCode`) and `machine:` (for `MachineName`), so `-status:200` filters out successful requests.
