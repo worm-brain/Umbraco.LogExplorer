@@ -78,7 +78,7 @@ internal sealed class UmbracoLogFileLocator
 
         return Directory
             .EnumerateFiles(directory)
-            .Select(TryParse)
+            .Select(path => ParseFileName(Path.GetFileName(path)))
             .OfType<LogFile>()
             .OrderBy(file => file.Date)
             .ThenBy(file => file.MachineName, StringComparer.OrdinalIgnoreCase)
@@ -86,12 +86,21 @@ internal sealed class UmbracoLogFileLocator
             .ToArray();
     }
 
-    private LogFile? TryParse(string path)
+    /// <summary>
+    /// Reads machine, date and roll index from a file name in the configured format, whether or not
+    /// the file exists, for example one named by a cursor after retention deleted it.
+    /// </summary>
+    /// <param name="fileName">A file name, without a directory.</param>
+    /// <returns>The file, with its path in the configured directory; null when the name does not match the format.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="fileName"/> is null.</exception>
+    public LogFile? ParseFileName(string fileName)
     {
-        string fileName = Path.GetFileName(path);
+        ArgumentNullException.ThrowIfNull(fileName);
         Match match = _fileNamePattern.Match(fileName);
         if (
-            !match.Success
+            // A name from a cursor must not reach another directory through the machine placeholder.
+            fileName != Path.GetFileName(fileName)
+            || !match.Success
             || !DateOnly.TryParseExact(
                 match.Groups[DateGroup].Value,
                 "yyyyMMdd",
@@ -120,7 +129,13 @@ internal sealed class UmbracoLogFileLocator
         }
 
         Group machine = match.Groups[MachineGroup];
-        return new LogFile(path, fileName, machine.Success ? machine.Value : null, date, rollIndex);
+        return new LogFile(
+            Path.Combine(_configuration.LogDirectory, fileName),
+            fileName,
+            machine.Success ? machine.Value : null,
+            date,
+            rollIndex
+        );
     }
 
     private static Regex BuildFileNamePattern(
