@@ -79,6 +79,16 @@ describe("encodeViewState / decodeViewState", () => {
     expect([encodeViewState(state, defaults).toString(), roundTrip(state).showQuery]).toEqual(["sq=1", true]);
   });
 
+  it("round-trips Around-this mode as around={record id}", () => {
+    const state = { ...defaults, chips, around: "aGVsbG8_d29ybGQ" };
+
+    expect([encodeViewState(state, defaults).get("around"), roundTrip(state)]).toEqual(["aGVsbG8_d29ybGQ", state]);
+  });
+
+  it("reads an empty around parameter as the normal list", () => {
+    expect(decodeViewState(new URLSearchParams("around="), defaults).around).toBeUndefined();
+  });
+
   it("keeps native mode with an empty native query across a reload", () => {
     expect(roundTrip({ ...defaults, native: "" }).native).toBe("");
   });

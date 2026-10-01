@@ -51,6 +51,13 @@ export interface LogExplorerViewState {
   zoom?: AbsoluteRange;
   /** Whether the show-query panel is open (UI brief §4.6). Absent means closed. */
   showQuery?: boolean;
+  /**
+   * Id of the entry the results list is showing the neighbours of ("Around this", UI brief
+   * §4.10). While set, the results list ignores every filter and shows the entries either side of
+   * it; the histogram and fields panel keep showing the filtered query. Absent means the normal
+   * list. Not validated here: a stale id shows the results panel's error banner.
+   */
+  around?: string;
 }
 
 /** Fallback when the server's `DefaultTimeRange` is unknown or not a supported preset (BRIEF §6.5). */
@@ -72,6 +79,7 @@ export const VIEW_STATE_KEYS = [
   "zf",
   "zt",
   "sq",
+  "around",
 ] as const;
 
 /**
@@ -98,7 +106,8 @@ export function createDefaultViewState(defaultTimeRange?: string): LogExplorerVi
  *
  * Keys: `src`; `range` (relative) or `from` + `to` (absolute ISO); `levels` (comma list, empty
  * value when every level is hidden); `f` (base64url JSON of the chips); `native`; `sort=asc`;
- * `zf` + `zt` (ISO) for the time zoom; `sq=1` when the show-query panel is open. `native` is
+ * `zf` + `zt` (ISO) for the time zoom; `sq=1` when the show-query panel is open; `around` (the
+ * record id) in Around-this mode. `native` is
  * written even when empty, because an empty native query still means native mode.
  *
  * @param state - The state to encode.
@@ -129,6 +138,7 @@ export function encodeViewState(state: LogExplorerViewState, defaults: LogExplor
     params.set("zt", state.zoom.to);
   }
   if (state.showQuery) params.set("sq", "1");
+  if (state.around) params.set("around", state.around);
   return params;
 }
 
@@ -151,6 +161,7 @@ export function decodeViewState(params: URLSearchParams, defaults: LogExplorerVi
     sort: params.get("sort") === "asc" ? "asc" : params.get("sort") === "desc" ? "desc" : defaults.sort,
     zoom: decodeAbsolute(params.get("zf"), params.get("zt")),
     showQuery: params.get("sq") === "1" ? true : undefined,
+    around: params.get("around") || undefined,
   };
 }
 

@@ -167,7 +167,11 @@ export default {
     actionAroundThis: "Around this",
     actionSamePattern: "Same pattern",
     actionCopyJson: "Copy as JSON",
+    detailSameRequestApplied: (id: string) => `Showing every entry from request ${id}`,
+    detailSameRequestUnavailable: (fields: string) => `Same request needs a value in one of: ${fields}`,
     aroundBanner: (time: string) => `Showing 7 entries either side of ${time}, ignoring filters`,
+    aroundBannerNoAnchor: "Entries around the selected entry, ignoring filters",
+    aroundError: (message: string) => `Could not load the entries around this entry: ${message}`,
     aroundBack: "Back to filtered results",
 
     // Saved views and show query (UI brief §4.5, §4.6).

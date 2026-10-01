@@ -27,6 +27,7 @@ import {
   visibleRows,
   type PropertyNode,
 } from "./property-tree.js";
+import { DEFAULT_CORRELATION_FIELDS, sameRequestTarget } from "./same-request.js";
 import { renderStackTrace, splitStackTrace } from "./stack-trace.js";
 
 /**
@@ -54,10 +55,11 @@ export class LogExplorerEntryCloseEvent extends Event {
  * `uui-tag` and `uui-button`s.
  *
  * Sections, top to bottom: header (level badge, local date and time, machine, close), the
- * rendered message whose property values add include chips, the actions (Same pattern, Copy as
- * JSON; Same request and Around this arrive with #42), the message template, the properties as a
+ * rendered message whose property values add include chips, the actions (Same request, Around
+ * this, Same pattern, Copy as JSON), the message template, the properties as a
  * typed tree with `+`/`-` buttons, and the exception with framework frames collapsed. Chips are
- * added through `LogExplorerQueryContext`. Log text is rendered as text nodes only.
+ * added through `LogExplorerQueryContext`, which also switches the results list to Same request
+ * or Around this. Log text is rendered as text nodes only.
  *
  * Positioning is the host's job: the Search view places it.
  *
@@ -79,6 +81,10 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
   @state()
   private _expanded: ReadonlySet<string> = new Set();
 
+  /** `CorrelationFields` from the query context; decides what Same request filters on. */
+  @state()
+  private _correlationFields: ReadonlyArray<string> = DEFAULT_CORRELATION_FIELDS;
+
   /** Whether the stack trace shows framework frames. */
   @state()
   private _showFramework = false;
@@ -95,7 +101,14 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
 
   constructor() {
     super();
-    this.consumeContext(LOG_EXPLORER_QUERY_CONTEXT, (context) => (this.#context = context));
+    this.consumeContext(LOG_EXPLORER_QUERY_CONTEXT, (context) => {
+      this.#context = context;
+      this.observe(
+        context?.correlationFields,
+        (fields) => (this._correlationFields = fields ?? DEFAULT_CORRELATION_FIELDS),
+        "_observeCorrelationFields",
+      );
+    });
     this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => (this.#notifications = context));
     // Escape anywhere inside the drawer closes it. Listening on the host catches keydowns from
     // the shadow tree too (they are composed), and a control that handles Escape itself can
@@ -145,6 +158,16 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
 
   #addChip(chip: FilterNode | undefined): void {
     if (chip) this.#context?.addChips([chip]);
+  }
+
+  /** Replaces the filters with the request's correlation chip and says which request it is. */
+  #sameRequest(record: LogRecord): void {
+    const target = sameRequestTarget(record, this._correlationFields);
+    if (!target) return;
+    this.#context?.showSameRequest(target.chip);
+    this.#notifications?.peek("positive", {
+      data: { message: this.localize.term("logExplorer_detailSameRequestApplied", String(target.value)) },
+    });
   }
 
   #samePattern(record: LogRecord): void {
@@ -238,10 +261,34 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
   }
 
   #renderActions(record: LogRecord) {
-    // Same request and Around this (UI brief §4.11 section 3) come with #42 and take the first
-    // row of this grid then.
+    const target = sameRequestTarget(record, this._correlationFields);
+    // A disabled uui-button gets no pointer events, so its tooltip goes on a wrapper; the reason
+    // is also in the label, for screen readers.
+    const unavailable = this.localize.term(
+      "logExplorer_detailSameRequestUnavailable",
+      this._correlationFields.join(", "),
+    );
     return html`
       <div class="actions">
+        <span class="action" title=${target ? "" : unavailable}>
+          <uui-button
+            look="primary"
+            label=${target ? this.localize.term("logExplorer_actionSameRequest") : unavailable}
+            ?disabled=${!target}
+            @click=${() => this.#sameRequest(record)}
+          >
+            <uui-icon name="icon-forking"></uui-icon>
+            ${this.localize.term("logExplorer_actionSameRequest")}
+          </uui-button>
+        </span>
+        <uui-button
+          look="secondary"
+          label=${this.localize.term("logExplorer_actionAroundThis")}
+          @click=${() => this.#context?.showAround(record.id)}
+        >
+          <uui-icon name="icon-navigation-vertical"></uui-icon>
+          ${this.localize.term("logExplorer_actionAroundThis")}
+        </uui-button>
         <uui-button
           look="secondary"
           label=${this.localize.term("logExplorer_actionSamePattern")}
@@ -531,6 +578,12 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
 
       .actions uui-icon {
         margin-right: var(--uui-size-space-2);
+      }
+
+      /* The wrapper carries the disabled Same request tooltip; as a grid it stretches the button
+         to the cell like the other actions. */
+      .action {
+        display: grid;
       }
 
       .none {

@@ -76,6 +76,7 @@ beforeEach(async () => {
   context = new LogExplorerQueryContext(workspace, {
     loadDefaultTimeRange: async () => undefined,
     loadDefaultSource: async () => undefined,
+    loadCorrelationFields: async () => undefined,
     loadSources: async () => ({ status: "empty" }),
   });
   drawer = new LogExplorerEntryDetailElement();
@@ -121,6 +122,33 @@ describe("log-explorer-entry-detail", () => {
     expect(context.getState().chips).toEqual([
       { kind: "condition", field: "@template", op: "equals", value: ERROR_ENTRY.messageTemplate },
     ]);
+  });
+
+  it("disables Same request, saying why, when no correlation field has a value", () => {
+    const button = byLabel("Same request needs a value in one of: @traceId, RequestId, HttpRequestId");
+
+    expect(button.hasAttribute("disabled")).toBe(true);
+  });
+
+  it("replaces the filters, levels and zoom with the request chip for Same request", async () => {
+    context.update({ chips: [{ kind: "text", text: "timeout" }], levels: ["error"] });
+    drawer.record = { ...ERROR_ENTRY, attributes: { ...ERROR_ENTRY.attributes, RequestId: "0HNFKQ41A1:00000001" } };
+    await settle();
+
+    byLabel("Same request").click();
+    await settle();
+
+    expect([context.getState().chips, context.getState().levels]).toEqual([
+      [{ kind: "condition", field: "RequestId", op: "equals", value: "0HNFKQ41A1:00000001" }],
+      null,
+    ]);
+  });
+
+  it("switches the results to the entries around this one", async () => {
+    byLabel("Around this").click();
+    await settle();
+
+    expect(context.getState().around).toBe("e7");
   });
 
   it("renders log text as text, never as HTML", () => {
