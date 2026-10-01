@@ -35,6 +35,30 @@ describe("en dictionary", () => {
     expect(en.logExplorer.sourcesError("Forbidden")).toBe("Could not load log sources: Forbidden");
   });
 
+  it.each([
+    ["one entry", 1, "1", "17:07, 1 entry, select to zoom in"],
+    ["several entries", 1234, "1,234", "17:07, 1,234 entries, select to zoom in"],
+    ["no entries", 0, "0", "17:07, 0 entries, select to zoom in"],
+  ])("words a histogram bar with %s", (_name, count, formatted, expected) => {
+    expect(en.logExplorer.histogramBarLabel("17:07", count, formatted)).toBe(expected);
+  });
+
+  it("words the histogram summary and level toggles in the singular for one entry", () => {
+    expect([
+      en.logExplorer.histogramSummary(1, "1", "00:00", "01:00"),
+      en.logExplorer.histogramLevelLabel("ERROR", 1, "1"),
+    ]).toEqual(["1 entry · 00:00 to 01:00", "ERROR, 1 entry"]);
+  });
+
+  it("words the drawer's counts in the singular and plural", () => {
+    expect([
+      en.logExplorer.detailArraySummary(1),
+      en.logExplorer.detailObjectSummary(3),
+      en.logExplorer.detailFrameworkFramesHidden(1),
+      en.logExplorer.detailFrameworkFramesHidden(2),
+    ]).toEqual(["1 item", "3 properties", "… 1 framework frame hidden", "… 2 framework frames hidden"]);
+  });
+
   it("formats the source menu note from the language and type", () => {
     expect(en.logExplorer.sourceNote("KQL", "ApplicationInsights")).toBe("KQL · ApplicationInsights");
   });

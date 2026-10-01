@@ -117,7 +117,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
     this.consumeContext(LOG_EXPLORER_QUERY_CONTEXT, (context) => {
       this.#context = context;
       this.observe(
-        context?.state,
+        context?.queryState,
         (viewState) => {
           this.#viewState = viewState;
           this._levels = viewState?.levels ?? null;
@@ -274,7 +274,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
               data-level=${level}
               compact
               look=${on ? "outline" : "secondary"}
-              label=${count === undefined ? name : this.localize.term("logExplorer_histogramLevelLabel", name, countText)}
+              label=${count === undefined ? name : this.localize.term("logExplorer_histogramLevelLabel", name, count, countText)}
               title=${this.localize.term(on ? "logExplorer_histogramLevelHide" : "logExplorer_histogramLevelShow", name)}
               @click=${() => this.#toggle(level)}
             >
@@ -301,6 +301,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
         <span>
           ${this.localize.term(
             "logExplorer_histogramSummary",
+            total,
             total.toLocaleString(lang),
             format.format(new Date(result.range.from)),
             format.format(new Date(result.range.to)),
@@ -371,7 +372,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
       .reverse()
       .map((segment) => `${segment.level.toUpperCase()} ${segment.count.toLocaleString(lang)}`)
       .join(" · ");
-    const label = this.localize.term("logExplorer_histogramBarLabel", time, total.toLocaleString(lang));
+    const label = this.localize.term("logExplorer_histogramBarLabel", time, total, total.toLocaleString(lang));
     return html`
       <button
         type="button"

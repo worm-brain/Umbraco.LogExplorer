@@ -16,9 +16,11 @@ namespace Umbraco.Community.LogExplorer.Infrastructure.Api;
 /// <see cref="ForbiddenSourceException"/> -> 403 <c>forbidden_source</c>;
 /// <see cref="NotSupportedException"/> -> 400 <c>unsupported_feature</c>;
 /// <see cref="RangeTooLargeException"/> -> 400 <c>range_too_large</c>;
+/// <see cref="InvalidNativeQueryException"/> -> 400 <c>invalid_native_query</c> with a
+/// <c>position</c> extension (zero-based offset, or null) so the search box can mark the error;
 /// any other <see cref="ArgumentException"/> (a bad range, cursor, page size or regex in the
-/// query) -> 400 <c>invalid_query</c>. Further codes (<c>invalid_native_query</c>,
-/// <c>upstream_error</c>, <c>throttled</c>) are added with the endpoints that raise them.
+/// query) -> 400 <c>invalid_query</c>. Further codes (<c>upstream_error</c>,
+/// <c>throttled</c>) are added with the endpoints that raise them.
 /// </remarks>
 internal sealed class LogExplorerProblemFilter(ProblemDetailsFactory problemDetailsFactory)
     : IExceptionFilter
@@ -43,6 +45,10 @@ internal sealed class LogExplorerProblemFilter(ProblemDetailsFactory problemDeta
                 StatusCodes.Status400BadRequest,
                 LogExplorerApi.ProblemCodes.UnsupportedFeature
             ),
+            InvalidNativeQueryException => (
+                StatusCodes.Status400BadRequest,
+                LogExplorerApi.ProblemCodes.InvalidNativeQuery
+            ),
             RangeTooLargeException => (
                 StatusCodes.Status400BadRequest,
                 LogExplorerApi.ProblemCodes.RangeTooLarge
@@ -65,6 +71,10 @@ internal sealed class LogExplorerProblemFilter(ProblemDetailsFactory problemDeta
             detail: context.Exception.Message
         );
         details.Extensions["code"] = problem.code;
+        if (context.Exception is InvalidNativeQueryException invalidNative)
+        {
+            details.Extensions["position"] = invalidNative.Position;
+        }
 
         context.Result = new ObjectResult(details) { StatusCode = problem.status };
         context.ExceptionHandled = true;

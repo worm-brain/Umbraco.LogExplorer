@@ -54,14 +54,18 @@ export default {
     // Histogram and its level toggles (UI brief §4.7), and the time chip (§4.4).
     histogramLabel: "Entries over time",
     histogramLevelsLabel: "Show or hide levels",
-    histogramLevelLabel: (level: string, count: string) => `${level}, ${count} entries`,
+    // Counts take the number (for the singular) and its locale-formatted text.
+    histogramLevelLabel: (level: string, count: number, formatted: string) =>
+      `${level}, ${formatted} ${count === 1 ? "entry" : "entries"}`,
     histogramLevelHide: (level: string) => `Hide ${level} entries`,
     histogramLevelShow: (level: string) => `Show ${level} entries`,
-    histogramSummary: (count: string, from: string, to: string) => `${count} entries · ${from} to ${to}`,
+    histogramSummary: (count: number, formatted: string, from: string, to: string) =>
+      `${formatted} ${count === 1 ? "entry" : "entries"} · ${from} to ${to}`,
     histogramApproximate: "Approximate",
     histogramApproximateHint:
       "Counts cover only part of the range: the source sampled its data or stopped at its scan budget.",
-    histogramBarLabel: (time: string, count: string) => `${time}, ${count} entries, select to zoom in`,
+    histogramBarLabel: (time: string, count: number, formatted: string) =>
+      `${time}, ${formatted} ${count === 1 ? "entry" : "entries"}, select to zoom in`,
     histogramError: (message: string) => `Could not load the histogram: ${message}`,
     histogramAlreadyZoomed: "Already zoomed in. Clear the time chip to zoom out.",
     zoomChip: (from: string, to: string) => `Time: ${from} to ${to}`,
@@ -113,6 +117,17 @@ export default {
     // Fields panel and results list (UI brief §4.8, §4.9).
     fieldsHeader: "Fields",
     fieldsSubheader: "top values in results",
+    fieldsHide: "Hide fields panel",
+    fieldsShow: "Show fields panel",
+    fieldsFilterLabel: "Filter fields",
+    fieldsPresence: (percent: string) => `${percent}% of entries`,
+    fieldsInclude: (field: string, value: string, count: string) => `Include ${field} ${value}, ${count} entries`,
+    fieldsExclude: (field: string, value: string) => `Exclude ${field} ${value}`,
+    fieldsApproximateHint: (from: string, to: string) =>
+      `The source sampled or stopped at its scan budget, so these counts cover ${from} to ${to} only.`,
+    fieldsEmpty: "No field values in the current results.",
+    fieldsNoMatch: "No fields match the filter.",
+    fieldsError: (message: string) => `Could not load fields: ${message}`,
     columnTime: "Time",
     columnLevel: "Level",
     columnMessage: "Message",
@@ -129,6 +144,26 @@ export default {
     detailMessageTemplate: "Message template",
     detailProperties: "Properties",
     detailException: "Exception",
+    detailLabel: "Entry details",
+    detailClose: "Close entry details",
+    detailFilterOn: (field: string) => `Filter on ${field}`,
+    detailInclude: (name: string, value: string) => `Include ${name} ${value}`,
+    detailExclude: (name: string, value: string) => `Exclude ${name} ${value}`,
+    detailExpand: (name: string) => `Expand ${name}`,
+    detailCollapse: (name: string) => `Collapse ${name}`,
+    detailPropertyName: "Name",
+    detailPropertyValue: "Value",
+    detailPropertyFilter: "Filter",
+    detailNoProperties: "This entry has no properties.",
+    detailObjectSummary: (count: number) => (count === 1 ? "1 property" : `${count} properties`),
+    detailArraySummary: (count: number) => (count === 1 ? "1 item" : `${count} items`),
+    detailShowFrameworkFrames: "Show framework frames",
+    detailHideFrameworkFrames: "Hide framework frames",
+    detailFrameworkFramesHidden: (count: number) =>
+      count === 1 ? "… 1 framework frame hidden" : `… ${count} framework frames hidden`,
+    detailCopied: "Entry copied as JSON",
+    detailCopyFailed: "Could not copy the entry to the clipboard",
+    detailSamePatternApplied: (template: string) => `Filtering on the message template ${template}`,
     actionSameRequest: "Same request",
     actionAroundThis: "Around this",
     actionSamePattern: "Same pattern",
@@ -140,6 +175,20 @@ export default {
     savedViewsCaption: "Saved views",
     savedViewsSaveCurrent: "Save current view…",
     showQueryEditAsNative: "Edit as native",
+    showQueryButton: "Show generated query",
+    showQueryLabel: (language: string) => `Generated ${language} query`,
+    showQueryEmpty: "(no filter: every entry in the time range)",
+    showQueryError: (message: string) => `Could not compile the query: ${message}`,
+    chipUnsupported: (source: string) => `Not supported by ${source}`,
+    chipUnsupportedDescription: (description: string, source: string) => `${description}, not supported by ${source}`,
+
+    // Native mode in the search box (BRIEF §6.2, UI brief §4.15).
+    nativeModeLabel: (language: string) => `Search logs with a ${language} query`,
+    nativeModePlaceholder: (language: string) => `Type a ${language} query, then press Enter`,
+    nativeModeLeave: (language: string) => `Leave ${language} mode and return to simple search`,
+    nativeInvalid: (message: string) => `Invalid query: ${message}`,
+    nativeInvalidAt: (message: string, position: string) => `Invalid query at character ${position}: ${message}`,
+    nativeValidateError: (message: string) => `Could not check the query: ${message}`,
 
     // Overview (UI brief §4.13).
     overviewEntriesByLevel: (range: string) => `Entries by level · ${range}`,

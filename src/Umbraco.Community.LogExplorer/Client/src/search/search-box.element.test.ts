@@ -1,15 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { UmbControllerHostElementMixin } from "@umbraco-cms/backoffice/controller-api";
+import type { SourceResponseModel } from "../api/index.js";
 import { LogExplorerQueryContext } from "../query/query.context.js";
 import type { FilterNode } from "../query/filter-node.js";
 import { LogExplorerSearchBoxElement } from "./search-box.element.js";
 
 // happy-dom has no ElementInternals, which every UUI form control (uui-input, uui-toggle) calls
 // in its constructor. These tests never touch form association, so a stub whose members are
-// all no-ops is enough for the controls to construct and render.
+// all no-ops is enough for the controls to construct and render. `form` is null (no form), as
+// uui-input's own Enter handler reads it to submit one.
 if (!("attachInternals" in HTMLElement.prototype)) {
   Object.defineProperty(HTMLElement.prototype, "attachInternals", {
-    value: () => new Proxy({}, { get: (_, key) => (key === "validity" ? {} : () => undefined) }),
+    value: () =>
+      new Proxy({}, { get: (_, key) => (key === "validity" ? {} : key === "form" ? null : () => undefined) }),
   });
 }
 
@@ -101,5 +104,67 @@ describe("log-explorer-search-box", () => {
     chip.shadowRoot!.querySelector("uui-button")!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     expect(context.getState().chips).toEqual([timeout]);
+  });
+});
+
+describe("log-explorer-search-box with a native-capable source", () => {
+  const sample: SourceResponseModel = {
+    alias: "sample",
+    displayName: "Sample data",
+    type: "Fake",
+    sensitive: false,
+    // `startsWith` is not declared, so the path chip cannot run.
+    capabilities: {
+      features: ["nativeQuery"],
+      operators: ["equals"],
+      nativeLanguage: "Sample",
+      maxRangeSeconds: null,
+      maxPageSize: 1000,
+    },
+    allowNativeQuery: true,
+  };
+
+  beforeEach(async () => {
+    workspace.remove();
+    workspace = new TestWorkspaceElement();
+    context = new LogExplorerQueryContext(workspace, {
+      loadDefaultTimeRange: async () => undefined,
+      loadDefaultSource: async () => "sample",
+      loadSources: async () => ({ status: "loaded", sources: [sample] }),
+      compile: async () => ({ data: { native: null, unsupported: [] } }),
+      compileDebounceMs: 0,
+    });
+    box = new LogExplorerSearchBoxElement();
+    workspace.appendChild(box);
+    document.body.appendChild(workspace);
+    await settle();
+    context.addChips([pathApi, timeout]);
+    await settle();
+  });
+
+  it("draws the chip the source cannot run as unsupported and the others normally", () => {
+    const chips = [...box.shadowRoot!.querySelectorAll("log-explorer-filter-chip")];
+
+    expect(chips.map((chip) => chip.unsupported)).toEqual([true, false]);
+  });
+
+  it("stores the typed text as the native query on Enter in native mode, without parsing it", async () => {
+    context.update({ native: "" });
+    await settle();
+
+    press("Enter", 'text("slow")');
+
+    expect([context.getState().native, context.getState().chips]).toEqual(['text("slow")', [pathApi, timeout]]);
+  });
+
+  it("returns to simple mode from the language tag's button", async () => {
+    context.update({ native: 'text("slow")' });
+    await settle();
+
+    box
+      .shadowRoot!.querySelector("uui-tag.language uui-button")!
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    expect(context.getState().native).toBeUndefined();
   });
 });

@@ -32,3 +32,22 @@ export function rowWindow(
     end: Math.min(count, lastVisible + overscan),
   };
 }
+
+/**
+ * The scroll offset that brings one row fully into view, scrolling as little as possible: a row
+ * already fully visible leaves the offset alone, one above aligns to the top, one below to the
+ * bottom. Used to return focus to a row the window has scrolled out of the DOM.
+ *
+ * @param index - The row to reveal.
+ * @param rowHeight - Height of every row in pixels.
+ * @param scrollTop - The list's current scroll offset.
+ * @param viewportHeight - The list's visible height.
+ * @returns The new scroll offset, never negative.
+ */
+export function scrollTopToReveal(index: number, rowHeight: number, scrollTop: number, viewportHeight: number): number {
+  const top = index * rowHeight;
+  const bottom = top + rowHeight;
+  if (top < scrollTop) return Math.max(0, top);
+  if (bottom > scrollTop + viewportHeight) return Math.max(0, bottom - viewportHeight);
+  return scrollTop;
+}
