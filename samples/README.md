@@ -44,6 +44,22 @@ bun run e2e:report                 # the HTML report of the last run
 `E2E_SITE17_PORT` / `E2E_SITE18_PORT` change the ports. A site already running on its e2e port is
 reused; run with `E2E_SKIP_BUILD=1` then, because the build cannot replace its locked DLLs.
 
+## Package smoke test
+
+The release workflow installs the packed nupkgs on clean spawned sites before publishing (ADR 0022).
+To run it locally (needs uv; sites go in a temp folder, on ports from 44800):
+
+```sh
+dotnet pack Umbraco.Community.LogExplorer.slnx -o <pkgs17> -p:UmbracoMajor=17 -p:Version=17.0.0-alpha.0
+uv run tests/package-smoke/smoke_nupkg.py --packages <pkgs17> --major 17       # 17.0.0 and the newest 17
+dotnet pack Umbraco.Community.LogExplorer.slnx -o <pkgs18> -p:UmbracoMajor=18 -p:Version=18.0.0-alpha.0
+uv run tests/package-smoke/smoke_nupkg.py --packages <pkgs18> --major 18 --umbraco 18.1.1   # one version
+```
+
+Use a separate output folder per major. `--keep` leaves the sites running for a look (admin
+`admin@example.com` / `Password1234!`); `--root` puts them in a folder of your choice, where the
+harness's `umbraco-spawn-harness remove <name> --root <root>` deletes them afterwards.
+
 ## Sample sources
 
 `appsettings.Development.json` configures the site's own log files as the default source and two

@@ -430,8 +430,9 @@ test-results/
 .AppleDouble
 .LSOverride
 
-# Icon must end with two \r
-Icon
+# macOS folder icon files ("Icon" + CR). A bare "Icon" also matched assets/icon/ on
+# case-insensitive checkouts, so the package icon was never committed.
+Icon[\r]
 
 
 # Thumbnails
