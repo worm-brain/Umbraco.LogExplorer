@@ -4,7 +4,7 @@ using Umbraco.Community.LogExplorer.Features.Sources;
 
 namespace Umbraco.Community.LogExplorer.Api.Tests.Features.Settings;
 
-/// <summary><c>GET /settings</c> reflects the configured options (#49, ADR 0011).</summary>
+/// <summary><c>GET /settings</c> reflects the configured options (#49, #86, ADR 0011).</summary>
 public class GetSettingsControllerTests
 {
     [Fact]
@@ -17,7 +17,10 @@ public class GetSettingsControllerTests
         SettingsResponseModel settings = controller.GetSettings();
 
         // Assert
-        Assert.Equal(new SettingsResponseModel(true, "files", "1h"), settings);
+        Assert.Equal(
+            (true, "files", "1h"),
+            (settings.HideCoreLogViewer, settings.DefaultSource, settings.DefaultTimeRange)
+        );
     }
 
     [Fact]
@@ -39,6 +42,26 @@ public class GetSettingsControllerTests
         SettingsResponseModel settings = controller.GetSettings();
 
         // Assert
-        Assert.Equal(new SettingsResponseModel(false, "sample", "24h"), settings);
+        Assert.Equal(
+            (false, "sample", "24h"),
+            (settings.HideCoreLogViewer, settings.DefaultSource, settings.DefaultTimeRange)
+        );
+    }
+
+    [Fact]
+    public void GetSettings_ConfiguredPinnedFacets_ReturnsThemInOrder()
+    {
+        // Arrange
+        var controller = new GetSettingsController(
+            Options.Create(
+                new LogExplorerOptions { PinnedFacets = ["StatusCode", "SourceContext"] }
+            )
+        );
+
+        // Act
+        SettingsResponseModel settings = controller.GetSettings();
+
+        // Assert
+        Assert.Equal(["StatusCode", "SourceContext"], settings.PinnedFacets);
     }
 }

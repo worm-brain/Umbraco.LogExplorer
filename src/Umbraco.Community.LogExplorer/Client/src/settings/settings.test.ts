@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import type { SettingsResponseModel } from "../api/index.js";
 import { hideCoreLogViewerIfConfigured, loadSettings, type ExtensionExcluder } from "./settings.js";
 
-const defaults: SettingsResponseModel = { hideCoreLogViewer: true, defaultSource: "files", defaultTimeRange: "1h" };
+const defaults: SettingsResponseModel = {
+  hideCoreLogViewer: true,
+  defaultSource: "files",
+  defaultTimeRange: "1h",
+  pinnedFacets: ["SourceContext"],
+};
 
 /** A registry fake that records which aliases were excluded. */
 function fakeRegistry(): ExtensionExcluder & { excluded: Array<string> } {

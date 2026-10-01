@@ -24,7 +24,10 @@ Alternatives considered:
 ## Decision
 
 - Add `GET /umbraco/log-explorer/api/v1/settings` (Phase 1), returning
-  `{ hideCoreLogViewer, defaultSource, defaultTimeRange }` from `IOptions<LogExplorerOptions>`.
+  `{ hideCoreLogViewer, defaultSource, defaultTimeRange, pinnedFacets }` from
+  `IOptions<LogExplorerOptions>`. `pinnedFacets` (added by #86) is the BRIEF §13 list the fields
+  panel shows first, in order; the client falls back to the BRIEF §13 defaults when the request
+  fails.
 - It derives from `LogExplorerApiControllerBase`, so it has the same Settings-section policy and
   appears in the `log-explorer` OpenAPI document on both majors.
 - Only UI flags and defaults are exposed. Sources, masking rules and secrets stay server-side
