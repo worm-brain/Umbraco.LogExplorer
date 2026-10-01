@@ -250,17 +250,10 @@ internal sealed class MergedLogStream : IDisposable
             ? null
             : ParsePositions(locator, starts);
 
-        // A file's date is the writer's local day while timestamps are UTC, so a day either side
-        // keeps files from writers in any time zone.
-        DateOnly firstDay = DateOnly.FromDateTime(range.From.UtcDateTime).AddDays(-1);
-        DateOnly lastDay = DateOnly.FromDateTime(range.To.UtcDateTime).AddDays(1);
-
         var tally = new ReadTally();
         var streams = new List<MachineStream>();
         foreach (
-            IGrouping<string, LogFile> machine in locator
-                .GetFiles()
-                .Where(file => file.Date >= firstDay && file.Date <= lastDay)
+            IGrouping<string, LogFile> machine in GetCandidateFiles(locator, range)
                 .GroupBy(StreamKey, StringComparer.OrdinalIgnoreCase)
                 .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
         )
@@ -323,6 +316,30 @@ internal sealed class MergedLogStream : IDisposable
         }
 
         return merged;
+    }
+
+    /// <summary>
+    /// The files a stream over <paramref name="range"/> reads from: those dated from the day before
+    /// <c>From</c> to the day after <c>To</c>, as the remarks on the class explain. Callers that key
+    /// a cache on the files' state fingerprint exactly these.
+    /// </summary>
+    /// <param name="locator">Lists the log files.</param>
+    /// <param name="range">The range to read.</param>
+    /// <returns>The candidate files, in the locator's order.</returns>
+    /// <exception cref="ArgumentNullException">An argument is null.</exception>
+    public static IReadOnlyList<LogFile> GetCandidateFiles(
+        UmbracoLogFileLocator locator,
+        ResolvedRange range
+    )
+    {
+        ArgumentNullException.ThrowIfNull(locator);
+        ArgumentNullException.ThrowIfNull(range);
+
+        // A file's date is the writer's local day while timestamps are UTC, so a day either side
+        // keeps files from writers in any time zone.
+        DateOnly firstDay = DateOnly.FromDateTime(range.From.UtcDateTime).AddDays(-1);
+        DateOnly lastDay = DateOnly.FromDateTime(range.To.UtcDateTime).AddDays(1);
+        return [.. locator.GetFiles().Where(file => file.Date >= firstDay && file.Date <= lastDay)];
     }
 
     private static Dictionary<string, (LogFile File, long Offset)> ParsePositions(
