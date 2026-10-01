@@ -24,3 +24,9 @@ dotnet_sort_system_directives_first = true
 dotnet_diagnostic.CA1707.severity = none
 # xUnit discovers public test classes; sealing or making them static is noise here.
 dotnet_diagnostic.CA1515.severity = none
+
+[samples/**.cs]
+# Sample sites are dev tools, never shipped: logging-performance rules (LoggerMessage delegates) would
+# only obscure the varied, hand-written message templates the log generator exists to produce.
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none

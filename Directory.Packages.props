@@ -17,6 +17,12 @@
     <PackageVersion Include="Microsoft.ICU.ICU4C.Runtime" Version="72.1.0.3" />
   </ItemGroup>
 
+  <ItemGroup Label="Serilog">
+    <!-- Versions Umbraco 17.7 depends on (Umbraco.Cms.Infrastructure nuspec), so tests write and read the same formats. -->
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageVersion Include="Serilog.Formatting.Compact" Version="3.0.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Testing">
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />

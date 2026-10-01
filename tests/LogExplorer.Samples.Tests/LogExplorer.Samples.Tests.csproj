@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Tests for the sample-site log generator's file scenarios. FileScenarios.cs is compiled in directly
+    (it has no Umbraco dependency), so the test needs no Umbraco host.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>LogExplorer.Samples.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile
+      Include="..\..\samples\Shared\LogGenerator\FileScenarios.cs"
+      Link="LogGenerator\FileScenarios.cs"
+    />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Formatting.Compact" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

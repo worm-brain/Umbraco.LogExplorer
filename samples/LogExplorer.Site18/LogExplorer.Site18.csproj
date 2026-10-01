@@ -23,6 +23,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The log generator (BRIEF Appendix C) is shared source, compiled into each sample site. -->
+    <Compile
+      Include="..\Shared\LogGenerator\**\*.cs"
+      Link="LogGenerator\%(RecursiveDir)%(Filename)%(Extension)"
+    />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Umbraco.Community.LogExplorer\Umbraco.Community.LogExplorer.csproj" />
   </ItemGroup>
 
