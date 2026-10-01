@@ -492,6 +492,11 @@ samples/*/umbraco-package-schema.json
 node_modules/
 src/Umbraco.Community.LogExplorer/wwwroot/App_Plugins/
 
+## Playwright e2e suite: saved logins, results and the HTML report (ADR 0020)
+src/Umbraco.Community.LogExplorer/Client/e2e/.auth/
+src/Umbraco.Community.LogExplorer/Client/e2e/test-results/
+src/Umbraco.Community.LogExplorer/Client/e2e/playwright-report/
+
 ## Files provider test fixtures live in folders named "Logs"; keep them despite the [Ll]ogs/ rule above
 !tests/**/Fixtures/**
 

@@ -8,13 +8,17 @@
     "watch": "vite build --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc",
+    "typecheck": "tsc && tsc -p e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "e2e": "bun e2e/prepare.ts && playwright test",
+    "e2e:report": "playwright show-report e2e/playwright-report",
     "generate": "bun scripts/generate-openapi.ts https://localhost:44370/umbraco/swagger/log-explorer/swagger.json"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.99.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "^26.6.3",
     "@umbraco-cms/backoffice": "^17.7.0",
     "happy-dom": "^20.0.0",
     "prettier": "^3.6.0",
