@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Tests for the sample-site log generator's file scenarios. FileScenarios.cs is compiled in directly
-    (it has no Umbraco dependency), so the test needs no Umbraco host.
+    Tests for the sample-site log generator's file scenarios and bulk mode. FileScenarios.cs and
+    BulkLogWriter.cs are compiled in directly (neither has an Umbraco dependency), so the test needs no Umbraco host.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -13,12 +13,18 @@
       Include="..\..\samples\Shared\LogGenerator\FileScenarios.cs"
       Link="LogGenerator\FileScenarios.cs"
     />
+    <Compile
+      Include="..\..\samples\Shared\LogGenerator\BulkLogWriter.cs"
+      Link="LogGenerator\BulkLogWriter.cs"
+    />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Serilog.Formatting.Compact" />
+    <!-- Reads the bulk mode's output the way the files provider does. -->
+    <PackageReference Include="Serilog.Formatting.Compact.Reader" />
   </ItemGroup>
 
   <ItemGroup>

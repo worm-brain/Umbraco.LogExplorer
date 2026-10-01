@@ -41,6 +41,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Umbraco.Community.LogExplorer.Api.Tests" />
+    <InternalsVisibleTo Include="Umbraco.Community.LogExplorer.Benchmarks" />
     <InternalsVisibleTo Include="Umbraco.Community.LogExplorer.Files.Tests" />
   </ItemGroup>
 
