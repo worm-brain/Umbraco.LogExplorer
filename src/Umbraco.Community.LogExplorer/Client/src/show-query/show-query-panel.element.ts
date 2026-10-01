@@ -1,8 +1,11 @@
 import { css, customElement, html, nothing, state, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UMB_NOTIFICATION_CONTEXT, type UmbNotificationContext } from "@umbraco-cms/backoffice/notification";
 import type { SourceResponseModel } from "../api/index.js";
+import type { FilterNode } from "../query/filter-node.js";
 import { LOG_EXPLORER_QUERY_CONTEXT, type LogExplorerQueryContext } from "../query/query.context.js";
-import { canShowQuery, canUseNativeMode, enterNativeMode, formatClauses } from "./native-mode.js";
+import { describeChip } from "../search/chip-format.js";
+import { canShowQuery, canUseNativeMode, enterNativeMode, formatClauses, splitsOrGroup } from "./native-mode.js";
 import { INITIAL_COMPILE_STATE, type CompileState } from "./query-compiler.js";
 
 /**
@@ -14,6 +17,12 @@ import { INITIAL_COMPILE_STATE, type CompileState } from "./query-compiler.js";
  * The compile itself lives in `LogExplorerQueryContext`, because the unsupported-chip check needs
  * it with the panel closed too; the panel only renders `compiled`. While a recompile runs the
  * previous text stays, dimmed, under a `uui-loader-bar` (UI brief §4.15).
+ *
+ * Chips the source runs but the compiled text leaves out (`notExpressibleChips`) are listed under
+ * the query as "Not shown in {language}: {chip}", so the user knows the text is not the whole
+ * filter (ADR 0016). "Edit as native" keeps them as chips, ANDed with the native query, and says
+ * so in a notification; it is disabled, with the reason in that list, when keeping them would
+ * split an OR group (see `splitsOrGroup`).
  *
  * Renders nothing when closed or when the source has no native language; "Edit as native" is
  * left out when the source does not allow native queries.
@@ -33,14 +42,29 @@ export class LogExplorerShowQueryPanelElement extends UmbLitElement {
   @state()
   private _compiled: CompileState = INITIAL_COMPILE_STATE;
 
+  @state()
+  private _chips: ReadonlyArray<FilterNode> = [];
+
+  /** Positions of the chips the source runs but the compiled text leaves out. */
+  @state()
+  private _notExpressible: ReadonlyArray<number> = [];
+
   #context?: LogExplorerQueryContext;
+  #notifications?: UmbNotificationContext;
   #unsupported: ReadonlyArray<number> = [];
 
   constructor() {
     super();
     this.consumeContext(LOG_EXPLORER_QUERY_CONTEXT, (context) => {
       this.#context = context;
-      this.observe(context?.state, (viewState) => (this._open = viewState?.showQuery ?? false), "_observeState");
+      this.observe(
+        context?.state,
+        (viewState) => {
+          this._open = viewState?.showQuery ?? false;
+          this._chips = viewState?.chips ?? [];
+        },
+        "_observeState",
+      );
       this.observe(context?.activeSource, (source) => (this._source = source), "_observeSource");
       this.observe(
         context?.compiled,
@@ -48,7 +72,13 @@ export class LogExplorerShowQueryPanelElement extends UmbLitElement {
         "_observeCompiled",
       );
       this.observe(context?.unsupportedChips, (indices) => (this.#unsupported = indices ?? []), "_observeUnsupported");
+      this.observe(
+        context?.notExpressibleChips,
+        (indices) => (this._notExpressible = indices ?? []),
+        "_observeNotExpressible",
+      );
     });
+    this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => (this.#notifications = context));
   }
 
   /**
@@ -60,10 +90,34 @@ export class LogExplorerShowQueryPanelElement extends UmbLitElement {
     this.hidden = !this._open || !canShowQuery(this._source);
   }
 
-  #editAsNative(): void {
+  #editAsNative(language: string): void {
     const context = this.#context;
     if (!context) return;
-    context.update(enterNativeMode(context.getState(), this._compiled.native, this.#unsupported));
+    context.update(
+      enterNativeMode(context.getState(), this._compiled.native, [...this.#unsupported, ...this._notExpressible]),
+    );
+    if (this._notExpressible.length > 0) {
+      this.#notifications?.peek("default", {
+        data: { message: this.localize.term("logExplorer_showQueryKeptAsChips", language) },
+      });
+    }
+  }
+
+  /** The not-shown list, plus why "Edit as native" is disabled when it would split an OR group. */
+  #renderNotShown(language: string, splits: boolean) {
+    if (this._notExpressible.length === 0) return nothing;
+    const term = (key: string, ...args: Array<string>) => this.localize.term(key, ...args);
+    return html`<ul class="not-shown">
+      ${this._notExpressible.map((index) => {
+        const chip = this._chips[index];
+        return chip
+          ? html`<li>
+              ${this.localize.term("logExplorer_showQueryNotShown", language, describeChip(chip, term).description)}
+            </li>`
+          : nothing;
+      })}
+      ${splits ? html`<li>${this.localize.term("logExplorer_showQuerySplitsGroup", language)}</li>` : nothing}
+    </ul>`;
   }
 
   /**
@@ -76,6 +130,12 @@ export class LogExplorerShowQueryPanelElement extends UmbLitElement {
     const language = this._source!.capabilities.nativeLanguage ?? "";
     const text = formatClauses(this._compiled.native);
     const loading = this._compiled.status === "loading";
+    const splits = splitsOrGroup(this._chips, this._notExpressible, this.#unsupported);
+    // With every chip left out of the text, "no filter" would be untrue: the chips still apply.
+    const empty =
+      this._notExpressible.length > 0
+        ? this.localize.term("logExplorer_showQueryNothingShown", language)
+        : this.localize.term("logExplorer_showQueryEmpty");
 
     return html`
       <section
@@ -95,16 +155,17 @@ export class LogExplorerShowQueryPanelElement extends UmbLitElement {
                 ? // No `language`: the panel already names it on the left, and the code block
                   // would repeat it in its own header row.
                   html`<umb-code-block copy>${text}</umb-code-block>`
-                : html`<p class="empty">${this.localize.term("logExplorer_showQueryEmpty")}</p>`
+                : html`<p class="empty">${empty}</p>`
           }
+          ${this.#renderNotShown(language, splits)}
         </div>
         ${
           canUseNativeMode(this._source)
             ? html`<uui-button
                 look="outline"
                 label=${this.localize.term("logExplorer_showQueryEditAsNative")}
-                ?disabled=${loading || this._compiled.status === "error"}
-                @click=${this.#editAsNative}
+                ?disabled=${loading || this._compiled.status === "error" || splits}
+                @click=${() => this.#editAsNative(language)}
               ></uui-button>`
             : nothing
         }
@@ -166,6 +227,14 @@ export class LogExplorerShowQueryPanelElement extends UmbLitElement {
 
       .error {
         color: var(--uui-color-danger-standalone);
+      }
+
+      .not-shown {
+        margin: var(--uui-size-space-2) 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: var(--uui-type-small-size);
+        color: var(--uui-color-text-alt);
       }
 
       uui-button {

@@ -4,14 +4,14 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState, mergeObservables } from "@umbraco-cms/backoffice/observable-api";
 import { NativeQueryService, type SettingsResponseModel, type SourceResponseModel } from "../api/index.js";
 import { loadSettings } from "../settings/settings.js";
-import { canShowQuery, canUseNativeMode } from "../show-query/native-mode.js";
+import { canShowQuery } from "../show-query/native-mode.js";
 import {
   INITIAL_COMPILE_STATE,
   QueryCompiler,
   type CompileFn,
   type CompileState,
 } from "../show-query/query-compiler.js";
-import { findUnsupportedChips, toQueryState } from "../show-query/unsupported-chips.js";
+import { findNotExpressibleChips, findUnsupportedChips, toQueryState } from "../show-query/unsupported-chips.js";
 import { findSource, resolveActiveSource } from "../sources/active-source.js";
 import { loadSources, type SourcesState } from "../sources/sources-loader.js";
 import { LOG_EXPLORER_ENTITY_TYPE } from "../workspace/constants.js";
@@ -66,9 +66,11 @@ const compileWithClient: CompileFn = (alias, query, signal) =>
  * The context also loads the visible sources and `DefaultSource`, and resolves the
  * {@link activeSource} from them and the `src` in the view state (see `resolveActiveSource`).
  *
- * It also compiles the query for "Show query" whenever it changes and the source has a native
- * language (see `QueryCompiler`), and from that answer works out which chips the source cannot
- * run ({@link unsupportedChips}). Queries read {@link queryState}, which leaves those chips out.
+ * It also works out which chips the source cannot run ({@link unsupportedChips}, from its
+ * declared operators) and compiles the query for "Show query" whenever it changes and the source
+ * has a native language (see `QueryCompiler`); from that answer it finds the chips the source runs
+ * but the compiled text cannot show ({@link notExpressibleChips}). Queries read
+ * {@link queryState}, which leaves out only the chips the source cannot run (ADR 0016).
  *
  * Provided by `log-explorer-workspace`; consume it with {@link LOG_EXPLORER_QUERY_CONTEXT}.
  */
@@ -115,12 +117,21 @@ export class LogExplorerQueryContext extends UmbContextBase {
   readonly compiled = this.#compiled.asObservable();
 
   /**
-   * Positions (in {@link LogExplorerViewState.chips}) of the chips the active source cannot run:
-   * the search box shows them disabled, and {@link queryState} leaves them out (BRIEF §6.3).
+   * Positions (in {@link LogExplorerViewState.chips}) of the chips the active source cannot run,
+   * because it does not declare their operator: the search box shows them disabled, and
+   * {@link queryState} leaves them out (BRIEF §6.3).
    */
-  readonly unsupportedChips = mergeObservables(
-    [this.state, this.activeSource, this.compiled],
-    ([state, source, compiled]) => findUnsupportedChips(state.chips, source, compiled.unsupported),
+  readonly unsupportedChips = mergeObservables([this.state, this.activeSource], ([state, source]) =>
+    findUnsupportedChips(state.chips, source),
+  );
+
+  /**
+   * Positions of the chips the active source runs but the latest compile could not express. They
+   * stay active and in {@link queryState}; the show-query panel lists them as not shown.
+   */
+  readonly notExpressibleChips = mergeObservables(
+    [this.state, this.unsupportedChips, this.compiled],
+    ([state, unsupported, compiled]) => findNotExpressibleChips(state.chips, compiled.unsupported, unsupported),
   );
 
   /**
@@ -279,17 +290,18 @@ export class LogExplorerQueryContext extends UmbContextBase {
   }
 
   /**
-   * Compiles the state for the source, unsupported chips included so the answer says which they
-   * are. A native query the source does not allow is left out, as {@link queryState} leaves it
-   * out of searches.
+   * Compiles the query exactly as {@link queryState} runs it (chips the source cannot run and a
+   * native query it does not allow left out), so the panel never shows a clause that does not run.
    */
   #compile(state: LogExplorerViewState, source: SourceResponseModel | undefined): void {
     if (!source || !canShowQuery(source)) {
       this.#compiler.reset();
       return;
     }
-    const native = canUseNativeMode(source) ? state.native : undefined;
-    this.#compiler.load(source.alias, toLogQuery({ ...state, native }, 1));
+    this.#compiler.load(
+      source.alias,
+      toLogQuery(toQueryState(state, source, findUnsupportedChips(state.chips, source)), 1),
+    );
   }
 
   /** Arrow function so it can be added and removed as a listener with the same identity. */

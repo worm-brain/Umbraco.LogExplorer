@@ -30,7 +30,8 @@ const validateWithClient: ValidateFn = (alias, native, signal) =>
  *   text chip is still added and a backoffice notification says why (UI brief §4.14).
  * - **Backspace** in an empty input removes the last chip; **Escape** clears the input.
  * - **Chips** are `log-explorer-filter-chip`s; their edit and remove events write the context.
- *   Chips the active source cannot run (`unsupportedChips` in the context) are drawn disabled.
+ *   Chips the active source cannot run (`unsupportedChips` in the context) are drawn disabled;
+ *   chips it runs but "Show query" cannot express (`notExpressibleChips`) only get a tooltip note.
  * - **Native mode** (BRIEF §6.2) is on while the view state holds a native query (`native`, even
  *   `""`) and the source allows native queries. A tag with the language name sits before the
  *   chips, with a button back to simple mode; the input holds the native text, checked with
@@ -63,6 +64,9 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
   /** Positions of the chips the active source cannot run. */
   @state()
   private _unsupported: ReadonlyArray<number> = [];
+
+  @state()
+  private _notExpressible: ReadonlyArray<number> = [];
 
   /** The active source, for its language, its name and whether native mode is allowed. */
   @state()
@@ -111,6 +115,11 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
         "_observeState",
       );
       this.observe(context?.unsupportedChips, (indices) => (this._unsupported = indices ?? []), "_observeUnsupported");
+      this.observe(
+        context?.notExpressibleChips,
+        (indices) => (this._notExpressible = indices ?? []),
+        "_observeNotExpressible",
+      );
       this.observe(
         context?.activeSource,
         (source) => {
@@ -370,6 +379,7 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
                 <log-explorer-filter-chip
                   .chip=${chip}
                   ?unsupported=${this._unsupported.includes(index)}
+                  .notShownIn=${this._notExpressible.includes(index) ? language : ""}
                   .sourceName=${sourceName}
                   @log-explorer-chip-change=${(event: LogExplorerChipChangeEvent) => this.#onChipChange(index, event)}
                   @log-explorer-chip-remove=${(event: LogExplorerChipRemoveEvent) => this.#onChipRemove(index, event)}

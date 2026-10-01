@@ -17,15 +17,18 @@ export type CompileFn = (
  *
  * - `idle`: nothing to compile (no source, or the source has no native language).
  * - `loading`: a compile is pending; `native` and `unsupported` still hold the previous answer,
- *   so the panel and the disabled chips do not flicker while it runs.
+ *   so the panel and its not-shown list do not flicker while it runs.
  * - `loaded`: `native` is the compiled text (`null` for no filter at all).
  * - `error`: the last compile failed; `error` is a message safe to show as text, and nothing is
- *   reported unsupported, so a failed compile never disables chips.
+ *   reported unsupported.
  */
 export interface CompileState {
   status: "idle" | "loading" | "loaded" | "error";
   native: string | null;
-  /** Nodes the source cannot express (`CompileResult.unsupported`), as the server returned them. */
+  /**
+   * Nodes the source's language cannot express (`CompileResult.unsupported`), as the server
+   * returned them. The source still runs them; the compiled text leaves them out.
+   */
   unsupported: ReadonlyArray<FilterNode>;
   error?: string;
 }
@@ -37,11 +40,11 @@ export const INITIAL_COMPILE_STATE: CompileState = { status: "idle", native: nul
 export const COMPILE_DEBOUNCE_MS = 150;
 
 /**
- * Compiles the current query for the show-query panel and the unsupported-chip check.
+ * Compiles the current query for the show-query panel and its not-shown list.
  *
  * Compiling is cheap (no store is touched), so it runs on every change that affects the output,
- * whether the panel is open or not; that is what lets chips the source cannot run show disabled
- * at all times (BRIEF §6.3). Requests are debounced by {@link COMPILE_DEBOUNCE_MS}, only one is
+ * whether the panel is open or not, so the panel opens on a current answer and the chips can say
+ * whether the query shows them. Requests are debounced by {@link COMPILE_DEBOUNCE_MS}, only one is
  * ever in flight (a newer one aborts it), and a query whose output cannot differ from the last
  * one (only the range, sort, page or cursor changed) is not sent again.
  */
@@ -71,7 +74,7 @@ export class QueryCompiler {
    * Schedules a compile of `query` on `alias`, unless the last one already covers it.
    *
    * @param alias - The source.
-   * @param query - The query as `/search` would get it, unsupported chips included.
+   * @param query - The query as `/search` would get it.
    */
   load(alias: string, query: LogQuery): void {
     // The range, sort, page size and cursor never change the compiled text (the compilers leave

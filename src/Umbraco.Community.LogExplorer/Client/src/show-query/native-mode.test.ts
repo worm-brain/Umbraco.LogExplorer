@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 import type { SourceResponseModel } from "../api/index.js";
 import type { FilterNode } from "../query/filter-node.js";
 import { createDefaultViewState } from "../query/view-state.js";
-import { canShowQuery, canUseNativeMode, enterNativeMode, formatClauses, leaveNativeMode } from "./native-mode.js";
+import {
+  canShowQuery,
+  canUseNativeMode,
+  enterNativeMode,
+  formatClauses,
+  leaveNativeMode,
+  splitsOrGroup,
+} from "./native-mode.js";
 
 function source(features: Array<string>, allowNativeQuery: boolean): SourceResponseModel {
   return {
@@ -45,7 +52,7 @@ describe("enterNativeMode", () => {
     });
   });
 
-  it("keeps the unsupported chips, which the compiled query left out", () => {
+  it("keeps the chips the compiled query left out", () => {
     const state = { ...createDefaultViewState("1h"), chips: [pathApi, matches] };
 
     expect(enterNativeMode(state, "x", [1]).chips).toEqual([matches]);
@@ -59,6 +66,28 @@ describe("enterNativeMode", () => {
 
   it("opens an empty native query when there was no filter", () => {
     expect(enterNativeMode(createDefaultViewState("1h"), null, []).native).toBe("");
+  });
+});
+
+describe("splitsOrGroup", () => {
+  const exceptionTimeout: FilterNode = {
+    kind: "condition",
+    field: "@exception.type",
+    op: "contains",
+    value: "Timeout",
+  };
+  const pathAdmin: FilterNode = { kind: "condition", field: "RequestPath", op: "startsWith", value: "/admin" };
+
+  it("is true when one field has include chips both shown and not shown", () => {
+    expect(splitsOrGroup([pathApi, pathAdmin], [1])).toBe(true);
+  });
+
+  it("is false when the not-shown chips are on a field of their own", () => {
+    expect(splitsOrGroup([pathApi, exceptionTimeout], [1])).toBe(false);
+  });
+
+  it("ignores chips the source cannot run, which no query sees", () => {
+    expect(splitsOrGroup([pathApi, matches], [1], [0])).toBe(false);
   });
 });
 

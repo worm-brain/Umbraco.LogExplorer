@@ -181,6 +181,14 @@ export default {
     showQueryError: (message: string) => `Could not compile the query: ${message}`,
     chipUnsupported: (source: string) => `Not supported by ${source}`,
     chipUnsupportedDescription: (description: string, source: string) => `${description}, not supported by ${source}`,
+    chipNotShown: (description: string, language: string) =>
+      `${description} (runs, but not shown in the ${language} query)`,
+    showQueryNotShown: (language: string, description: string) => `Not shown in ${language}: ${description}`,
+    showQueryNothingShown: (language: string) => `(nothing to show in ${language}: the filters below still apply)`,
+    showQueryKeptAsChips: (language: string) =>
+      `Filters ${language} cannot express stay as chips and still apply with the native query`,
+    showQuerySplitsGroup: (language: string) =>
+      `Edit as native is unavailable: some filters on one field can be shown in ${language} and some cannot. Change or remove one first.`,
 
     // Native mode in the search box (BRIEF §6.2, UI brief §4.15).
     nativeModeLabel: (language: string) => `Search logs with a ${language} query`,
