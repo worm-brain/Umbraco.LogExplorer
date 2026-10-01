@@ -1,4 +1,5 @@
 import { SourcesService, type SourceResponseModel } from "../api/index.js";
+import { describeError } from "../shared/describe-error.js";
 
 /**
  * The state of the visible-sources fetch, as the workspace header renders it.
@@ -48,23 +49,4 @@ export async function loadSources(
     // fetch rejects on network failures and aborted requests rather than returning a result.
     return { status: "error", message: error instanceof Error ? error.message : String(error) };
   }
-}
-
-/**
- * Builds a user-facing message from a failed response, preferring the ProblemDetails `detail`
- * or `title` the package API returns (BRIEF §11.1) over the bare HTTP status.
- *
- * @param error - The parsed error body, if any.
- * @param response - The raw response, if one arrived.
- * @returns A short message for the header's error state.
- */
-function describeError(error: unknown, response: Response | undefined): string {
-  if (typeof error === "object" && error !== null) {
-    const problem = error as { detail?: unknown; title?: unknown };
-    if (typeof problem.detail === "string" && problem.detail) return problem.detail;
-    if (typeof problem.title === "string" && problem.title) return problem.title;
-  }
-  if (response)
-    return `The server responded ${response.status}${response.statusText ? ` ${response.statusText}` : ""}.`;
-  return "The request failed.";
 }
