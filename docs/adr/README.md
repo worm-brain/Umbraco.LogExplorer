@@ -28,6 +28,7 @@ brief assumed. Update the brief in the same change.
 | [0017](0017-files-filter-on-partial-records.md) | The files pager tests filters on partially mapped records, not on a LogEvent predicate | Accepted |
 | [0019](0019-overview-from-existing-endpoints-and-minimum-levels.md) | The Overview reuses the query endpoints; sink minimum levels come from `GET /minimum-levels` | Accepted |
 | [0020](0020-e2e-suite-with-plain-playwright.md) | The e2e suite runs plain Playwright from the client, against both sample sites | Accepted |
+| [0021](0021-menus-patch-uui-aria.md) | Menus and toggles patch the ARIA UUI does not expose | Accepted |
 | [0022](0022-smoke-test-packed-nupkgs.md) | The release smoke-tests the packed nupkgs on spawned sites of the floor and latest Umbraco versions | Accepted |
 
 ## Template

@@ -1,7 +1,8 @@
 import { css, customElement, html, nothing, query, state } from "@umbraco-cms/backoffice/external/lit";
-import type { UUIPopoverContainerElement } from "@umbraco-cms/backoffice/external/uui";
+import type { UUIButtonElement, UUIPopoverContainerElement } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { PopoverMenuController } from "../shared/popover-menu.controller.js";
 import { LOG_EXPLORER_QUERY_CONTEXT, type LogExplorerQueryContext } from "../query/query.context.js";
 import { RELATIVE_RANGES, type RelativeRange, type ViewTimeRange } from "../query/view-state.js";
 import {
@@ -24,6 +25,8 @@ import {
  * rather than `umb-dropdown`: `umb-dropdown` closes its popover on any click inside it (a
  * capture-phase handler, there for a WebKit bug), so the custom-range inputs could never be
  * focused. Escape and outside clicks close the menu through the native popover API.
+ * {@link PopoverMenuController} supplies what UUI does not: menu roles, `aria-expanded` on the
+ * button, arrow keys between the presets, and focus back on the button after a choice (#51).
  *
  * Not bound to a manifest; the Search view renders it.
  *
@@ -34,10 +37,6 @@ export class LogExplorerTimeRangePickerElement extends UmbLitElement {
   /** The range in force, mirrored from the query context; re-renders the button label. */
   @state()
   private _range: ViewTimeRange | undefined;
-
-  /** Whether the menu is open; drives the chevron. */
-  @state()
-  private _open = false;
 
   /** Whether the custom-range inputs are shown inside the menu. */
   @state()
@@ -51,8 +50,23 @@ export class LogExplorerTimeRangePickerElement extends UmbLitElement {
   @state()
   private _draftInvalid = false;
 
+  @query("#popover")
+  private _popover?: UUIPopoverContainerElement;
+
+  @query("#trigger")
+  private _trigger?: UUIButtonElement;
+
   @query("#menu")
-  private _menu?: UUIPopoverContainerElement;
+  private _menuList?: HTMLElement;
+
+  @query("#from")
+  private _fromInput?: HTMLElement;
+
+  #menu = new PopoverMenuController(this, {
+    trigger: () => this._trigger,
+    popover: () => this._popover,
+    menu: () => this._menuList,
+  });
 
   #context?: LogExplorerQueryContext;
 
@@ -67,10 +81,10 @@ export class LogExplorerTimeRangePickerElement extends UmbLitElement {
   #select(relative: RelativeRange): void {
     this.#context?.setRange({ relative });
     this._customOpen = false;
-    this._menu?.hidePopover();
+    this.#menu.close();
   }
 
-  #openCustom(): void {
+  async #openCustom(): Promise<void> {
     // Seed the inputs with the range in force; for a relative range, compute it from now so the
     // user starts from what they are looking at.
     const range = this._range;
@@ -80,6 +94,9 @@ export class LogExplorerTimeRangePickerElement extends UmbLitElement {
     this._draft = { from: toLocalInputValue(from), to: toLocalInputValue(to) };
     this._draftInvalid = false;
     this._customOpen = true;
+    // The inputs are what the user came for; Tab from them reaches Apply.
+    await this.updateComplete;
+    this._fromInput?.focus();
   }
 
   #applyCustom(): void {
@@ -90,13 +107,13 @@ export class LogExplorerTimeRangePickerElement extends UmbLitElement {
     }
     this.#context?.setRange(range);
     this._customOpen = false;
-    this._menu?.hidePopover();
+    this.#menu.close();
   }
 
-  #onToggle(event: Event): void {
-    this._open = (event as ToggleEvent).newState === "open";
-    if (!this._open) this._customOpen = false;
-  }
+  #onToggle = (event: Event): void => {
+    this.#menu.onToggle(event);
+    if (!this.#menu.open) this._customOpen = false;
+  };
 
   #label(): string {
     const range = this._range;
@@ -115,32 +132,45 @@ export class LogExplorerTimeRangePickerElement extends UmbLitElement {
     const active = this._range && "relative" in this._range ? this._range.relative : undefined;
     return html`
       <uui-button
-        popovertarget="menu"
+        id="trigger"
+        popovertarget="popover"
         look="outline"
         label=${this.localize.term("logExplorer_timeRangePickerLabel", label)}
       >
         <span class="button-content">
           <umb-icon name="icon-time"></umb-icon>
           <span class="label">${label}</span>
-          <uui-symbol-expand .open=${this._open}></uui-symbol-expand>
+          <uui-symbol-expand .open=${this.#menu.open}></uui-symbol-expand>
         </span>
       </uui-button>
-      <uui-popover-container id="menu" placement="bottom-start" @toggle=${this.#onToggle}>
+      <uui-popover-container
+        id="popover"
+        placement="bottom-start"
+        no-scroll
+        @toggle=${this.#onToggle}
+        @focusout=${this.#menu.onFocusOut}
+        @keydown=${this.#menu.onKeydown}
+      >
         <umb-popover-layout>
-          ${RELATIVE_RANGES.map(
-            (preset) => html`
-              <uui-menu-item
-                label=${this.localize.term(PRESET_LABEL_KEYS[preset])}
-                ?active=${preset === active}
-                @click-label=${() => this.#select(preset)}
-              ></uui-menu-item>
-            `,
-          )}
-          <uui-menu-item
-            label=${this.localize.term("logExplorer_timeRangeCustom")}
-            ?active=${active === undefined}
-            @click-label=${() => this.#openCustom()}
-          ></uui-menu-item>
+          <!-- role="none" on each item before it connects, or UUI gives it role="menu". -->
+          <div id="menu" role="menu" aria-label=${this.localize.term("logExplorer_timeRangeMenuLabel")}>
+            ${RELATIVE_RANGES.map(
+              (preset) => html`
+                <uui-menu-item
+                  role="none"
+                  label=${this.localize.term(PRESET_LABEL_KEYS[preset])}
+                  ?active=${preset === active}
+                  @click-label=${() => this.#select(preset)}
+                ></uui-menu-item>
+              `,
+            )}
+            <uui-menu-item
+              role="none"
+              label=${this.localize.term("logExplorer_timeRangeCustom")}
+              ?active=${active === undefined}
+              @click-label=${() => void this.#openCustom()}
+            ></uui-menu-item>
+          </div>
           ${this._customOpen ? this.#renderCustom() : nothing}
         </umb-popover-layout>
       </uui-popover-container>

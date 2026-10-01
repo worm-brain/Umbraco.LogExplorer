@@ -2,6 +2,7 @@ import { css, customElement, html, nothing, query, state } from "@umbraco-cms/ba
 import type { UUIButtonElement, UUIPopoverContainerElement } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { PopoverMenuController } from "../shared/popover-menu.controller.js";
 import type { SourceResponseModel } from "../api/index.js";
 import { LOG_EXPLORER_QUERY_CONTEXT, type LogExplorerQueryContext } from "../query/query.context.js";
 import type { SourcesState } from "./sources-loader.js";
@@ -20,7 +21,9 @@ import type { SourcesState } from "./sources-loader.js";
  *
  * Built from `uui-button` + `uui-popover-container` + `umb-popover-layout` + `uui-menu-item`, like
  * the time range picker, because `umb-dropdown` closes on any click inside its popover. Escape
- * and outside clicks close the menu through the native popover API.
+ * and outside clicks close the menu through the native popover API. {@link PopoverMenuController}
+ * supplies what UUI does not: menu roles, `aria-expanded` on the button, arrow keys between the
+ * sources, and focus back on the button after a choice (#51).
  *
  * Rendered by `log-explorer-workspace` into `umb-workspace-editor`'s `header` slot; no manifest
  * binds to it directly.
@@ -37,15 +40,20 @@ export class LogExplorerSourcePickerElement extends UmbLitElement {
   @state()
   private _active: SourceResponseModel | undefined;
 
-  /** Whether the menu is open; drives the chevron and `aria-expanded`. */
-  @state()
-  private _open = false;
-
-  @query("#menu")
-  private _menu?: UUIPopoverContainerElement;
+  @query("#popover")
+  private _popover?: UUIPopoverContainerElement;
 
   @query("#trigger")
   private _trigger?: UUIButtonElement;
+
+  @query("#menu")
+  private _menuList?: HTMLElement;
+
+  #menu = new PopoverMenuController(this, {
+    trigger: () => this._trigger,
+    popover: () => this._popover,
+    menu: () => this._menuList,
+  });
 
   #context?: LogExplorerQueryContext;
 
@@ -64,30 +72,7 @@ export class LogExplorerSourcePickerElement extends UmbLitElement {
 
   #select(alias: string): void {
     this.#context?.setSource(alias);
-    this._menu?.hidePopover();
-  }
-
-  #onToggle(event: Event): void {
-    this._open = (event as ToggleEvent).newState === "open";
-  }
-
-  /** Keeps the menu state on the focusable button after each render. */
-  override updated(): void {
-    void this.#syncTriggerAria();
-  }
-
-  /**
-   * `uui-button` forwards only `aria-label`/`aria-labelledby` to the `<button>` in its shadow
-   * root, and that inner button is what takes focus, so `aria-haspopup` and `aria-expanded` on the
-   * host would never reach assistive technology. Set them on the inner button directly.
-   */
-  async #syncTriggerAria(): Promise<void> {
-    const trigger = this._trigger;
-    if (!trigger) return;
-    await trigger.updateComplete;
-    const button = trigger.shadowRoot?.querySelector("#button");
-    button?.setAttribute("aria-haspopup", "menu");
-    button?.setAttribute("aria-expanded", String(this._open));
+    this.#menu.close();
   }
 
   /**
@@ -127,7 +112,7 @@ export class LogExplorerSourcePickerElement extends UmbLitElement {
   #renderPicker(sources: Array<SourceResponseModel>, active: SourceResponseModel) {
     const label = this.localize.term("logExplorer_sourcePickerLabel", active.displayName);
     return html`
-      <uui-button id="trigger" popovertarget="menu" look="outline" label=${label} title=${label}>
+      <uui-button id="trigger" popovertarget="popover" look="outline" label=${label} title=${label}>
         <span class="button-content">
           <umb-icon name="icon-database"></umb-icon>
           <strong class="name">${active.displayName}</strong>
@@ -137,13 +122,23 @@ export class LogExplorerSourcePickerElement extends UmbLitElement {
               ? html`<uui-tag look="secondary">${active.capabilities.nativeLanguage}</uui-tag>`
               : nothing
           }
-          <uui-symbol-expand .open=${this._open}></uui-symbol-expand>
+          <uui-symbol-expand .open=${this.#menu.open}></uui-symbol-expand>
         </span>
       </uui-button>
-      <uui-popover-container id="menu" placement="bottom-start" @toggle=${this.#onToggle}>
+      <uui-popover-container
+        id="popover"
+        placement="bottom-start"
+        no-scroll
+        @toggle=${this.#menu.onToggle}
+        @focusout=${this.#menu.onFocusOut}
+        @keydown=${this.#menu.onKeydown}
+      >
         <umb-popover-layout>
-          <p class="caption">${this.localize.term("logExplorer_sourcesMenuCaption")}</p>
-          ${sources.map((source) => this.#renderItem(source, source.alias === active.alias))}
+          <!-- The caption names the menu; it sits outside it, a menu holding only items. -->
+          <p class="caption" id="caption">${this.localize.term("logExplorer_sourcesMenuCaption")}</p>
+          <div id="menu" role="menu" aria-labelledby="caption">
+            ${sources.map((source) => this.#renderItem(source, source.alias === active.alias))}
+          </div>
         </umb-popover-layout>
       </uui-popover-container>
     `;
@@ -159,10 +154,11 @@ export class LogExplorerSourcePickerElement extends UmbLitElement {
       source.displayName,
       note,
     );
+    // `role="none"` before the item connects, or UUI gives it role="menu" (see PopoverMenuController).
     // `selected` without `selectable` gives the menu item's selected look without its own
     // toggle-on-click behaviour; the label click is handled through `click-label`.
     return html`
-      <uui-menu-item label=${label} ?selected=${selected} @click-label=${() => this.#select(source.alias)}>
+      <uui-menu-item role="none" label=${label} ?selected=${selected} @click-label=${() => this.#select(source.alias)}>
         <span slot="label" class="item">
           <span class="item-name">
             <strong>${source.displayName}</strong>
@@ -242,11 +238,6 @@ export class LogExplorerSourcePickerElement extends UmbLitElement {
       .note {
         color: var(--uui-color-text-alt);
         font-size: var(--uui-type-small-size);
-      }
-
-      /* The selected item is accent-filled; the alt text colour would fail contrast on it. */
-      uui-menu-item[selected] .note {
-        color: inherit;
       }
 
       /* The selected item is accent-filled; the alt text colour would fail contrast on it. */

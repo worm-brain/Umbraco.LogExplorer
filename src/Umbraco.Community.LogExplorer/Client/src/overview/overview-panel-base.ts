@@ -130,7 +130,8 @@ export abstract class LogExplorerOverviewPanelBase<TRequest, TResult> extends Um
   ) {
     const { status, error, result } = this._data;
     return html`
-      <uui-box headline=${headline}>
+      <!-- h4: one level below the workspace title (h3), which axe's heading-order wants (#51). -->
+      <uui-box headline=${headline} headline-variant="h4">
         ${
           approximate
             ? html`<uui-tag

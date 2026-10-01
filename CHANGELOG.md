@@ -6,6 +6,10 @@ All notable user-visible changes to this project are documented here. The format
 
 ## [Unreleased]
 
+### Fixed
+
+- Accessibility of the query bar, histogram and drawer. The time range and source pickers are announced as menu buttons with their open state, their menus as one menu of choices with the current one checked; the arrow keys, Home and End move between choices, Tab leaves the menu (without stopping on an empty scroll area first), and choosing or pressing Escape returns focus to the button. The histogram bars are one Tab stop: Left, Right, Home and End move between bars and Enter or Space zooms. The drawer's expand and "Show framework frames" toggles announce whether they are open. Hidden and zero-count level toggles keep readable text contrast, the Overview headings follow the page's heading order, and the show-query and share buttons are square.
+
 ### Changed
 
 - The NuGet packages carry the Log Explorer icon (a teal tile with a magnifier over log lines).

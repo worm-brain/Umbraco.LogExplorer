@@ -1,7 +1,7 @@
-import { css, customElement, html, query, state } from "@umbraco-cms/backoffice/external/lit";
-import type { UUIButtonElement } from "@umbraco-cms/backoffice/external/uui";
+import { css, customElement, html, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { LOG_EXPLORER_QUERY_CONTEXT, type LogExplorerQueryContext } from "../query/query.context.js";
+import { syncButtonAria } from "../shared/button-aria.js";
 import { canShowQuery } from "./native-mode.js";
 
 /**
@@ -27,9 +27,6 @@ export class LogExplorerShowQueryButtonElement extends UmbLitElement {
   @state()
   private _available = false;
 
-  @query("uui-button")
-  private _button?: UUIButtonElement;
-
   #context?: LogExplorerQueryContext;
 
   constructor() {
@@ -41,20 +38,9 @@ export class LogExplorerShowQueryButtonElement extends UmbLitElement {
     });
   }
 
+  /** Copies `data-pressed` onto the focusable inner button (see syncButtonAria). */
   protected override updated(): void {
-    void this.#syncPressed();
-  }
-
-  /**
-   * `uui-button` forwards only `aria-label`/`aria-labelledby` to the `<button>` in its shadow
-   * root, which is what takes focus, so `aria-pressed` goes on that inner button (as the
-   * histogram's level toggles do).
-   */
-  async #syncPressed(): Promise<void> {
-    const button = this._button;
-    if (!button) return;
-    await button.updateComplete;
-    button.shadowRoot?.querySelector("#button")?.setAttribute("aria-pressed", String(this._pressed));
+    void syncButtonAria(this.renderRoot);
   }
 
   #toggle(): void {
@@ -70,7 +56,13 @@ export class LogExplorerShowQueryButtonElement extends UmbLitElement {
     if (!this._available) return html``;
     const label = this.localize.term("logExplorer_showQueryButton");
     return html`
-      <uui-button look=${this._pressed ? "primary" : "outline"} label=${label} title=${label} @click=${this.#toggle}>
+      <uui-button
+        look=${this._pressed ? "primary" : "outline"}
+        data-pressed=${String(this._pressed)}
+        label=${label}
+        title=${label}
+        @click=${this.#toggle}
+      >
         <umb-icon name="icon-code"></umb-icon>
       </uui-button>
     `;
@@ -83,9 +75,14 @@ export class LogExplorerShowQueryButtonElement extends UmbLitElement {
       }
 
       uui-button {
+        /* Square: as wide as the query bar is tall (both var(--uui-size-11)). Not aspect-ratio:
+           a flex item's automatic minimum width is its content width, and uui-button's
+           horizontal padding made that 54 px against the bar's 33 px (#51). */
         height: 100%;
-        /* Square: as wide as the bar is tall. */
-        aspect-ratio: 1;
+        width: var(--uui-size-11);
+        flex: none;
+        --uui-button-padding-left-factor: 0;
+        --uui-button-padding-right-factor: 0;
       }
     `,
   ];

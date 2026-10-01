@@ -16,6 +16,7 @@
     "generate": "bun scripts/generate-openapi.ts https://localhost:44370/umbraco/swagger/log-explorer/swagger.json"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@hey-api/openapi-ts": "^0.99.0",
     "@playwright/test": "1.63.0",
     "@types/node": "^26.6.3",

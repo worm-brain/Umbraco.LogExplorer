@@ -62,9 +62,13 @@ export class LogExplorerShareButtonElement extends UmbLitElement {
       }
 
       uui-button {
+        /* Square, like the show-query button beside it: see that button for why a fixed width
+           rather than aspect-ratio. */
         height: 100%;
-        /* Square: as wide as the bar is tall, like the show-query button beside it. */
-        aspect-ratio: 1;
+        width: var(--uui-size-11);
+        flex: none;
+        --uui-button-padding-left-factor: 0;
+        --uui-button-padding-right-factor: 0;
       }
     `,
   ];
