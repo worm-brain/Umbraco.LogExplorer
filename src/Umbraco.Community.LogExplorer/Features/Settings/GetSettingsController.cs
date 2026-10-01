@@ -14,10 +14,15 @@ namespace Umbraco.Community.LogExplorer.Features.Settings;
 /// <param name="HideCoreLogViewer">Whether the client removes the core Log Viewer menu item (ADR 0007).</param>
 /// <param name="DefaultSource">Alias of the source the explorer opens with. It may name a source the user cannot see.</param>
 /// <param name="DefaultTimeRange">Relative range the explorer opens with, for example <c>1h</c> (BRIEF §6.5).</param>
+/// <param name="PinnedFacets">
+/// Fields the fields panel always shows first, in this order (BRIEF §6.6, §13); the BRIEF §13
+/// defaults when configuration leaves the list empty.
+/// </param>
 public sealed record SettingsResponseModel(
     bool HideCoreLogViewer,
     string DefaultSource,
-    string DefaultTimeRange
+    string DefaultTimeRange,
+    IReadOnlyList<string> PinnedFacets
 );
 
 /// <summary>Returns the client-facing settings (BRIEF §11.1 <c>GET /settings</c>).</summary>
@@ -36,7 +41,8 @@ public sealed class GetSettingsController(IOptions<LogExplorerOptions> options)
         return new SettingsResponseModel(
             value.HideCoreLogViewer,
             value.DefaultSource,
-            value.DefaultTimeRange
+            value.DefaultTimeRange,
+            [.. value.PinnedFacets]
         );
     }
 }

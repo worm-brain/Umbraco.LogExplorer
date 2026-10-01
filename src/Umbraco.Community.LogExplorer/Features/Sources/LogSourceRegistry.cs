@@ -14,8 +14,8 @@ namespace Umbraco.Community.LogExplorer.Features.Sources;
 /// Validation is per source: an unknown type, a missing or duplicate alias, or a factory that
 /// rejects its settings logs one error and skips only that source, so one bad entry never breaks
 /// the others. With no sources configured, a single <c>files</c> source of type
-/// <c>UmbracoFiles</c> is used; until that provider is registered it is reported as unavailable
-/// (a warning) rather than failing start-up.
+/// <c>UmbracoFiles</c> is used; if that provider is missing (a host that removed its factory) it
+/// is reported as unavailable (a warning) rather than failing start-up.
 /// </para>
 /// <para>
 /// Visibility (BRIEF §12): a source with <see cref="LogSourceDefinition.AllowedUserGroups"/> is
@@ -165,7 +165,7 @@ internal sealed partial class LogSourceRegistry : ILogSourceRegistry
             {
                 if (usingDefault)
                 {
-                    // The zero-configuration files source before its provider ships (P1-07).
+                    // The zero-configuration files source with its provider removed by the host.
                     LogDefaultUnavailable(definition.Alias, definition.Type);
                 }
                 else

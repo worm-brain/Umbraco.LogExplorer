@@ -12,6 +12,7 @@
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +21,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Umbraco.Community.LogExplorer\Umbraco.Community.LogExplorer.csproj" />
+    <!-- The provider contract suite, subclassed by UmbracoFilesContractTests. -->
+    <ProjectReference Include="..\Umbraco.Community.LogExplorer.ContractTests\Umbraco.Community.LogExplorer.ContractTests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

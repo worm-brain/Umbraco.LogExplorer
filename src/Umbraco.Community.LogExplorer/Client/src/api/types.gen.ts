@@ -22,6 +22,35 @@ export type ConditionNode = {
     caseInsensitive?: boolean;
 };
 
+export type Facet = {
+    field: string;
+    presenceRatio: number;
+    topValues: Array<FacetValue>;
+};
+
+export type FacetResult = {
+    facets: Array<Facet>;
+    approximate: boolean;
+    scannedRange: ResolvedRange;
+};
+
+export type FacetValue = {
+    value: unknown;
+    count: number;
+};
+
+export type FacetsRequest = {
+    query: LogQuery;
+    fields: Array<string>;
+    top: number;
+};
+
+export type FieldInfo = {
+    path: string;
+    kind: string;
+    presenceRatio: number;
+};
+
 export type FilterOperator = 'equals' | 'notEquals' | 'contains' | 'startsWith' | 'endsWith' | 'greaterThan' | 'greaterOrEqual' | 'lessThan' | 'lessOrEqual' | 'in' | 'exists' | 'notExists' | 'matches';
 
 export type HistogramBucket = {
@@ -132,6 +161,7 @@ export type SettingsResponseModel = {
     hideCoreLogViewer: boolean;
     defaultSource: string;
     defaultTimeRange: string;
+    pinnedFacets: Array<string>;
 };
 
 export type SortDirection = 'descending' | 'ascending';
@@ -174,6 +204,88 @@ export type ValidationResult = {
     error?: string | null;
     position?: number | null;
 };
+
+export type GetFacetsData = {
+    body?: FacetsRequest;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/facets';
+};
+
+export type GetFacetsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetFacetsError = GetFacetsErrors[keyof GetFacetsErrors];
+
+export type GetFacetsResponses = {
+    /**
+     * OK
+     */
+    200: FacetResult;
+};
+
+export type GetFacetsResponse = GetFacetsResponses[keyof GetFacetsResponses];
+
+export type GetFieldsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        relative?: string;
+    };
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/fields';
+};
+
+export type GetFieldsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetFieldsError = GetFieldsErrors[keyof GetFieldsErrors];
+
+export type GetFieldsResponses = {
+    /**
+     * OK
+     */
+    200: Array<FieldInfo>;
+};
+
+export type GetFieldsResponse = GetFieldsResponses[keyof GetFieldsResponses];
 
 export type GetHistogramData = {
     body?: HistogramRequest;
