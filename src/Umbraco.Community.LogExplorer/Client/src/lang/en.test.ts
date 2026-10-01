@@ -34,4 +34,8 @@ describe("en dictionary", () => {
   it("formats entries that take values", () => {
     expect(en.logExplorer.sourcesError("Forbidden")).toBe("Could not load log sources: Forbidden");
   });
+
+  it("formats the source menu note from the language and type", () => {
+    expect(en.logExplorer.sourceNote("KQL", "ApplicationInsights")).toBe("KQL · ApplicationInsights");
+  });
 });

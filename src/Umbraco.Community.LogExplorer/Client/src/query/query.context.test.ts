@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { UmbControllerHostElementMixin } from "@umbraco-cms/backoffice/controller-api";
+import type { SourceResponseModel } from "../api/index.js";
 import { LogExplorerQueryContext, type LogExplorerQueryContextOptions } from "./query.context.js";
 
 const SEARCH_PATH = "/umbraco/section/settings/workspace/log-explorer/view/search";
@@ -21,6 +22,8 @@ function navigate(url: string): void {
 async function connectContext(options: LogExplorerQueryContextOptions = {}): Promise<LogExplorerQueryContext> {
   const context = new LogExplorerQueryContext(host, {
     loadDefaultTimeRange: async () => undefined,
+    loadDefaultSource: async () => undefined,
+    loadSources: async () => ({ status: "empty" }),
     ...options,
   });
   document.body.appendChild(host);
@@ -113,5 +116,89 @@ describe("LogExplorerQueryContext", () => {
     navigate(`${SEARCH_PATH}?range=7d`);
 
     expect(context.getState().range).toEqual({ relative: "1h" });
+  });
+});
+
+function source(alias: string): SourceResponseModel {
+  return {
+    alias,
+    displayName: alias,
+    type: "Fake",
+    sensitive: false,
+    capabilities: { features: [], operators: [], nativeLanguage: null, maxRangeSeconds: null, maxPageSize: 1000 },
+  };
+}
+
+const twoSources: LogExplorerQueryContextOptions = {
+  loadSources: async () => ({ status: "loaded", sources: [source("files"), source("sample")] }),
+  loadDefaultSource: async () => "sample",
+};
+
+describe("LogExplorerQueryContext active source", () => {
+  it("uses DefaultSource when the URL names no source", async () => {
+    const context = await connectContext(twoSources);
+
+    expect(context.getActiveSource()?.alias).toBe("sample");
+  });
+
+  it("uses the source the URL names when it is visible", async () => {
+    window.history.replaceState({}, "", `${SEARCH_PATH}?src=files`);
+
+    const context = await connectContext(twoSources);
+
+    expect(context.getActiveSource()?.alias).toBe("files");
+  });
+
+  it("falls back to DefaultSource when the URL names a source the user cannot see", async () => {
+    window.history.replaceState({}, "", `${SEARCH_PATH}?src=prod-ai`);
+
+    const context = await connectContext(twoSources);
+
+    expect(context.getActiveSource()?.alias).toBe("sample");
+  });
+
+  it("writes the selected source into the URL", async () => {
+    const context = await connectContext(twoSources);
+
+    context.setSource("files");
+
+    expect([context.getActiveSource()?.alias, window.location.search]).toEqual(["files", "?src=files"]);
+  });
+
+  it("publishes the resolved source to observers", async () => {
+    const context = await connectContext(twoSources);
+    const seen: Array<string | undefined> = [];
+    const subscription = context.activeSource.subscribe((active) => seen.push(active?.alias));
+
+    context.setSource("files");
+    subscription.unsubscribe();
+
+    expect(seen).toEqual(["sample", "files"]);
+  });
+
+  it("has no active source while DefaultSource is still loading", async () => {
+    const context = await connectContext({ ...twoSources, loadDefaultSource: () => new Promise(() => {}) });
+
+    expect(context.getActiveSource()).toBeUndefined();
+  });
+
+  it("has no active source when no source is visible", async () => {
+    const context = await connectContext({ loadDefaultSource: async () => "sample" });
+
+    expect(context.getActiveSource()).toBeUndefined();
+  });
+
+  it("loads the sources again on reload", async () => {
+    let calls = 0;
+    const context = await connectContext({
+      loadSources: async () =>
+        ++calls === 1
+          ? { status: "error", message: "Failed to fetch" }
+          : { status: "loaded", sources: [source("files")] },
+    });
+
+    await context.reloadSources();
+
+    expect(context.getActiveSource()?.alias).toBe("files");
   });
 });

@@ -1,8 +1,11 @@
 import { UmbContextBase } from "@umbraco-cms/backoffice/class-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
+import { UmbBasicState, UmbObjectState, mergeObservables } from "@umbraco-cms/backoffice/observable-api";
+import type { SettingsResponseModel, SourceResponseModel } from "../api/index.js";
 import { loadSettings } from "../settings/settings.js";
+import { findSource, resolveActiveSource } from "../sources/active-source.js";
+import { loadSources, type SourcesState } from "../sources/sources-loader.js";
 import { LOG_EXPLORER_ENTITY_TYPE } from "../workspace/constants.js";
 import {
   createDefaultViewState,
@@ -18,6 +21,10 @@ import {
 export interface LogExplorerQueryContextOptions {
   /** Supplies `DefaultTimeRange`; defaults to `GET /settings`. A failure keeps the built-in default. */
   loadDefaultTimeRange?: () => Promise<string | undefined>;
+  /** Supplies `DefaultSource`; defaults to `GET /settings`. A failure means "no default". */
+  loadDefaultSource?: () => Promise<string | undefined>;
+  /** Fetches the visible sources; defaults to `GET /sources`. */
+  loadSources?: () => Promise<SourcesState>;
 }
 
 /**
@@ -36,12 +43,19 @@ export interface LogExplorerQueryContextOptions {
  * Only URLs inside the Log Explorer workspace are read or written, because `changestate` also
  * fires while the user navigates away, before the workspace element disconnects.
  *
+ * The context also loads the visible sources and `DefaultSource`, and resolves the
+ * {@link activeSource} from them and the `src` in the view state (see `resolveActiveSource`).
+ *
  * Provided by `log-explorer-workspace`; consume it with {@link LOG_EXPLORER_QUERY_CONTEXT}.
  */
 export class LogExplorerQueryContext extends UmbContextBase {
   #defaults = createDefaultViewState();
   #state = new UmbObjectState<LogExplorerViewState>(this.#defaults);
   #lastPath: string | undefined;
+  #sources = new UmbObjectState<SourcesState>({ status: "loading" });
+  #loadSources: () => Promise<SourcesState>;
+  /** `undefined` until `/settings` has answered; `null` when it answered with no usable default. */
+  #defaultSource = new UmbBasicState<string | null | undefined>(undefined);
 
   /** The whole view state. */
   readonly state = this.#state.asObservable();
@@ -49,14 +63,44 @@ export class LogExplorerQueryContext extends UmbContextBase {
   /** The time range alone, for controls that only care about it. */
   readonly range = this.#state.asObservablePart((state) => state.range);
 
+  /** The `src` alias in the view state; `undefined` means "use the default". Not validated. */
+  readonly source = this.#state.asObservablePart((state) => state.source);
+
+  /** The outcome of the visible-sources fetch, for the source picker's loading and error states. */
+  readonly sources = this.#sources.asObservable();
+
+  /**
+   * The source queries should run against, resolved from `src`, `DefaultSource` and the visible
+   * sources. `undefined` while either request is pending, and when no source is visible; it only
+   * emits when the resolved source changes.
+   */
+  readonly activeSource = mergeObservables(
+    [this.#sources.asObservable(), this.#defaultSource.asObservable(), this.source],
+    ([sources, defaultSource, requested]) => this.#resolve(sources, defaultSource, requested),
+    // Return true when unchanged: the comparator feeds rxjs `distinctUntilChanged`, whatever the
+    // mergeObservables TSDoc says ("true when different").
+    (previous, current) => previous?.alias === current?.alias,
+  );
+
   /**
    * @param host - The workspace element that provides the context.
    * @param options - Optional overrides; see {@link LogExplorerQueryContextOptions}.
    */
   constructor(host: UmbControllerHost, options: LogExplorerQueryContextOptions = {}) {
     super(host, LOG_EXPLORER_QUERY_CONTEXT);
-    const loadDefaultTimeRange = options.loadDefaultTimeRange ?? (async () => (await loadSettings())?.defaultTimeRange);
+    // Both defaults come from one /settings response, so share the request between them.
+    let settingsRequest: Promise<SettingsResponseModel | undefined> | undefined;
+    const settings = () => (settingsRequest ??= loadSettings());
+    const loadDefaultTimeRange = options.loadDefaultTimeRange ?? (async () => (await settings())?.defaultTimeRange);
+    const loadDefaultSource = options.loadDefaultSource ?? (async () => (await settings())?.defaultSource);
+    this.#loadSources = options.loadSources ?? (() => loadSources());
+
     void loadDefaultTimeRange().then((range) => this.#applyDefaults(createDefaultViewState(range)));
+    void loadDefaultSource().then(
+      (alias) => this.#defaultSource.setValue(alias || null),
+      () => this.#defaultSource.setValue(null),
+    );
+    void this.reloadSources();
   }
 
   /** Starts listening to the URL and reads the current one. */
@@ -89,6 +133,30 @@ export class LogExplorerQueryContext extends UmbContextBase {
    */
   setRange(range: ViewTimeRange): void {
     this.update({ range });
+  }
+
+  /**
+   * Selects a source by alias and records it in the URL as `src`. The alias is not checked here:
+   * one that is not visible resolves to the default, as it would from a hand-edited URL.
+   *
+   * @param alias - The source alias; `undefined` returns to the configured default.
+   */
+  setSource(alias: string | undefined): void {
+    this.update({ source: alias });
+  }
+
+  /** @returns The active source right now; see {@link activeSource}. */
+  getActiveSource(): SourceResponseModel | undefined {
+    return this.#resolve(this.#sources.getValue(), this.#defaultSource.getValue(), this.getState().source);
+  }
+
+  /**
+   * Fetches the visible sources again, for the source picker's Retry button. Never rejects; a
+   * failure lands in {@link sources} as an `error` state.
+   */
+  async reloadSources(): Promise<void> {
+    this.#sources.setValue({ status: "loading" });
+    this.#sources.setValue(await this.#loadSources());
   }
 
   /**
@@ -125,6 +193,17 @@ export class LogExplorerQueryContext extends UmbContextBase {
     if (isInWorkspace(window.location.pathname)) {
       this.#state.setValue(decodeViewState(new URLSearchParams(window.location.search), defaults));
     }
+  }
+
+  #resolve(
+    sources: SourcesState,
+    defaultSource: string | null | undefined,
+    requested: string | undefined,
+  ): SourceResponseModel | undefined {
+    if (sources.status !== "loaded") return undefined;
+    // Without a visible `src`, wait for DefaultSource rather than briefly showing the first source.
+    if (defaultSource === undefined && !findSource(sources.sources, requested)) return undefined;
+    return resolveActiveSource(sources.sources, requested, defaultSource ?? undefined);
   }
 
   #writeUrl(mode: "push" | "replace"): void {

@@ -14,3 +14,4 @@ All notable user-visible changes to this project are documented here. The format
 - `HideCoreLogViewer` (default `true`) now hides the core Settings > Log Viewer item; set it to `false` to show both.
 - `GET /umbraco/log-explorer/api/v1/settings` returns the client settings (`hideCoreLogViewer`, `defaultSource`, `defaultTimeRange`).
 - Time range picker on the Search view (last 15 minutes to 30 days, or a custom range with the time zone shown). The explorer's view state lives in the URL, so reloading, sharing a link or pressing Back restores the same view; the default range is `DefaultTimeRange`.
+- Source picker in the workspace header: shows the active source with its query language and a lock for sensitive sources, and lists every source you can see. The chosen source is kept in the URL (`src`); without one the explorer opens on `DefaultSource`, or the first visible source if that is unavailable.
