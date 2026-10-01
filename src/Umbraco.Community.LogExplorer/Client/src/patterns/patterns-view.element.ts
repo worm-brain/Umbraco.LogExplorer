@@ -55,10 +55,12 @@ export class LogExplorerPatternsViewElement extends UmbLitElement {
         padding: var(--uui-size-layout-1);
       }
 
+      /* The same definite height as the Search view's bar, which the square icon buttons need. */
       .query-bar {
         display: flex;
         align-items: stretch;
         gap: var(--uui-size-space-3);
+        height: var(--uui-size-11);
       }
 
       log-explorer-search-box {
