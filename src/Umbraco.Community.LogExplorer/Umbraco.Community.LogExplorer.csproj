@@ -1,0 +1,105 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <RootNamespace>Umbraco.Community.LogExplorer</RootNamespace>
+    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
+    <!-- Transitive packages resolve at the Umbraco 17.0.0 floor here; consuming sites resolve (and audit) their own newer versions. -->
+    <NuGetAuditMode>direct</NuGetAuditMode>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- The Umbraco. prefix is reserved on nuget.org, so community packages publish as Umbraco.Community.*. -->
+    <PackageId>Umbraco.Community.LogExplorer</PackageId>
+    <Product>Umbraco.Community.LogExplorer</Product>
+    <Title>Umbraco Log Explorer</Title>
+    <Description>A click-to-filter log explorer for the Umbraco backoffice: search, facets, histogram, patterns and request correlation over Umbraco's log files, with Application Insights and Seq providers.</Description>
+    <PackageTags>umbraco;umbraco-marketplace;logs;log-viewer;serilog</PackageTags>
+    <!-- The one place the version is defined: the client build stamps it into umbraco-package.json (Client/scripts/umbraco-package-version.ts). -->
+    <Version>0.0.1</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Range set in Directory.Packages.props: [17.0.0, 19.0.0) so one package serves Umbraco 17 and 18 (ADR 0001). -->
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Umbraco.Community.LogExplorer.Core\Umbraco.Community.LogExplorer.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Lit client source is not part of the package; only its build output in wwwroot is. -->
+    <Content Remove="Client\**" />
+    <None Include="Client\public\umbraco-package.json" Pack="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umbraco.Community.LogExplorer.Api.Tests" />
+  </ItemGroup>
+
+  <!--
+    The client's build output is gitignored, so packing has to build it. This happens on `dotnet pack` only
+    (the CLI sets _IsPacking), so C#-only work never needs Bun. Pass -p:BuildClient=true to build it on an
+    ordinary `dotnet build` too. Pattern taken from Umbraco.RichDictionary.
+  -->
+  <PropertyGroup>
+    <BuildClient Condition="'$(BuildClient)' == ''">$(_IsPacking)</BuildClient>
+    <ClientDirectory>$(MSBuildProjectDirectory)\Client\</ClientDirectory>
+    <ClientOutputDirectory>wwwroot\App_Plugins\UmbracoCommunityLogExplorer\</ClientOutputDirectory>
+  </PropertyGroup>
+
+  <!--
+    Runs before static web assets are resolved. They are discovered from @(Content), whose wwwroot glob was
+    evaluated before this target wrote the files, so the client output is re-globbed afterwards: without that,
+    a pack from a clean checkout ships no client, and a rebuild with new chunk hashes points at deleted files.
+    The NoBuild check is needed because a BeforeTargets hook still runs when its target is skipped.
+  -->
+  <Target
+    Name="BuildClient"
+    BeforeTargets="ResolveProjectStaticWebAssets"
+    Condition="'$(BuildClient)' == 'true' and '$(NoBuild)' != 'true'"
+  >
+    <Exec
+      Command="bun --version"
+      IgnoreExitCode="true"
+      EchoOff="true"
+      StandardOutputImportance="low"
+      StandardErrorImportance="low"
+    >
+      <Output TaskParameter="ExitCode" PropertyName="_BunExitCode" />
+    </Exec>
+    <Error
+      Condition="'$(_BunExitCode)' != '0'"
+      Text="Bun is required to build the Log Explorer backoffice client, but 'bun' was not found on PATH. Install it from https://bun.sh and try again."
+    />
+
+    <Exec
+      Command="bun install --frozen-lockfile"
+      WorkingDirectory="$(ClientDirectory)"
+      Condition="Exists('$(ClientDirectory)bun.lock')"
+    />
+    <!-- Passes the version on so a -p:Version override reaches umbraco-package.json too. -->
+    <Exec
+      Command="bun run build"
+      WorkingDirectory="$(ClientDirectory)"
+      EnvironmentVariables="LOG_EXPLORER_VERSION=$(PackageVersion)"
+    />
+
+    <ItemGroup>
+      <Content Remove="$(ClientOutputDirectory)**" />
+      <Content Include="$(ClientOutputDirectory)**" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Catches packs that skip BuildClient (a no-build `dotnet pack`, or `msbuild -t:Pack`) on a checkout with no client build. -->
+  <Target Name="EnsureClientBuilt" BeforeTargets="GenerateNuspec">
+    <Error
+      Condition="!Exists('$(ClientOutputDirectory)umbraco-community-log-explorer.js')"
+      Text="The backoffice client has not been built, so the package would ship without it. Pack with `dotnet pack` (which builds it), or run `bun run build` in src/Umbraco.Community.LogExplorer/Client first."
+    />
+  </Target>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+</Project>

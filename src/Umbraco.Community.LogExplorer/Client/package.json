@@ -1,0 +1,25 @@
+{
+  "name": "umbraco-community-log-explorer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && vite build",
+    "watch": "vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "generate-client": "bun scripts/generate-openapi.ts https://localhost:44370/umbraco/swagger/log-explorer/swagger.json"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.99.0",
+    "@umbraco-cms/backoffice": "^17.7.0",
+    "happy-dom": "^20.0.0",
+    "prettier": "^3.6.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9",
+    "vitest": "^4.0.0"
+  }
+}

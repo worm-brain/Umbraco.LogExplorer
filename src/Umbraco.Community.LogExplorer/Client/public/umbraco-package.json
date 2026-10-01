@@ -1,0 +1,14 @@
+{
+  "id": "Umbraco.Community.LogExplorer",
+  "name": "Log Explorer",
+  "version": "0.0.0",
+  "allowTelemetry": true,
+  "extensions": [
+    {
+      "name": "Umbraco Community Log Explorer Bundle",
+      "alias": "Umbraco.Community.LogExplorer.Bundle",
+      "type": "bundle",
+      "js": "/App_Plugins/UmbracoCommunityLogExplorer/umbraco-community-log-explorer.js"
+    }
+  ]
+}
