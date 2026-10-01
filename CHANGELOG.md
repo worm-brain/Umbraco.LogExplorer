@@ -8,6 +8,8 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Added
 
+- The `UmbracoFiles` source: the explorer now reads the site's own Umbraco log files from every machine, including rolled `_001` files. With no `LogExplorer:Sources` configured, a `files` source ("This server's log files") is used automatically and is the default. Native queries use the core Log Viewer's Serilog Expressions dialect; set `AllowNativeQuery: false` on a source to switch them off. A startup warning says when Umbraco's file sink does not roll daily, because only daily files are read.
+- An invalid native query returns ProblemDetails code `invalid_native_query` with a `position` extension (the zero-based offset of the error, or null when unknown).
 - Search box aliases `status:` (for `StatusCode`) and `machine:` (for `MachineName`), so `-status:200` filters out successful requests.
 - Histogram on the Search view: entry volume over time with bars stacked by level and a tooltip of counts per bar. Its level toggles (TRACE to FATAL) are the level filter and keep showing how many entries each hidden level holds. Clicking a bar zooms to five minutes around it and dragging across bars zooms to any range; the zoom shows as a "Time: 00:40 to 00:45" chip, is kept in the URL (`zf`, `zt`) and is cleared by the chip's remove button or by choosing a new time range.
 - `POST /umbraco/log-explorer/api/v1/sources/{alias}/histogram` counts entries per time bucket and level for a query (`{ query, targetBuckets }`, 1 to 1000 buckets); the level counts ignore the query's level set.
