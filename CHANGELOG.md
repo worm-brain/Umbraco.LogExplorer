@@ -12,6 +12,7 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Added
 
+- "Copy link to this view" button in the query bar of the Search, Patterns and Overview views: copies a link that reopens exactly this view (tab, source, time range, zoom, filters, level toggles, native query, sort and the show-query panel) and confirms with "Link to this exact view copied". The fields panel's open or collapsed state stays a per-browser preference and is not part of the link.
 - Overview view: a summary of the time range under the same query bar as Search, in three panels that stack on narrow workspaces. "Entries by level" shows every level's count with a proportional bar (levels hidden by the level filter stay visible, muted) and, for the log files source, the minimum level each sink is configured to write. "Most frequent messages" lists the top six templates and "Exception types" the exception types, each with its count; select one to see its entries in Search.
 - `GET /umbraco/log-explorer/api/v1/sources/{alias}/minimum-levels` returns the configured minimum level of each Serilog sink (`Global`, `UmbracoFile`) for `UmbracoFiles` sources.
 - Patterns view: the entries matching the query bar grouped by message template, highest count first, each with its placeholders highlighted, its source and a sample message, a level-mix bar, a volume sparkline across the time range and its count. Focus filters to that template and opens Search; Mute excludes it and says so. A level set from `level:` is named above the list with a "Show all levels" button.

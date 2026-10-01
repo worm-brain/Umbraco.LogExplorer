@@ -169,11 +169,14 @@ export default {
     aroundBanner: (time: string) => `Showing 7 entries either side of ${time}, ignoring filters`,
     aroundBack: "Back to filtered results",
 
-    // Saved views and show query (UI brief §4.5, §4.6).
+    // Saved views, show query and share (UI brief §4.5, §4.6, §4.14).
     savedViewsCaption: "Saved views",
     savedViewsSaveCurrent: "Save current view…",
     showQueryEditAsNative: "Edit as native",
     showQueryButton: "Show generated query",
+    shareButton: "Copy link to this view",
+    shareCopied: "Link to this exact view copied",
+    shareCopyFailed: "Could not copy the link to the clipboard",
     showQueryLabel: (language: string) => `Generated ${language} query`,
     showQueryEmpty: "(no filter: every entry in the time range)",
     showQueryError: (message: string) => `Could not compile the query: ${message}`,

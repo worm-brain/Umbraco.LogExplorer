@@ -2,6 +2,7 @@ import { css, customElement, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../histogram/zoom-chip.element.js";
 import "../search/search-box.element.js";
+import "../share/share-button.element.js";
 import "../show-query/show-query-button.element.js";
 import "../show-query/show-query-panel.element.js";
 import "../time-range/time-range-picker.element.js";
@@ -15,7 +16,7 @@ import "./overview-messages.element.js";
  * minimum levels for a files source), the most frequent messages and the exception types.
  *
  * Keeps the Search view's query bar (time range picker, the search box with the time-zoom chip,
- * the show-query button) and its show-query panel, repeated here as the Patterns view does, so
+ * the show-query and share buttons) and its show-query panel, repeated here as the Patterns view does, so
  * the summary follows the same filters; every panel reads the shared `LogExplorerQueryContext`.
  * The panels sit in a row and stack when the view is narrower than about three readable columns
  * (a container query on the view, so the tree's width counts, not the window's). The view
@@ -33,7 +34,6 @@ export class LogExplorerOverviewViewElement extends UmbLitElement {
    * @returns The template.
    */
   override render() {
-    // Further query-bar buttons (the share link) go after the show-query button, as on Search.
     return html`
       <div class="query-bar">
         <log-explorer-time-range-picker></log-explorer-time-range-picker>
@@ -41,6 +41,7 @@ export class LogExplorerOverviewViewElement extends UmbLitElement {
           <log-explorer-zoom-chip slot="before-chips"></log-explorer-zoom-chip>
         </log-explorer-search-box>
         <log-explorer-show-query-button></log-explorer-show-query-button>
+        <log-explorer-share-button></log-explorer-share-button>
       </div>
       <log-explorer-show-query-panel></log-explorer-show-query-panel>
       <div class="panels">
