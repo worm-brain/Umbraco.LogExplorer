@@ -30,5 +30,12 @@ public static class LogExplorerApi
         /// the <c>POST /parse</c> length limit.
         /// </summary>
         public const string InvalidQuery = "invalid_query";
+
+        /// <summary>
+        /// The native query does not compile in the source's language. The response's
+        /// <c>position</c> extension is the zero-based offset of the error, or null when the
+        /// source cannot say where it is.
+        /// </summary>
+        public const string InvalidNativeQuery = "invalid_native_query";
     }
 }
