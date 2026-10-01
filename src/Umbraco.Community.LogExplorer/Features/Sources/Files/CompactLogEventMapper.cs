@@ -60,9 +60,8 @@ internal static class CompactLogEventMapper
     /// <param name="file">The file the event came from.</param>
     /// <param name="offset">Byte offset of the event's line in <paramref name="file"/>.</param>
     /// <returns>
-    /// The record, with <see cref="LogRecord.Id"/> set to <c>{fileName}:{offset}</c>. That id is
-    /// provisional: paging (#31) base64url-encodes it for routes. <see cref="LogRecord.SourceAlias"/>
-    /// is left for the source to set.
+    /// The record, with <see cref="LogRecord.Id"/> from <see cref="FilePosition.ToRecordId"/>.
+    /// <see cref="LogRecord.SourceAlias"/> is left for the source to set.
     /// </returns>
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
     public static LogRecord Map(LogEvent logEvent, LogFile file, long offset)
@@ -77,7 +76,7 @@ internal static class CompactLogEventMapper
 
         return new LogRecord
         {
-            Id = string.Create(CultureInfo.InvariantCulture, $"{file.FileName}:{offset}"),
+            Id = new FilePosition(file.FileName, offset).ToRecordId(),
             Timestamp = logEvent.Timestamp,
             SeverityNumber = SeverityMap.FromSerilog(level),
             SeverityText = level,

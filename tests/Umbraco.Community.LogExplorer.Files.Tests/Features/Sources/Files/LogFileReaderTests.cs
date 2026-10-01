@@ -28,6 +28,51 @@ public class LogFileReaderTests
     }
 
     [Fact]
+    public void ReadEvents_CrlfFileWithBlankLine_EachEventEndsWhereTheNextLineStarts()
+    {
+        // Arrange
+        var reader = new LogFileReader(LogFixtures.PathOf(LogFixtures.CrlfFile));
+
+        // Act
+        long[] ends = reader
+            .ReadEvents(TestContext.Current.CancellationToken)
+            .Select(logEvent => logEvent.End)
+            .ToArray();
+
+        // Assert: the first event's line is followed by the blank line at 145; the file is 995 bytes.
+        Assert.Equal([145L, 523L, 995L], ends);
+    }
+
+    [Fact]
+    public void ReadEvents_StartOffsetAtALine_ReturnsThatLineAndTheRest()
+    {
+        // Arrange
+        var reader = new LogFileReader(LogFixtures.PathOf(LogFixtures.CrlfFile));
+
+        // Act
+        long[] offsets = reader
+            .ReadEvents(147, TestContext.Current.CancellationToken)
+            .Select(logEvent => logEvent.Offset)
+            .ToArray();
+
+        // Assert
+        Assert.Equal([147L, 523L], offsets);
+    }
+
+    [Fact]
+    public void ReadEvents_NegativeStartOffset_ThrowsArgumentOutOfRange()
+    {
+        // Arrange
+        var reader = new LogFileReader(LogFixtures.PathOf(LogFixtures.CrlfFile));
+
+        // Act
+        void Read() => _ = reader.ReadEvents(-1, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Throws<ArgumentOutOfRangeException>(Read);
+    }
+
+    [Fact]
     public void ReadEvents_BlankLine_IsNotCountedAsMalformed()
     {
         // Arrange

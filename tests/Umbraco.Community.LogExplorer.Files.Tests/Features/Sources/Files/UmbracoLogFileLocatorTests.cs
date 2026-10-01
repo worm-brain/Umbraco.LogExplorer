@@ -155,6 +155,49 @@ public class UmbracoLogFileLocatorTests
         Assert.Null(file.MachineName);
     }
 
+    [Fact]
+    public void ParseFileName_NameOfAFileThatDoesNotExist_ParsesItIntoTheLogDirectory()
+    {
+        // Arrange
+        UmbracoLogFileLocator locator = CreateLocator(
+            LogFixtures.Directory,
+            DefaultFormat,
+            ["WORM"]
+        );
+
+        // Act
+        LogFile? file = locator.ParseFileName("UmbracoTraceLog.GONE.20250101_002.json");
+
+        // Assert
+        Assert.Equal(
+            new LogFile(
+                LogFixtures.PathOf("UmbracoTraceLog.GONE.20250101_002.json"),
+                "UmbracoTraceLog.GONE.20250101_002.json",
+                "GONE",
+                new DateOnly(2025, 1, 1),
+                2
+            ),
+            file
+        );
+    }
+
+    [Fact]
+    public void ParseFileName_NameWithADirectory_ReturnsNull()
+    {
+        // Arrange
+        UmbracoLogFileLocator locator = CreateLocator(
+            LogFixtures.Directory,
+            DefaultFormat,
+            ["WORM"]
+        );
+
+        // Act
+        LogFile? file = locator.ParseFileName("UmbracoTraceLog.x/../../WORM.20261001.json");
+
+        // Assert
+        Assert.Null(file);
+    }
+
     private static UmbracoLogFileLocator CreateLocator(
         string directory,
         string format,

@@ -20,7 +20,7 @@ public class CompactLogEventMapperTests
     );
 
     [Fact]
-    public void Map_Event_IdIsFileNameAndLineOffset()
+    public void Map_Event_IdIsBase64UrlOfFileNameAndLineOffset()
     {
         // Arrange
         const string json = """{"@t":"2026-10-01T12:00:00Z","@mt":"Started"}""";
@@ -28,8 +28,8 @@ public class CompactLogEventMapperTests
         // Act
         LogRecord record = Map(json, offset: 147);
 
-        // Assert
-        Assert.Equal("UmbracoTraceLog.NODE2.20261001.json:147", record.Id);
+        // Assert: base64url of "UmbracoTraceLog.NODE2.20261001.json:147".
+        Assert.Equal("VW1icmFjb1RyYWNlTG9nLk5PREUyLjIwMjYxMDAxLmpzb246MTQ3", record.Id);
     }
 
     [Fact]
