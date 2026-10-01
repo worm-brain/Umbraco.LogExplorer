@@ -17,6 +17,7 @@ brief assumed. Update the brief in the same change.
 | [0006](0006-tooling.md) | Tooling: Bun, Vitest, Prettier, xUnit v3, NSubstitute, CSharpier | Accepted |
 | [0007](0007-hide-core-log-viewer-by-default.md) | Hide the core Log Viewer by default | Accepted |
 | [0008](0008-core-contract-refinements.md) | Core contract refinements from Phase 0 | Accepted |
+| [0009](0009-package-api-route.md) | The package API lives at `/umbraco/log-explorer/api/v1` | Accepted |
 
 ## Template
 

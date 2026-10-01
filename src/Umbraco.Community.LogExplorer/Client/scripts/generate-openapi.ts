@@ -1,7 +1,7 @@
 /**
  * Generates the typed Management API client in `src/api` from the package's Swagger document.
  *
- * Usage: `bun scripts/generate-openapi.ts <swagger-url>` (see the `generate-client` script in
+ * Usage: `bun scripts/generate-openapi.ts <swagger-url>` (see the `generate` script in
  * package.json). A sample site (samples/LogExplorer.Site17) must be running, because the Swagger document is only served
  * by a live Umbraco instance.
  */

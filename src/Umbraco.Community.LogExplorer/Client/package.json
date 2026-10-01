@@ -11,7 +11,7 @@
     "typecheck": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "generate-client": "bun scripts/generate-openapi.ts https://localhost:44370/umbraco/swagger/log-explorer/swagger.json"
+    "generate": "bun scripts/generate-openapi.ts https://localhost:44370/umbraco/swagger/log-explorer/swagger.json"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.99.0",
