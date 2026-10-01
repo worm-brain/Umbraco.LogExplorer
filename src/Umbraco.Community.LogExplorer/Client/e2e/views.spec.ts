@@ -18,12 +18,9 @@ async function tabTo(page: Page, target: Locator, maxPresses = 200): Promise<voi
   throw new Error(`Tab did not reach ${target} within ${maxPresses} presses`);
 }
 
-/**
- * The Overview view's first panel heading: the placeholder box's "Overview" until #48 builds the
- * view, then "Entries by level · {range}" (UI brief §4.13).
- */
+/** The Overview view's first panel heading, "Entries by level · {range}" (UI brief §4.13). */
 function overviewHeading(page: Page): Locator {
-  return page.getByRole("heading", { name: /^(Overview|Entries by level)/ });
+  return page.getByRole("heading", { name: /^Entries by level/ });
 }
 
 test("the three views load on the site's own log files", async ({ page }) => {
