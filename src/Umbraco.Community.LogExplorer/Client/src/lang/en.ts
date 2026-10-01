@@ -36,6 +36,7 @@ export default {
 
     // Time range picker (UI brief §4.2).
     timeRangePickerLabel: (range: string) => `Time range: ${range}`,
+    timeRangeMenuLabel: "Time ranges",
     timeRangeLast15m: "Last 15 minutes",
     timeRangeLast1h: "Last 1 hour",
     timeRangeLast4h: "Last 4 hours",
@@ -52,6 +53,7 @@ export default {
     // Histogram and its level toggles (UI brief §4.7), and the time chip (§4.4).
     histogramLabel: "Entries over time",
     histogramLevelsLabel: "Show or hide levels",
+    histogramBarsLabel: "Entries per time bucket",
     // Counts take the number (for the singular) and its locale-formatted text.
     histogramLevelLabel: (level: string, count: number, formatted: string) =>
       `${level}, ${formatted} ${count === 1 ? "entry" : "entries"}`,

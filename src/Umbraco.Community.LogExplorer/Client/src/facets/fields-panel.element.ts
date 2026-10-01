@@ -1,18 +1,10 @@
-import {
-  classMap,
-  css,
-  customElement,
-  html,
-  nothing,
-  queryAll,
-  state,
-  styleMap,
-} from "@umbraco-cms/backoffice/external/lit";
-import type { UUIButtonElement, UUIInputElement } from "@umbraco-cms/backoffice/external/uui";
+import { classMap, css, customElement, html, nothing, state, styleMap } from "@umbraco-cms/backoffice/external/lit";
+import type { UUIInputElement } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { FacetsService, FieldsService, type Facet, type FacetValue } from "../api/index.js";
 import { sameChip } from "../query/chips.js";
+import { syncButtonAria } from "../shared/button-aria.js";
 import type { FilterNode } from "../query/filter-node.js";
 import { LOG_EXPLORER_QUERY_CONTEXT, type LogExplorerQueryContext } from "../query/query.context.js";
 import type { LogExplorerViewState } from "../query/view-state.js";
@@ -94,9 +86,6 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
   @state()
   private _filter = "";
 
-  @queryAll("uui-button[data-pressed], uui-button[data-expanded]")
-  private _pressable!: NodeListOf<UUIButtonElement>;
-
   #loader = new FacetsLoader(facetsWithClient, fieldsWithClient, (facets) => (this._facets = facets));
   #context?: LogExplorerQueryContext;
   #viewState?: LogExplorerViewState;
@@ -162,23 +151,9 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
     this.#requestKey = undefined;
   }
 
+  /** Copies the buttons' `data-pressed`/`data-expanded` onto their focusable inner buttons. */
   protected override updated(): void {
-    void this.#syncAria();
-  }
-
-  /**
-   * `uui-button` forwards only `aria-label`/`aria-labelledby` to the `<button>` in its shadow
-   * root, which is what takes focus, so `aria-pressed` and `aria-expanded` on the host would never
-   * reach assistive technology. Copy them onto the inner button (as the histogram toggles do).
-   */
-  async #syncAria(): Promise<void> {
-    for (const button of this._pressable) {
-      await button.updateComplete;
-      const inner = button.shadowRoot?.querySelector("#button");
-      const { pressed, expanded } = button.dataset;
-      if (pressed !== undefined) inner?.setAttribute("aria-pressed", pressed);
-      if (expanded !== undefined) inner?.setAttribute("aria-expanded", expanded);
-    }
+    void syncButtonAria(this.renderRoot);
   }
 
   get #collapsed(): boolean {

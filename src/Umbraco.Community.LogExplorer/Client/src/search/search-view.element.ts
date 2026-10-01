@@ -165,9 +165,8 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
         }
       }
 
-      /* A definite height (UUI's standard control height): the square icon buttons size
-         themselves from the bar's height (height: 100%; aspect-ratio: 1), which without one
-         resolves against their own content and stretches the whole bar to about 54 px. */
+      /* A definite height (UUI's standard control height), which the square icon buttons fill
+         (height: 100%) and match in width. */
       .query-bar {
         display: flex;
         align-items: stretch;

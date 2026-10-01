@@ -117,7 +117,7 @@ export class LogExplorerOverviewLevelsElement extends LogExplorerOverviewPanelBa
     if (status === "idle") return nothing;
     return html`
       <section class="minimum" aria-label=${this.localize.term("logExplorer_overviewMinimumLevels")}>
-        <h6>${this.localize.term("logExplorer_overviewMinimumLevels")}</h6>
+        <h5>${this.localize.term("logExplorer_overviewMinimumLevels")}</h5>
         ${
           status === "error"
             ? html`<p class="empty">${this.localize.term("logExplorer_overviewMinimumLevelsError", error ?? "")}</p>`
@@ -216,7 +216,7 @@ export class LogExplorerOverviewLevelsElement extends LogExplorerOverviewPanelBa
         border-top: 1px solid var(--uui-color-divider);
       }
 
-      .minimum h6 {
+      .minimum h5 {
         margin: 0 0 var(--uui-size-space-2);
         color: var(--uui-color-text-alt);
         font-size: var(--uui-type-small-size);

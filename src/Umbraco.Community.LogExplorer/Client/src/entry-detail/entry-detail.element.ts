@@ -17,6 +17,7 @@ import type { FilterNode } from "../query/filter-node.js";
 import { LOG_EXPLORER_QUERY_CONTEXT, type LogExplorerQueryContext } from "../query/query.context.js";
 import { tokeniseMessage } from "../results/message-tokens.js";
 import { levelOf } from "../results/row-format.js";
+import { syncButtonAria } from "../shared/button-aria.js";
 import { LEVEL_BADGE_STYLES, LEVEL_TOKENS } from "../shared/level-tokens.js";
 import { formatDetailTime, machineOf, messageValueChip, recordJson, samePatternChip } from "./entry-format.js";
 import {
@@ -147,6 +148,8 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
 
   protected override updated(changed: PropertyValues<this>): void {
     super.updated(changed);
+    // The expand toggles' state, onto their focusable inner buttons (see syncButtonAria).
+    void syncButtonAria(this.renderRoot);
     if (changed.has("record") && changed.get("record")?.id !== this.record?.id && this._content) {
       this._content.scrollTop = 0;
     }
@@ -359,7 +362,7 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
                     compact
                     class="expand"
                     label=${this.localize.term(open ? "logExplorer_detailCollapse" : "logExplorer_detailExpand", name)}
-                    aria-expanded=${open ? "true" : "false"}
+                    data-expanded=${open ? "true" : "false"}
                     @click=${() => this.#toggle(node.key)}
                   >
                     <uui-symbol-expand ?open=${open}></uui-symbol-expand>
@@ -441,7 +444,7 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
                             ? "logExplorer_detailHideFrameworkFrames"
                             : "logExplorer_detailShowFrameworkFrames",
                         )}
-                        aria-expanded=${this._showFramework ? "true" : "false"}
+                        data-expanded=${this._showFramework ? "true" : "false"}
                         @click=${() => (this._showFramework = !this._showFramework)}
                       ></uui-button>`
                     : nothing

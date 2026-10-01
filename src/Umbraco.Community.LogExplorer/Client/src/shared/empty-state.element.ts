@@ -27,7 +27,8 @@ export class LogExplorerEmptyStateElement extends UmbLitElement {
    * @returns The template.
    */
   override render() {
-    return html`<uui-box headline=${this.headline}><slot></slot></uui-box>`;
+    // h4: one level below the workspace title (h3), for a sound heading order (#51).
+    return html`<uui-box headline=${this.headline} headline-variant="h4"><slot></slot></uui-box>`;
   }
 
   static override styles = [

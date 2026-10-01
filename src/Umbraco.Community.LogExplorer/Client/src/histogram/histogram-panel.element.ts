@@ -5,11 +5,9 @@ import {
   html,
   nothing,
   query,
-  queryAll,
   state,
   styleMap,
 } from "@umbraco-cms/backoffice/external/lit";
-import type { UUIButtonElement } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
@@ -17,7 +15,9 @@ import { HistogramService, type HistogramBucket, type HistogramRequest } from ".
 import { toLogQuery } from "../query/log-query.js";
 import { LOG_EXPLORER_QUERY_CONTEXT, type LogExplorerQueryContext } from "../query/query.context.js";
 import { LEVELS, type Level, type LogExplorerViewState } from "../query/view-state.js";
+import { syncButtonAria } from "../shared/button-aria.js";
 import { LEVEL_TOKENS } from "../shared/level-tokens.js";
+import { rovingIndex } from "../shared/roving-focus.js";
 import { HistogramLoader, type HistogramFn, type HistogramState } from "./histogram-loader.js";
 import {
   barIndexAt,
@@ -65,7 +65,8 @@ const histogramWithClient: HistogramFn = (alias, body, signal) =>
  *   `uui-button` because each needs a column layout of coloured segments, which `uui-button`'s
  *   centred, padded content box cannot hold. Clicking a bar zooms to five minutes around it;
  *   dragging across bars selects any range. Both write the context's `zoom`, which the time chip
- *   (`log-explorer-zoom-chip`) shows and the URL records.
+ *   (`log-explorer-zoom-chip`) shows and the URL records. The bars are one Tab stop (a roving
+ *   tabindex): Left/Right/Home/End move between them and Enter or Space zooms (#51).
  * - **States** (UI brief §4.15): `uui-loader-bar` with the previous bars dimmed while a request
  *   runs; an error banner with Retry; an Approximate tag beside the summary. A source without
  *   the Histogram feature shows the level toggles only, without counts, because they are still
@@ -98,11 +99,15 @@ export class LogExplorerHistogramElement extends UmbLitElement {
   @state()
   private _drag: { start: number; end: number } | undefined;
 
+  /**
+   * Index of the bar that holds the bars' single Tab stop; moved by the arrow keys and by focusing
+   * a bar. Clamped to the bars on screen, so a shorter histogram keeps a reachable stop.
+   */
+  @state()
+  private _activeBar = 0;
+
   @query(".bars")
   private _bars?: HTMLElement;
-
-  @queryAll("uui-button.level")
-  private _toggles!: NodeListOf<UUIButtonElement>;
 
   #loader = new HistogramLoader(histogramWithClient, (histogram) => (this._histogram = histogram));
   #context?: LogExplorerQueryContext;
@@ -145,21 +150,9 @@ export class LogExplorerHistogramElement extends UmbLitElement {
     this.#requestKey = undefined;
   }
 
+  /** Copies the level toggles' `data-pressed` onto their focusable inner buttons. */
   protected override updated(): void {
-    void this.#syncPressed();
-  }
-
-  /**
-   * `uui-button` forwards only `aria-label`/`aria-labelledby` to the `<button>` in its shadow
-   * root, which is what takes focus, so `aria-pressed` on the host would never reach assistive
-   * technology. Set it on the inner button (the source picker does the same for `aria-expanded`).
-   */
-  async #syncPressed(): Promise<void> {
-    for (const toggle of this._toggles) {
-      await toggle.updateComplete;
-      const pressed = isLevelOn(this._levels, toggle.dataset.level as Level);
-      toggle.shadowRoot?.querySelector("#button")?.setAttribute("aria-pressed", String(pressed));
-    }
+    void syncButtonAria(this.renderRoot);
   }
 
   /** Requests the bars again only when the request itself changed (not on level or sort changes). */
@@ -214,6 +207,24 @@ export class LogExplorerHistogramElement extends UmbLitElement {
       return;
     }
     this.#context?.setZoom(zoomFromBucket(bucket.start));
+  }
+
+  /** Moves the roving focus between bars with Left/Right/Home/End; other keys pass through. */
+  #onBarsKeydown = async (event: KeyboardEvent): Promise<void> => {
+    const count = this._histogram.result?.buckets.length ?? 0;
+    const next = rovingIndex(this.#clampedActiveBar(count), event.key, count, {
+      orientation: "horizontal",
+      wrap: false,
+    });
+    if (next === undefined) return;
+    event.preventDefault();
+    this._activeBar = next;
+    await this.updateComplete;
+    this.renderRoot.querySelectorAll<HTMLButtonElement>("button.bar")[next]?.focus();
+  };
+
+  #clampedActiveBar(count: number): number {
+    return Math.min(Math.max(this._activeBar, 0), Math.max(count - 1, 0));
   }
 
   #indexAt(event: PointerEvent): number {
@@ -272,6 +283,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
             <uui-button
               class=${classMap({ level: true, off: !on, zero: count === 0 })}
               data-level=${level}
+              data-pressed=${String(on)}
               compact
               look=${on ? "outline" : "secondary"}
               label=${count === undefined ? name : this.localize.term("logExplorer_histogramLevelLabel", name, count, countText)}
@@ -331,17 +343,23 @@ export class LogExplorerHistogramElement extends UmbLitElement {
     const lastEndMs = new Date(buckets[buckets.length - 1]!.start).getTime() + sizeMs;
     const dimmed = this._histogram.status === "loading";
     const drag = this._drag;
+    const activeBar = this.#clampedActiveBar(buckets.length);
 
     return html`
       <div class=${classMap({ chart: true, dimmed })}>
         <div
           class="bars"
+          role="group"
+          aria-label=${this.localize.term("logExplorer_histogramBarsLabel")}
+          @keydown=${this.#onBarsKeydown}
           @pointerdown=${this.#onPointerDown}
           @pointermove=${this.#onPointerMove}
           @pointerup=${this.#onPointerUp}
           @pointercancel=${this.#onPointerCancel}
         >
-          ${buckets.map((bucket) => this.#renderBar(bucket, maxTotal, withSeconds, lang))}
+          ${buckets.map((bucket, index) =>
+            this.#renderBar(bucket, index, index === activeBar, maxTotal, withSeconds, lang),
+          )}
           ${
             drag && drag.start !== drag.end
               ? html`<div
@@ -363,7 +381,14 @@ export class LogExplorerHistogramElement extends UmbLitElement {
     `;
   }
 
-  #renderBar(bucket: HistogramBucket, maxTotal: number, withSeconds: boolean, lang: string) {
+  #renderBar(
+    bucket: HistogramBucket,
+    index: number,
+    tabStop: boolean,
+    maxTotal: number,
+    withSeconds: boolean,
+    lang: string,
+  ) {
     const time = formatClock(new Date(bucket.start).getTime(), withSeconds, lang);
     const total = bucketTotal(bucket);
     const segments = layoutBar(bucket.countsBySeverityShortName, maxTotal, MIN_SEGMENT_PERCENT);
@@ -379,6 +404,8 @@ export class LogExplorerHistogramElement extends UmbLitElement {
         class="bar"
         aria-label=${label}
         title=${breakdown ? `${label}\n${breakdown}` : label}
+        tabindex=${tabStop ? 0 : -1}
+        @focus=${() => (this._activeBar = index)}
         @click=${(event: MouseEvent) => this.#onBarClick(event, bucket)}
       >
         ${segments.map(
@@ -504,12 +531,20 @@ export class LogExplorerHistogramElement extends UmbLitElement {
       uui-button.level.off .name,
       uui-button.level.off .count {
         text-decoration: line-through;
-        color: var(--uui-color-disabled-contrast);
+        /* Secondary text, not the disabled colour: an off toggle is still a live control, and
+           the disabled colour fails 4.5:1 on the secondary look (axe, #51). The strike-through,
+           hollow swatch and aria-pressed carry the off state. */
+        color: var(--uui-color-text-alt);
       }
 
-      /* Zero-count levels stay visible but recede. */
-      uui-button.level.zero:not(.off) {
-        opacity: 0.6;
+      /* Zero-count levels stay visible but recede: a faded swatch and secondary text. Not
+         opacity on the whole toggle, which took the text below 4.5:1 contrast (axe, #51). */
+      uui-button.level.zero:not(.off) .swatch {
+        opacity: 0.5;
+      }
+
+      uui-button.level.zero:not(.off) .name {
+        color: var(--uui-color-text-alt);
       }
 
       .summary {
