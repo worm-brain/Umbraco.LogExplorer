@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/LogExplorer.Site17/LogExplorer.Site17.csproj" />
+    <Project Path="samples/LogExplorer.Site18/LogExplorer.Site18.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Umbraco.Community.LogExplorer.Core/Umbraco.Community.LogExplorer.Core.csproj" />
     <Project Path="src/Umbraco.Community.LogExplorer/Umbraco.Community.LogExplorer.csproj" />
