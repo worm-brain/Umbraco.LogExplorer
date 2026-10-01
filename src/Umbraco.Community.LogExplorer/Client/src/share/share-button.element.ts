@@ -13,7 +13,8 @@ import { buildShareUrl } from "./share-link.js";
  * Not `uui-button-copy-text`: that reports a failed write only with `console.error`, and the
  * failure needs a notification (as the drawer's Copy as JSON does).
  *
- * Not bound to a manifest; the Search and Patterns views render it at the end of the query bar.
+ * Not bound to a manifest; the Search, Patterns and Overview views render it at the end of the
+ * query bar.
  *
  * @element log-explorer-share-button
  */

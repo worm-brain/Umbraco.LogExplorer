@@ -21,7 +21,6 @@ export default {
     tabOverview: "Overview",
 
     // Empty views, until each view is built.
-    overviewEmpty: "Nothing to summarise yet. Counts by level, frequent messages and exception types arrive here.",
 
     // Source picker (UI brief §4.1).
     sourcesLoading: "Loading log sources…",
@@ -229,5 +228,15 @@ export default {
     overviewMinimumLevels: "Minimum levels (configuration)",
     overviewFrequentMessages: "Most frequent messages",
     overviewExceptionTypes: "Exception types",
+    overviewLevelHidden: (level: string) => `${level} entries are hidden by the level filter`,
+    overviewLevelsUnsupported: (source: string) => `${source} cannot count entries by level.`,
+    overviewLevelsError: (message: string) => `Could not count entries by level: ${message}`,
+    overviewMinimumLevelsError: (message: string) => `Could not read the minimum levels: ${message}`,
+    overviewFocusTemplate: (template: string, count: string) => `Show the ${count} entries of ${template} in Search`,
+    overviewMessagesEmpty: "No messages in the current results.",
+    overviewFocusException: (type: string, count: string) => `Show the ${count} ${type} entries in Search`,
+    overviewExceptionsUnsupported: (source: string) => `${source} cannot count exception types.`,
+    overviewExceptionsError: (message: string) => `Could not load exception types: ${message}`,
+    overviewExceptionsEmpty: "No exceptions in the current results.",
   },
 } satisfies UmbLocalizationDictionary;
