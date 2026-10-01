@@ -1,4 +1,4 @@
-import { test as base, expect, type ConsoleMessage } from "@playwright/test";
+import { test as base, expect, type ConsoleMessage, type Page } from "@playwright/test";
 import type { E2eSite } from "./sites.js";
 
 /**
@@ -27,19 +27,32 @@ function isAllowed(text: string): boolean {
   return ALLOWED_CONSOLE_ERRORS.some(({ pattern }) => pattern.test(text));
 }
 
+/**
+ * Starts recording a page's console errors and uncaught page errors, minus the allow-list. The
+ * automatic guard does this for the test's `page`; call it for any other page a test opens, and
+ * assert the returned list is empty at the end.
+ *
+ * @param page - The page to watch.
+ * @returns A live list of problems, one line each, appended to as they happen.
+ */
+export function watchConsole(page: Page): Array<string> {
+  const problems: Array<string> = [];
+  page.on("console", (message: ConsoleMessage) => {
+    if (message.type() !== "error" || isAllowed(message.text())) return;
+    const { url, lineNumber } = message.location();
+    problems.push(`console.error: ${message.text()}${url ? ` (${url}:${lineNumber})` : ""}`);
+  });
+  page.on("pageerror", (error) => problems.push(`page error: ${error.message}`));
+  return problems;
+}
+
 /** Playwright's `test` with the console guard and the site option. Import this, not `@playwright/test`. */
 export const test = base.extend<E2eFixtures, E2eOptions>({
   site: [undefined as unknown as E2eSite, { option: true, scope: "worker" }],
 
   consoleGuard: [
     async ({ page }, use) => {
-      const problems: Array<string> = [];
-      page.on("console", (message: ConsoleMessage) => {
-        if (message.type() !== "error" || isAllowed(message.text())) return;
-        const { url, lineNumber } = message.location();
-        problems.push(`console.error: ${message.text()}${url ? ` (${url}:${lineNumber})` : ""}`);
-      });
-      page.on("pageerror", (error) => problems.push(`page error: ${error.message}`));
+      const problems = watchConsole(page);
 
       await use();
 

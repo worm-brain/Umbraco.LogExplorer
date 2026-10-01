@@ -2,7 +2,7 @@
 // and reloading the URL restores the identical view. Runs on the `sample` source, whose data is
 // generated once when the site starts, so the same absolute zoom shows the same rows after reload.
 import type { Page } from "@playwright/test";
-import { openExplorer, searchView } from "./support/explorer.js";
+import { dragAcrossBars, openExplorer, searchView } from "./support/explorer.js";
 import { expect, test } from "./support/test.js";
 
 /** What the Search view shows, as text, for comparing before and after a reload. */
@@ -13,19 +13,6 @@ async function snapshot(page: Page) {
     zoom: await view.zoomChip.getAttribute("aria-label"),
     rows: await view.rows.allTextContents(),
   };
-}
-
-/** Drags across the histogram from one bar to another with the mouse (pointer events). */
-async function dragAcrossBars(page: Page, fromIndex: number, toIndex: number): Promise<void> {
-  const bars = searchView(page).histogramBars;
-  const from = await bars.nth(fromIndex).boundingBox();
-  const to = await bars.nth(toIndex).boundingBox();
-  if (!from || !to) throw new Error("histogram bars are not laid out");
-
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 10 });
-  await page.mouse.up();
 }
 
 test("dragging on the histogram zooms in, and reloading the URL restores the same view", async ({ page }) => {

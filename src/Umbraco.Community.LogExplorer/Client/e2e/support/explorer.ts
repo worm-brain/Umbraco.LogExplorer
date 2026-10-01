@@ -52,7 +52,30 @@ export function searchView(page: Page) {
     levelToggle: (level: (typeof LEVEL_NAMES)[number]): Locator =>
       levels.getByRole("button", { name: new RegExp(`^${level},`) }),
     rows: page.getByRole("button", { name: /^Open entry / }),
+    /** The Time column header, which toggles the sort; its name says the current direction. */
+    sort: page.getByRole("button", { name: /^Time, (newest|oldest) first/ }),
+    showQuery: page.getByRole("button", { name: "Show generated query" }),
+    share: page.getByRole("button", { name: "Copy link to this view" }),
   };
+}
+
+/**
+ * Drags across the histogram from one bar to another with the mouse, as a user selecting a range.
+ *
+ * @param page - A page showing the Search view.
+ * @param fromIndex - Zero-based index of the bar the drag starts on.
+ * @param toIndex - Index of the bar it ends on; both bars are inside the selection.
+ */
+export async function dragAcrossBars(page: Page, fromIndex: number, toIndex: number): Promise<void> {
+  const bars = searchView(page).histogramBars;
+  const from = await bars.nth(fromIndex).boundingBox();
+  const to = await bars.nth(toIndex).boundingBox();
+  if (!from || !to) throw new Error("histogram bars are not laid out");
+
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 10 });
+  await page.mouse.up();
 }
 
 /**
