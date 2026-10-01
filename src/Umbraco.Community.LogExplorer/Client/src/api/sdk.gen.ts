@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, SearchData, SearchErrors, SearchResponses } from './types.gen';
+import type { GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,20 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+export class ParseService {
+    public static parse<ThrowOnError extends boolean = false>(options?: Options<ParseData, ThrowOnError>): RequestResult<ParseResponses, ParseErrors, ThrowOnError> {
+        return (options?.client ?? client).post<ParseResponses, ParseErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/parse',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options?.headers
+            }
+        });
+    }
+}
 
 export class SearchService {
     public static search<ThrowOnError extends boolean = false>(options: Options<SearchData, ThrowOnError>): RequestResult<SearchResponses, SearchErrors, ThrowOnError> {

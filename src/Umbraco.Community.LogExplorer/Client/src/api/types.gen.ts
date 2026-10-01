@@ -75,6 +75,21 @@ export type OrNode = {
     children: Array<AndNode | OrNode | NotNode | ConditionNode | TextNode>;
 };
 
+export type ParseFallback = {
+    code: string;
+    message: string;
+};
+
+export type ParseRequest = {
+    input?: string | null;
+};
+
+export type ParseResult = {
+    chips: Array<AndNode | OrNode | NotNode | ConditionNode | TextNode>;
+    levels?: Array<string> | null;
+    fallback?: ParseFallback | null;
+};
+
 export type ProblemDetails = {
     type?: string | null;
     title?: string | null;
@@ -124,6 +139,35 @@ export type TimeRange = {
     to?: string | null;
     relative?: string | null;
 };
+
+export type ParseData = {
+    body?: ParseRequest;
+    path?: never;
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/parse';
+};
+
+export type ParseErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type ParseError = ParseErrors[keyof ParseErrors];
+
+export type ParseResponses = {
+    /**
+     * OK
+     */
+    200: ParseResult;
+};
+
+export type ParseResponse = ParseResponses[keyof ParseResponses];
 
 export type SearchData = {
     body?: LogQuery;
