@@ -8,6 +8,7 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Added
 
+- Patterns view: the entries matching the query bar grouped by message template, highest count first, each with its placeholders highlighted, its source and a sample message, a level-mix bar, a volume sparkline across the time range and its count. Focus filters to that template and opens Search; Mute excludes it and says so. A level set from `level:` is named above the list with a "Show all levels" button.
 - `POST /umbraco/log-explorer/api/v1/sources/{alias}/patterns` groups matching entries by message template (`{ query, top }`, 1 to 200 patterns), each with its count, level mix, a 30-bucket sparkline and the newest entry as a sample.
 - Search box aliases `status:` (for `StatusCode`) and `machine:` (for `MachineName`), so `-status:200` filters out successful requests.
 - Histogram on the Search view: entry volume over time with bars stacked by level and a tooltip of counts per bar. Its level toggles (TRACE to FATAL) are the level filter and keep showing how many entries each hidden level holds. Clicking a bar zooms to five minutes around it and dragging across bars zooms to any range; the zoom shows as a "Time: 00:40 to 00:45" chip, is kept in the URL (`zf`, `zt`) and is cleared by the chip's remove button or by choosing a new time range.

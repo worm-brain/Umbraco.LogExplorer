@@ -21,7 +21,6 @@ export default {
     tabOverview: "Overview",
 
     // Empty views, until each view is built.
-    patternsEmpty: "No patterns to show yet. Message templates grouped by count arrive here.",
     overviewEmpty: "Nothing to summarise yet. Counts by level, frequent messages and exception types arrive here.",
 
     // Source picker (UI brief §4.1).
@@ -140,6 +139,30 @@ export default {
     savedViewsCaption: "Saved views",
     savedViewsSaveCurrent: "Save current view…",
     showQueryEditAsNative: "Edit as native",
+
+    // Patterns view (UI brief §4.12, §4.14).
+    patternsLabel: "Message patterns",
+    patternsHeader: (count: string) => `Message template · ${count} patterns in the current results`,
+    patternsHeaderOne: "Message template · 1 pattern in the current results",
+    patternsColumnLevelMix: "Level mix",
+    patternsColumnVolume: (from: string, to: string) => `Volume, ${from} to ${to}`,
+    patternsColumnCount: "Count",
+    patternsColumnActions: "Actions",
+    patternsSample: (source: string, sample: string) => `${source} · e.g. ${sample}`,
+    patternsSampleNoSource: (sample: string) => `e.g. ${sample}`,
+    patternsLevelMix: (levels: string) => `Level mix: ${levels}`,
+    patternsVolume: (count: string, peak: string) => `${count} entries, at most ${peak} in one interval`,
+    patternsVolumeOne: "1 entry",
+    patternsFocus: "Focus",
+    patternsFocusLabel: (template: string) => `Focus on ${template}`,
+    patternsMute: "Mute",
+    patternsMuteLabel: (template: string) => `Mute ${template}`,
+    patternsMuted: (template: string) => `Muted: ${template}`,
+    patternsEmpty: "No patterns match. Remove a filter or widen the time range.",
+    patternsError: (message: string) => `Could not load patterns: ${message}`,
+    patternsUnsupported: (source: string) => `${source} cannot group entries by message template.`,
+    patternsLevelsFiltered: (levels: string) => `Only ${levels} entries`,
+    patternsShowAllLevels: "Show all levels",
 
     // Overview (UI brief §4.13).
     overviewEntriesByLevel: (range: string) => `Entries by level · ${range}`,
