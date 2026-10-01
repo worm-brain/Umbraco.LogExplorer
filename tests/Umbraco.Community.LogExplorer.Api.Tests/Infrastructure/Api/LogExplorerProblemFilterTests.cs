@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Routing;
 using NSubstitute;
 using Umbraco.Community.LogExplorer.Core.Sources;
+using Umbraco.Community.LogExplorer.Features.Context;
 using Umbraco.Community.LogExplorer.Infrastructure.Api;
 
 namespace Umbraco.Community.LogExplorer.Api.Tests.Infrastructure.Api;
@@ -20,8 +21,11 @@ public class LogExplorerProblemFilterTests
 
     [Theory]
     [InlineData(typeof(KeyNotFoundException), 404, "source_not_found")]
+    [InlineData(typeof(RecordNotFoundException), 404, "record_not_found")]
     [InlineData(typeof(ForbiddenSourceException), 403, "forbidden_source")]
     [InlineData(typeof(NotSupportedException), 400, "unsupported_feature")]
+    [InlineData(typeof(ArgumentException), 400, "invalid_query")]
+    [InlineData(typeof(ArgumentOutOfRangeException), 400, "invalid_query")]
     public void OnException_KnownException_WritesProblemDetailsWithTheCode(
         Type exceptionType,
         int status,
@@ -37,6 +41,66 @@ public class LogExplorerProblemFilterTests
         // Assert
         var details = (ProblemDetails)((ObjectResult)context.Result!).Value!;
         Assert.Equal((status, code), (details.Status!.Value, (string)details.Extensions["code"]!));
+    }
+
+    [Fact]
+    public void OnException_RangeTooLarge_WritesRangeTooLargeWithItsMessage()
+    {
+        // Arrange
+        ExceptionContext context = Context(new RangeTooLargeException("At most 4 hours."));
+
+        // Act
+        _filter.OnException(context);
+
+        // Assert
+        var details = (ProblemDetails)((ObjectResult)context.Result!).Value!;
+        Assert.Equal(
+            (400, "range_too_large", "At most 4 hours."),
+            (details.Status!.Value, (string)details.Extensions["code"]!, details.Detail)
+        );
+    }
+
+    [Fact]
+    public void OnException_InvalidNativeQuery_WritesInvalidNativeQueryWithThePosition()
+    {
+        // Arrange
+        ExceptionContext context = Context(
+            new InvalidNativeQueryException("Syntax error (line 1, column 5): unexpected `)`.")
+            {
+                Position = 4,
+            }
+        );
+
+        // Act
+        _filter.OnException(context);
+
+        // Assert
+        var details = (ProblemDetails)((ObjectResult)context.Result!).Value!;
+        Assert.Equal(
+            (400, "invalid_native_query", (int?)4),
+            (
+                details.Status!.Value,
+                (string)details.Extensions["code"]!,
+                (int?)details.Extensions["position"]
+            )
+        );
+    }
+
+    [Fact]
+    public void OnException_InvalidNativeQueryWithoutPosition_WritesANullPosition()
+    {
+        // Arrange
+        ExceptionContext context = Context(new InvalidNativeQueryException("Unknown function."));
+
+        // Act
+        _filter.OnException(context);
+
+        // Assert
+        var details = (ProblemDetails)((ObjectResult)context.Result!).Value!;
+        Assert.True(
+            details.Extensions.TryGetValue("position", out object? position) && position is null,
+            "The position extension should be present and null."
+        );
     }
 
     [Fact]

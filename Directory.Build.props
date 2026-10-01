@@ -48,7 +48,15 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- House-style package icon (#75); the 128 px PNG is what NuGet and the marketplace show. -->
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)src$([System.IO.Path]::DirectorySeparatorChar)'))">
+    <None Include="$(MSBuildThisFileDirectory)assets\icon\umbraco-logexplorer-128.png" Pack="true" PackagePath="icon.png" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="README.md" Visible="false" />
+  </ItemGroup>
 
   <!-- Tests and samples are never packed. -->
   <PropertyGroup Condition="!$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)src$([System.IO.Path]::DirectorySeparatorChar)'))">

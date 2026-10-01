@@ -19,6 +19,17 @@ brief assumed. Update the brief in the same change.
 | [0008](0008-core-contract-refinements.md) | Core contract refinements from Phase 0 | Accepted |
 | [0009](0009-package-api-route.md) | The package API lives at `/umbraco/log-explorer/api/v1` | Accepted |
 | [0010](0010-one-package-per-umbraco-major.md) | Build one package per Umbraco major from one source tree | Accepted |
+| [0011](0011-settings-endpoint.md) | The client reads its settings from `GET /settings` | Accepted |
+| [0012](0012-file-cursor-per-machine-stream.md) | The files cursor holds one position per machine stream; record ids are base64url | Accepted |
+| [0013](0013-files-native-dialect-is-the-core-viewers.md) | The files source's native dialect is the core Log Viewer's own Serilog.Expressions setup | Accepted |
+| [0014](0014-package-api-json-and-query-errors.md) | The package API formats JSON with `LogJson`; malformed queries return `invalid_query` | Accepted |
+| [0015](0015-results-list-virtual-window.md) | The results list virtualises with its own fixed-height row window | Accepted |
+| [0016](0016-show-query-and-native-mode.md) | Show query compiles on every change; native mode is gated by `allowNativeQuery` | Accepted |
+| [0017](0017-files-filter-on-partial-records.md) | The files pager tests filters on partially mapped records, not on a LogEvent predicate | Accepted |
+| [0019](0019-overview-from-existing-endpoints-and-minimum-levels.md) | The Overview reuses the query endpoints; sink minimum levels come from `GET /minimum-levels` | Accepted |
+| [0020](0020-e2e-suite-with-plain-playwright.md) | The e2e suite runs plain Playwright from the client, against both sample sites | Accepted |
+| [0021](0021-menus-patch-uui-aria.md) | Menus and toggles patch the ARIA UUI does not expose | Accepted |
+| [0022](0022-smoke-test-packed-nupkgs.md) | The release smoke-tests the packed nupkgs on spawned sites of the floor and latest Umbraco versions | Accepted |
 
 ## Template
 

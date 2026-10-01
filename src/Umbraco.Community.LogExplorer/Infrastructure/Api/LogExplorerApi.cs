@@ -15,10 +15,30 @@ public static class LogExplorerApi
         /// <summary>No source has the requested alias.</summary>
         public const string SourceNotFound = "source_not_found";
 
+        /// <summary>The source has no record with the requested id (for example its log file was deleted).</summary>
+        public const string RecordNotFound = "record_not_found";
+
         /// <summary>The source exists but the user may not use it.</summary>
         public const string ForbiddenSource = "forbidden_source";
 
         /// <summary>The source does not support the requested feature or operator.</summary>
         public const string UnsupportedFeature = "unsupported_feature";
+
+        /// <summary>The time range is longer than the source allows.</summary>
+        public const string RangeTooLarge = "range_too_large";
+
+        /// <summary>
+        /// The query is malformed: an unknown relative range, <c>From</c> not before <c>To</c>, a
+        /// cursor from another source, a page size below 1, an invalid regular expression, or search box input over
+        /// the <c>POST /parse</c> length limit.
+        /// </summary>
+        public const string InvalidQuery = "invalid_query";
+
+        /// <summary>
+        /// The native query does not compile in the source's language. The response's
+        /// <c>position</c> extension is the zero-based offset of the error, or null when the
+        /// source cannot say where it is.
+        /// </summary>
+        public const string InvalidNativeQuery = "invalid_native_query";
     }
 }

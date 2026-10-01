@@ -4,6 +4,205 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44370' | (string & {});
 };
 
+export type AndNode = {
+    kind: 'and';
+    children: Array<AndNode | OrNode | NotNode | ConditionNode | TextNode>;
+};
+
+export type CompileResult = {
+    native?: string | null;
+    unsupported: Array<AndNode | OrNode | NotNode | ConditionNode | TextNode>;
+};
+
+export type ConditionNode = {
+    kind: 'condition';
+    field: string;
+    op: FilterOperator;
+    value?: unknown;
+    caseInsensitive?: boolean;
+};
+
+export type ContextResult = {
+    before: Array<LogRecord>;
+    anchor: LogRecord;
+    after: Array<LogRecord>;
+};
+
+export type Facet = {
+    field: string;
+    presenceRatio: number;
+    topValues: Array<FacetValue>;
+};
+
+export type FacetResult = {
+    facets: Array<Facet>;
+    approximate: boolean;
+    scannedRange: ResolvedRange;
+};
+
+export type FacetValue = {
+    value: unknown;
+    count: number;
+};
+
+export type FacetsRequest = {
+    query: LogQuery;
+    fields: Array<string>;
+    top: number;
+};
+
+export type FieldInfo = {
+    path: string;
+    kind: string;
+    presenceRatio: number;
+};
+
+export type FilterOperator = 'equals' | 'notEquals' | 'contains' | 'startsWith' | 'endsWith' | 'greaterThan' | 'greaterOrEqual' | 'lessThan' | 'lessOrEqual' | 'in' | 'exists' | 'notExists' | 'matches';
+
+export type HistogramBucket = {
+    start: string;
+    countsBySeverityShortName: {
+        [key: string]: number;
+    };
+};
+
+export type HistogramRequest = {
+    query: LogQuery;
+    targetBuckets: number;
+};
+
+export type HistogramResult = {
+    range: ResolvedRange;
+    bucketSize: string;
+    buckets: Array<HistogramBucket>;
+    approximate: boolean;
+};
+
+export type LogException = {
+    type?: string | null;
+    message?: string | null;
+    stackTrace?: string | null;
+};
+
+export type LogPage = {
+    records: Array<LogRecord>;
+    nextCursor?: string | null;
+    range: ResolvedRange;
+    totalCount?: number | null;
+    totalIsLowerBound: boolean;
+    warnings: Array<string>;
+};
+
+export type LogQuery = {
+    range: TimeRange;
+    levels?: Array<string> | null;
+    filter?: AndNode | OrNode | NotNode | ConditionNode | TextNode | null;
+    nativeQuery?: string | null;
+    take: number;
+    cursor?: string | null;
+    sort: SortDirection;
+};
+
+export type LogRecord = {
+    id: string;
+    timestamp: string;
+    severityNumber: number;
+    severityText?: string | null;
+    body?: string | null;
+    messageTemplate?: string | null;
+    templateHash?: string | null;
+    traceId?: string | null;
+    spanId?: string | null;
+    scope?: string | null;
+    exception?: LogException | null;
+    attributes: {
+        [key: string]: unknown;
+    };
+    resource: {
+        [key: string]: unknown;
+    };
+    sourceAlias: string;
+};
+
+export type MinimumLevelsResult = {
+    sinks: Array<SinkMinimumLevel>;
+};
+
+export type NotNode = {
+    kind: 'not';
+    child: AndNode | OrNode | NotNode | ConditionNode | TextNode;
+};
+
+export type OrNode = {
+    kind: 'or';
+    children: Array<AndNode | OrNode | NotNode | ConditionNode | TextNode>;
+};
+
+export type ParseFallback = {
+    code: string;
+    message: string;
+};
+
+export type ParseRequest = {
+    input?: string | null;
+};
+
+export type ParseResult = {
+    chips: Array<AndNode | OrNode | NotNode | ConditionNode | TextNode>;
+    levels?: Array<string> | null;
+    fallback?: ParseFallback | null;
+};
+
+export type Pattern = {
+    templateHash: string;
+    template: string;
+    count: number;
+    countsBySeverityShortName: {
+        [key: string]: number;
+    };
+    sample: LogRecord;
+    sparkline: Array<number>;
+};
+
+export type PatternResult = {
+    patterns: Array<Pattern>;
+    approximate: boolean;
+};
+
+export type PatternsRequest = {
+    query: LogQuery;
+    top: number;
+};
+
+export type ProblemDetails = {
+    type?: string | null;
+    title?: string | null;
+    status?: number | null;
+    detail?: string | null;
+    instance?: string | null;
+    [key: string]: unknown;
+};
+
+export type ResolvedRange = {
+    from: string;
+    to: string;
+};
+
+export type SettingsResponseModel = {
+    hideCoreLogViewer: boolean;
+    defaultSource: string;
+    defaultTimeRange: string;
+    pinnedFacets: Array<string>;
+    correlationFields: Array<string>;
+};
+
+export type SinkMinimumLevel = {
+    name: string;
+    level: string;
+};
+
+export type SortDirection = 'descending' | 'ascending';
+
 export type SourceCapabilitiesResponseModel = {
     features: Array<string>;
     operators: Array<string>;
@@ -18,7 +217,441 @@ export type SourceResponseModel = {
     type: string;
     sensitive: boolean;
     capabilities: SourceCapabilitiesResponseModel;
+    allowNativeQuery: boolean;
 };
+
+export type TextNode = {
+    kind: 'text';
+    text: string;
+    phrase?: boolean;
+};
+
+export type TimeRange = {
+    from?: string | null;
+    to?: string | null;
+    relative?: string | null;
+};
+
+export type ValidateRequest = {
+    native?: string | null;
+};
+
+export type ValidationResult = {
+    valid: boolean;
+    error?: string | null;
+    position?: number | null;
+};
+
+export type GetContextData = {
+    body?: never;
+    path: {
+        alias: string;
+        id: string;
+    };
+    query?: {
+        before?: number;
+        after?: number;
+    };
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/records/{id}/context';
+};
+
+export type GetContextErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetContextError = GetContextErrors[keyof GetContextErrors];
+
+export type GetContextResponses = {
+    /**
+     * OK
+     */
+    200: ContextResult;
+};
+
+export type GetContextResponse = GetContextResponses[keyof GetContextResponses];
+
+export type GetFacetsData = {
+    body?: FacetsRequest;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/facets';
+};
+
+export type GetFacetsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetFacetsError = GetFacetsErrors[keyof GetFacetsErrors];
+
+export type GetFacetsResponses = {
+    /**
+     * OK
+     */
+    200: FacetResult;
+};
+
+export type GetFacetsResponse = GetFacetsResponses[keyof GetFacetsResponses];
+
+export type GetFieldsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        from?: string;
+        to?: string;
+        relative?: string;
+    };
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/fields';
+};
+
+export type GetFieldsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetFieldsError = GetFieldsErrors[keyof GetFieldsErrors];
+
+export type GetFieldsResponses = {
+    /**
+     * OK
+     */
+    200: Array<FieldInfo>;
+};
+
+export type GetFieldsResponse = GetFieldsResponses[keyof GetFieldsResponses];
+
+export type GetHistogramData = {
+    body?: HistogramRequest;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/histogram';
+};
+
+export type GetHistogramErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetHistogramError = GetHistogramErrors[keyof GetHistogramErrors];
+
+export type GetHistogramResponses = {
+    /**
+     * OK
+     */
+    200: HistogramResult;
+};
+
+export type GetHistogramResponse = GetHistogramResponses[keyof GetHistogramResponses];
+
+export type GetMinimumLevelsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/minimum-levels';
+};
+
+export type GetMinimumLevelsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetMinimumLevelsError = GetMinimumLevelsErrors[keyof GetMinimumLevelsErrors];
+
+export type GetMinimumLevelsResponses = {
+    /**
+     * OK
+     */
+    200: MinimumLevelsResult;
+};
+
+export type GetMinimumLevelsResponse = GetMinimumLevelsResponses[keyof GetMinimumLevelsResponses];
+
+export type CompileData = {
+    body?: LogQuery;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/compile';
+};
+
+export type CompileErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type CompileError = CompileErrors[keyof CompileErrors];
+
+export type CompileResponses = {
+    /**
+     * OK
+     */
+    200: CompileResult;
+};
+
+export type CompileResponse = CompileResponses[keyof CompileResponses];
+
+export type ValidateData = {
+    body?: ValidateRequest;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/validate';
+};
+
+export type ValidateErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type ValidateError = ValidateErrors[keyof ValidateErrors];
+
+export type ValidateResponses = {
+    /**
+     * OK
+     */
+    200: ValidationResult;
+};
+
+export type ValidateResponse = ValidateResponses[keyof ValidateResponses];
+
+export type ParseData = {
+    body?: ParseRequest;
+    path?: never;
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/parse';
+};
+
+export type ParseErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type ParseError = ParseErrors[keyof ParseErrors];
+
+export type ParseResponses = {
+    /**
+     * OK
+     */
+    200: ParseResult;
+};
+
+export type ParseResponse = ParseResponses[keyof ParseResponses];
+
+export type GetPatternsData = {
+    body?: PatternsRequest;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/patterns';
+};
+
+export type GetPatternsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetPatternsError = GetPatternsErrors[keyof GetPatternsErrors];
+
+export type GetPatternsResponses = {
+    /**
+     * OK
+     */
+    200: PatternResult;
+};
+
+export type GetPatternsResponse = GetPatternsResponses[keyof GetPatternsResponses];
+
+export type SearchData = {
+    body?: LogQuery;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/search';
+};
+
+export type SearchErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type SearchError = SearchErrors[keyof SearchErrors];
+
+export type SearchResponses = {
+    /**
+     * OK
+     */
+    200: LogPage;
+};
+
+export type SearchResponse = SearchResponses[keyof SearchResponses];
+
+export type GetSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/settings';
+};
+
+export type GetSettingsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetSettingsResponses = {
+    /**
+     * OK
+     */
+    200: SettingsResponseModel;
+};
+
+export type GetSettingsResponse = GetSettingsResponses[keyof GetSettingsResponses];
 
 export type GetSourcesData = {
     body?: never;

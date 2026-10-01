@@ -94,6 +94,53 @@ public class FakeLogSourceTests
     }
 
     [Fact]
+    public void Records_ThreeSampleHours_HasThreeHoursOfEntriesWithUniqueIds()
+    {
+        // Act
+        IReadOnlyList<LogRecord> records = CreateSource(
+            new FakeLogSourceOptions { SampleHours = 3 }
+        ).Records;
+
+        // Assert
+        Assert.Equal(
+            (238 * 3, 238 * 3),
+            (records.Count, records.Select(record => record.Id).Distinct().Count())
+        );
+    }
+
+    [Fact]
+    public void Records_ThreeSampleHours_StartThreeHoursAgoInTimestampOrder()
+    {
+        // Act
+        IReadOnlyList<LogRecord> records = CreateSource(
+            new FakeLogSourceOptions { SampleHours = 3 }
+        ).Records;
+
+        // Assert
+        Assert.Equal(
+            (true, true),
+            (
+                records[0].Timestamp >= Now.AddHours(-3) && records[0].Timestamp < Now.AddHours(-2),
+                records
+                    .Zip(records.Skip(1))
+                    .All(pair => pair.First.Timestamp <= pair.Second.Timestamp)
+            )
+        );
+    }
+
+    [Fact]
+    public void Constructor_ZeroSampleHours_Throws()
+    {
+        // Act
+        Exception? thrown = Record.Exception(() =>
+            CreateSource(new FakeLogSourceOptions { SampleHours = 0 })
+        );
+
+        // Assert
+        Assert.IsType<ArgumentOutOfRangeException>(thrown);
+    }
+
+    [Fact]
     public void Records_InjectedClock_EndsTheHourAtItsNow()
     {
         // Arrange
@@ -419,15 +466,46 @@ public class FakeLogSourceTests
     }
 
     [Theory]
-    [InlineData("anything at all", true)]
-    [InlineData("   ", false)]
-    public void ValidateNative_Text_IsValidUnlessBlank(string native, bool expected)
+    [InlineData("anything at all")]
+    [InlineData("(a = [1, 2]) and text(\"say \\\"(hi\\\"\")")]
+    public void ValidateNative_BalancedText_IsValid(string native)
     {
         // Act
         ValidationResult result = CreateSource().ValidateNative(native);
 
         // Assert
-        Assert.Equal(expected, result.Valid);
+        Assert.True(result.Valid);
+    }
+
+    [Theory]
+    [InlineData("   ", 0)]
+    [InlineData("a and (b", 6)]
+    [InlineData("a)", 1)]
+    [InlineData("(a]", 2)]
+    [InlineData("text(\"open)", 5)]
+    public void ValidateNative_Unbalanced_ReportsThePositionOfTheProblem(
+        string native,
+        int position
+    )
+    {
+        // Act
+        ValidationResult result = CreateSource().ValidateNative(native);
+
+        // Assert
+        Assert.Equal((false, position), (result.Valid, result.Position));
+    }
+
+    [Fact]
+    public async Task QueryAsync_InvalidNativeQuery_ThrowsInvalidNativeQueryWithItsPosition()
+    {
+        // Act
+        Exception? thrown = await Record.ExceptionAsync(() =>
+            CreateSource()
+                .QueryAsync(LastHour with { NativeQuery = "a and (b" }, CancellationToken.None)
+        );
+
+        // Assert
+        Assert.Equal(6, Assert.IsType<InvalidNativeQueryException>(thrown).Position);
     }
 
     [Fact]

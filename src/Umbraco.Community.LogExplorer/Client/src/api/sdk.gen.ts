@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetSourcesData, GetSourcesErrors, GetSourcesResponses } from './types.gen';
+import type { CompileData, CompileErrors, CompileResponses, GetContextData, GetContextErrors, GetContextResponses, GetFacetsData, GetFacetsErrors, GetFacetsResponses, GetFieldsData, GetFieldsErrors, GetFieldsResponses, GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetMinimumLevelsData, GetMinimumLevelsErrors, GetMinimumLevelsResponses, GetPatternsData, GetPatternsErrors, GetPatternsResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses, ValidateData, ValidateErrors, ValidateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,142 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+export class ContextService {
+    public static getContext<ThrowOnError extends boolean = false>(options: Options<GetContextData, ThrowOnError>): RequestResult<GetContextResponses, GetContextErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetContextResponses, GetContextErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/records/{id}/context',
+            ...options
+        });
+    }
+}
+
+export class FacetsService {
+    public static getFacets<ThrowOnError extends boolean = false>(options: Options<GetFacetsData, ThrowOnError>): RequestResult<GetFacetsResponses, GetFacetsErrors, ThrowOnError> {
+        return (options.client ?? client).post<GetFacetsResponses, GetFacetsErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/facets',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class FieldsService {
+    public static getFields<ThrowOnError extends boolean = false>(options: Options<GetFieldsData, ThrowOnError>): RequestResult<GetFieldsResponses, GetFieldsErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetFieldsResponses, GetFieldsErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/fields',
+            ...options
+        });
+    }
+}
+
+export class HistogramService {
+    public static getHistogram<ThrowOnError extends boolean = false>(options: Options<GetHistogramData, ThrowOnError>): RequestResult<GetHistogramResponses, GetHistogramErrors, ThrowOnError> {
+        return (options.client ?? client).post<GetHistogramResponses, GetHistogramErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/histogram',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class MinimumLevelsService {
+    public static getMinimumLevels<ThrowOnError extends boolean = false>(options: Options<GetMinimumLevelsData, ThrowOnError>): RequestResult<GetMinimumLevelsResponses, GetMinimumLevelsErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetMinimumLevelsResponses, GetMinimumLevelsErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/minimum-levels',
+            ...options
+        });
+    }
+}
+
+export class NativeQueryService {
+    public static compile<ThrowOnError extends boolean = false>(options: Options<CompileData, ThrowOnError>): RequestResult<CompileResponses, CompileErrors, ThrowOnError> {
+        return (options.client ?? client).post<CompileResponses, CompileErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/compile',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public static validate<ThrowOnError extends boolean = false>(options: Options<ValidateData, ThrowOnError>): RequestResult<ValidateResponses, ValidateErrors, ThrowOnError> {
+        return (options.client ?? client).post<ValidateResponses, ValidateErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/validate',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class ParseService {
+    public static parse<ThrowOnError extends boolean = false>(options?: Options<ParseData, ThrowOnError>): RequestResult<ParseResponses, ParseErrors, ThrowOnError> {
+        return (options?.client ?? client).post<ParseResponses, ParseErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/parse',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options?.headers
+            }
+        });
+    }
+}
+
+export class PatternsService {
+    public static getPatterns<ThrowOnError extends boolean = false>(options: Options<GetPatternsData, ThrowOnError>): RequestResult<GetPatternsResponses, GetPatternsErrors, ThrowOnError> {
+        return (options.client ?? client).post<GetPatternsResponses, GetPatternsErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/patterns',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class SearchService {
+    public static search<ThrowOnError extends boolean = false>(options: Options<SearchData, ThrowOnError>): RequestResult<SearchResponses, SearchErrors, ThrowOnError> {
+        return (options.client ?? client).post<SearchResponses, SearchErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/search',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class SettingsService {
+    public static getSettings<ThrowOnError extends boolean = false>(options?: Options<GetSettingsData, ThrowOnError>): RequestResult<GetSettingsResponses, GetSettingsErrors, ThrowOnError> {
+        return (options?.client ?? client).get<GetSettingsResponses, GetSettingsErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/settings',
+            ...options
+        });
+    }
+}
 
 export class SourcesService {
     public static getSources<ThrowOnError extends boolean = false>(options?: Options<GetSourcesData, ThrowOnError>): RequestResult<GetSourcesResponses, GetSourcesErrors, ThrowOnError> {

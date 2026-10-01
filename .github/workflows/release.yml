@@ -2,6 +2,9 @@
 # the tag's first number selects the major, so v17.0.0-alpha.1 packs the Umbraco 17 build and
 # v18.0.0-alpha.1 packs the Umbraco 18 build, each at the tag's version.
 #
+# Before anything is published, the smoke job installs the packed nupkgs on clean sites of the
+# major's lowest declared Umbraco version and its newest release (ADR 0022).
+#
 # Publishing to nuget.org is a separate job that stays disabled until the first alpha (issue #52).
 # It uses NuGet trusted publishing, so no API key is stored: the job exchanges its GitHub OIDC token for a
 # short-lived key. One-off setup before enabling: add a trusted publishing policy on nuget.org for this
@@ -23,6 +26,8 @@ env:
 jobs:
   pack:
     runs-on: ubuntu-latest
+    outputs:
+      major: ${{ steps.version.outputs.major }}
     steps:
       - uses: actions/checkout@v7
 
@@ -57,10 +62,39 @@ jobs:
           name: packages
           path: artifacts/
 
-  publish:
-    # Off until the first alpha release (#52). Remove this condition to enable publishing.
-    if: false
+  # Installs the packed nupkgs from the artifact on clean spawned sites (umbraco-spawn-harness) and
+  # checks the zero-configuration install over HTTP: tests/package-smoke/smoke_nupkg.py, ADR 0022.
+  smoke:
     needs: pack
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      # The script reads the declared Umbraco floor from Directory.Packages.props.
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: packages
+          path: artifacts/
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      # uv also provides the Python the script asks for in its inline metadata.
+      - uses: astral-sh/setup-uv@v10.2.0
+
+      # The spawned sites serve HTTPS (the backoffice sign-in refuses HTTP); the harness ignores that
+      # the development certificate is untrusted.
+      - run: dotnet dev-certs https
+
+      - run: uv run tests/package-smoke/smoke_nupkg.py --packages artifacts --major ${{ needs.pack.outputs.major }} --root "${{ runner.temp }}/sites"
+
+  publish:
+    # Off until Jack has set up nuget.org trusted publishing (the one-off setup at the top of this
+    # file; #52). Remove this condition to enable publishing. It runs only after the smoke test passes.
+    if: false
+    needs: [pack, smoke]
     runs-on: ubuntu-latest
     environment: nuget
     permissions:

@@ -129,4 +129,35 @@ public class LogJsonTests
         // Assert
         Assert.Equal(["debug", "error"], query.Levels!.Order());
     }
+
+    [Fact]
+    public void Apply_ToOtherOptions_ReadsAQueryWithLevelsAndKindAfterTheFields()
+    {
+        // Arrange
+        var options = new JsonSerializerOptions();
+        LogJson.Apply(options);
+        const string json = """
+            {"range":{"relative":"1h"},"levels":["WARN"],"sort":"ascending",
+             "filter":{"field":"RequestPath","op":"startsWith","value":"/api","kind":"condition"}}
+            """;
+
+        // Act
+        LogQuery query = JsonSerializer.Deserialize<LogQuery>(json, options)!;
+
+        // Assert
+        Assert.Equal(
+            (true, SortDirection.Ascending, FilterOperator.StartsWith),
+            (query.Levels!.Contains("warn"), query.Sort, ((ConditionNode)query.Filter!).Op)
+        );
+    }
+
+    [Fact]
+    public void Apply_ReadOnlyOptions_Throws()
+    {
+        // Act
+        Exception? thrown = Record.Exception(() => LogJson.Apply(LogJson.Options));
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(thrown);
+    }
 }

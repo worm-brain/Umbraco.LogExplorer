@@ -53,6 +53,13 @@ public sealed record FakeLogSourceOptions
     public int MaxPageSize { get; init; } = 1000;
 
     /// <summary>
+    /// How many copies of the sample hour to generate, back to back and ending now; at least 1.
+    /// More than one is for volume testing (scrolling thousands of rows). Copies before the latest
+    /// hour get ids prefixed <c>h{n}.</c>; their request and trace ids repeat the latest hour's.
+    /// </summary>
+    public int SampleHours { get; init; } = 1;
+
+    /// <summary>
     /// Freezes the clock at this instant: the sample hour ends here and relative ranges resolve
     /// against it, for tests and stable screenshots. Null uses the injected clock.
     /// </summary>

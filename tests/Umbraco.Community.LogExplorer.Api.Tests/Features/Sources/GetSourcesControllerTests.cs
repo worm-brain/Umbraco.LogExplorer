@@ -39,6 +39,59 @@ public class GetSourcesControllerTests
     }
 
     [Fact]
+    public void GetSources_SourceDeclaringNativeQuery_AllowsNativeQueries()
+    {
+        // Arrange
+        GetSourcesController controller = CreateController(
+            new FakeLogSource(new FakeLogSourceOptions { Alias = "sample" })
+        );
+
+        // Act
+        SourceResponseModel source = Assert.Single(controller.GetSources());
+
+        // Assert
+        Assert.True(source.AllowNativeQuery);
+    }
+
+    [Fact]
+    public void GetSources_SourceConfiguredWithoutNativeQueries_DoesNotAllowThem()
+    {
+        // Arrange
+        GetSourcesController controller = CreateController(
+            new NativeQueryDisabledSource(
+                new FakeLogSource(new FakeLogSourceOptions { Alias = "sample" })
+            )
+        );
+
+        // Act
+        SourceResponseModel source = Assert.Single(controller.GetSources());
+
+        // Assert
+        Assert.False(source.AllowNativeQuery);
+    }
+
+    [Fact]
+    public void GetSources_SourceWithoutTheNativeQueryFeature_DoesNotAllowThem()
+    {
+        // Arrange
+        GetSourcesController controller = CreateController(
+            new FakeLogSource(
+                new FakeLogSourceOptions
+                {
+                    Alias = "sample",
+                    Features = LogSourceFeatures.Histogram,
+                }
+            )
+        );
+
+        // Act
+        SourceResponseModel source = Assert.Single(controller.GetSources());
+
+        // Assert
+        Assert.False(source.AllowNativeQuery);
+    }
+
+    [Fact]
     public void GetSources_NoVisibleSources_ReturnsAnEmptyList()
     {
         // Arrange

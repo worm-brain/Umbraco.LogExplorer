@@ -28,6 +28,49 @@ For client work, keep `bun run watch` running in `src/Umbraco.Community.LogExplo
 refresh the backoffice after each rebuild. Static web asset folders are discovered when the site
 starts, so restart the site once after the very first client build on a fresh clone.
 
+## End-to-end tests
+
+The Playwright suite (ADR 0020) starts both sites itself, on https://localhost:44374 (17) and
+https://localhost:44384 (18), with the log generator on:
+
+```sh
+cd src/Umbraco.Community.LogExplorer/Client
+bunx playwright install chromium   # once
+bun run e2e                        # builds the client and both sites, then runs every spec on each
+E2E_SITES=18 bun run e2e           # one site only
+bun run e2e:report                 # the HTML report of the last run
+```
+
+`E2E_SITE17_PORT` / `E2E_SITE18_PORT` change the ports. A site already running on its e2e port is
+reused; run with `E2E_SKIP_BUILD=1` then, because the build cannot replace its locked DLLs.
+
+## Package smoke test
+
+The release workflow installs the packed nupkgs on clean spawned sites before publishing (ADR 0022).
+To run it locally (needs uv; sites go in a temp folder, on ports from 44800):
+
+```sh
+dotnet pack Umbraco.Community.LogExplorer.slnx -o <pkgs17> -p:UmbracoMajor=17 -p:Version=17.0.0-alpha.0
+uv run tests/package-smoke/smoke_nupkg.py --packages <pkgs17> --major 17       # 17.0.0 and the newest 17
+dotnet pack Umbraco.Community.LogExplorer.slnx -o <pkgs18> -p:UmbracoMajor=18 -p:Version=18.0.0-alpha.0
+uv run tests/package-smoke/smoke_nupkg.py --packages <pkgs18> --major 18 --umbraco 18.1.1   # one version
+```
+
+Use a separate output folder per major. `--keep` leaves the sites running for a look (admin
+`admin@example.com` / `Password1234!`); `--root` puts them in a folder of your choice, where the
+harness's `umbraco-spawn-harness remove <name> --root <root>` deletes them afterwards.
+
+## Sample sources
+
+`appsettings.Development.json` configures the site's own log files as the default source and two
+`Fake` sources (in-memory sample data, UI brief §12):
+
+| Alias | Data | Use |
+| --- | --- | --- |
+| `files` (default) | This site's Umbraco log files (`umbraco/Logs`); turn on the log generator below to fill them | Checking the real files provider |
+| `sample` | The prototype's sample hour (238 entries), ending now | Everyday UI work |
+| `sample-48h` | The same hour repeated 48 times (11,424 entries); `Settings: { "SampleHours": "48" }` | Volume checks such as scrolling 10,000 rows: open `...?src=sample-48h&range=7d` |
+
 ## Log generator
 
 Both sites compile in `samples/Shared/LogGenerator` (BRIEF Appendix C), which writes realistic
@@ -46,7 +89,38 @@ LogGenerator__Enabled=true LogGenerator__WriteFileScenarios=true dotnet run --pr
 dotnet run --project samples/LogExplorer.Site18 -p:UmbracoMajor=18
 ```
 
-The 2 GB, 7-day bulk mode for the performance check is added with #36.
+### Bulk mode and the first-page benchmark
+
+For the performance check (BRIEF §17, #36) the generator also writes about 2 GB of logs covering
+7 days, ending now, in seconds: lines go straight to disk as Umbraco's compact JSON (not through
+`ILogger`) under two machines, `BULK-NODE1` and `BULK-NODE2`, named and rolled like Umbraco's own
+files (`UmbracoTraceLog.BULK-NODE1.20261001.json`, then `_001`, ...). The mix is mostly requests
+(2% slow), a noisy job, content publishes, surface-controller and SQL timeout exceptions, rare 404
+storms and one fatal boot failure an hour in.
+
+| Setting | Default | Effect |
+| --- | --- | --- |
+| `LogGenerator:BulkGigabytes` | `0` (off) | Size of the set, written once at start-up in the background; skipped if `BULK-NODE1` files already exist in the directory. |
+| `LogGenerator:BulkDirectory` | the site's log directory | Where to write it. |
+| `LogGenerator:BulkDays` | `7` | Simulated days, ending now. |
+| `LogGenerator:BulkRollMegabytes` | `100` | Size at which a day's file rolls to `_001` and on. |
+
+```sh
+LogGenerator__BulkGigabytes=2 dotnet run --project samples/LogExplorer.Site17
+```
+
+The benchmark needs no site: it writes the set itself into
+`%TEMP%/LogExplorer.Benchmarks/bulk` (reused on later runs), then times the first page of the
+files provider over the last 7 days. It is a console app, built by CI but never run there.
+
+```sh
+dotnet run -c Release --project tests/Umbraco.Community.LogExplorer.Benchmarks
+dotnet run -c Release --project tests/Umbraco.Community.LogExplorer.Benchmarks -- --delete   # remove the 2 GB set
+```
+
+Other arguments: `--data <dir>`, `--gigabytes <n>`, `--runs <n>`, `--regenerate`; set
+`LOG_EXPLORER_BENCHMARK_VERBOSE=1` to print every run's time. It exits 1 if a budgeted case's
+median is 500 ms or more. ADR 0017 has the last recorded numbers.
 
 Runtime state (`umbraco/` with the SQLite database and logs, `wwwroot/media/`, generated schema
 files) is gitignored. Delete a site's `umbraco/` folder to reinstall it from scratch.

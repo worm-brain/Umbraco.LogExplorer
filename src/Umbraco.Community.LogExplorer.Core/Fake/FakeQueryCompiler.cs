@@ -60,6 +60,64 @@ internal static class FakeQueryCompiler
         );
     }
 
+    /// <summary>
+    /// Checks pseudo-language text the way a real parser would report a syntax error, so native
+    /// mode can be exercised against the fake: the text must not be blank, double-quoted strings
+    /// (with backslash escapes, as <see cref="Compile"/> writes them) must close, and brackets
+    /// must balance. Nothing else is checked; the fake never evaluates native queries.
+    /// </summary>
+    /// <param name="nativeQuery">The text.</param>
+    /// <returns>The outcome, with the zero-based position of the first problem.</returns>
+    public static ValidationResult Validate(string nativeQuery)
+    {
+        if (string.IsNullOrWhiteSpace(nativeQuery))
+        {
+            return new ValidationResult(false, "The query is empty.", 0);
+        }
+
+        var open = new Stack<(char Bracket, int Position)>();
+        for (int i = 0; i < nativeQuery.Length; i++)
+        {
+            char c = nativeQuery[i];
+            if (c == '"')
+            {
+                int start = i;
+                for (i++; i < nativeQuery.Length && nativeQuery[i] != '"'; i++)
+                {
+                    if (nativeQuery[i] == '\\')
+                    {
+                        i++;
+                    }
+                }
+
+                if (i >= nativeQuery.Length)
+                {
+                    return new ValidationResult(false, "The quote is never closed.", start);
+                }
+            }
+            else if (c is '(' or '[')
+            {
+                open.Push((c, i));
+            }
+            else if (c is ')' or ']')
+            {
+                char expected = c == ')' ? '(' : '[';
+                if (open.Count == 0 || open.Pop().Bracket != expected)
+                {
+                    return new ValidationResult(false, $"Unexpected '{c}'.", i);
+                }
+            }
+        }
+
+        return open.Count == 0
+            ? new ValidationResult(true, null, null)
+            : new ValidationResult(
+                false,
+                $"'{open.Peek().Bracket}' is never closed.",
+                open.Peek().Position
+            );
+    }
+
     /// <summary>Every condition in the tree whose operator is not declared.</summary>
     public static IEnumerable<ConditionNode> Undeclared(
         FilterNode? node,
