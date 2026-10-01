@@ -19,6 +19,25 @@ export type ConditionNode = {
 
 export type FilterOperator = 'equals' | 'notEquals' | 'contains' | 'startsWith' | 'endsWith' | 'greaterThan' | 'greaterOrEqual' | 'lessThan' | 'lessOrEqual' | 'in' | 'exists' | 'notExists' | 'matches';
 
+export type HistogramBucket = {
+    start: string;
+    countsBySeverityShortName: {
+        [key: string]: number;
+    };
+};
+
+export type HistogramRequest = {
+    query: LogQuery;
+    targetBuckets: number;
+};
+
+export type HistogramResult = {
+    range: ResolvedRange;
+    bucketSize: string;
+    buckets: Array<HistogramBucket>;
+    approximate: boolean;
+};
+
 export type LogException = {
     type?: string | null;
     message?: string | null;
@@ -124,6 +143,45 @@ export type TimeRange = {
     to?: string | null;
     relative?: string | null;
 };
+
+export type GetHistogramData = {
+    body?: HistogramRequest;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/histogram';
+};
+
+export type GetHistogramErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetHistogramError = GetHistogramErrors[keyof GetHistogramErrors];
+
+export type GetHistogramResponses = {
+    /**
+     * OK
+     */
+    200: HistogramResult;
+};
+
+export type GetHistogramResponse = GetHistogramResponses[keyof GetHistogramResponses];
 
 export type SearchData = {
     body?: LogQuery;
