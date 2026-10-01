@@ -97,7 +97,9 @@ public sealed class FakeLogSource : LogSourceBase
 
     /// <inheritdoc />
     /// <remarks>
-    /// A native query is accepted but not evaluated; the page carries a warning saying so.
+    /// A native query is checked like <see cref="ILogSource.ValidateNative"/> (throwing
+    /// <see cref="InvalidNativeQueryException"/> when invalid) but not evaluated; the page carries
+    /// a warning saying so.
     /// </remarks>
     protected override Task<LogPage> QueryCoreAsync(LogQuery query, CancellationToken ct)
     {
@@ -107,6 +109,14 @@ public sealed class FakeLogSource : LogSourceBase
             throw new NotSupportedException(
                 $"Log source '{Alias}' does not accept native queries."
             );
+        }
+
+        if (
+            query.NativeQuery is not null
+            && FakeQueryCompiler.Validate(query.NativeQuery) is { Valid: false } invalid
+        )
+        {
+            throw new InvalidNativeQueryException(invalid.Error!) { Position = invalid.Position };
         }
 
         List<LogRecord> matches = Select(query, applyLevels: true, out ResolvedRange range);
@@ -323,11 +333,12 @@ public sealed class FakeLogSource : LogSourceBase
         FakeQueryCompiler.Compile(query, Capabilities.Operators);
 
     /// <inheritdoc />
-    /// <remarks>The pseudo-language is never executed, so any non-blank text is valid.</remarks>
+    /// <remarks>
+    /// The pseudo-language is never executed, so only quotes and brackets are checked (see
+    /// <see cref="FakeQueryCompiler.Validate"/>).
+    /// </remarks>
     protected override ValidationResult ValidateNativeCore(string nativeQuery) =>
-        string.IsNullOrWhiteSpace(nativeQuery)
-            ? new ValidationResult(false, "The query is empty.", 0)
-            : new ValidationResult(true, null, null);
+        FakeQueryCompiler.Validate(nativeQuery);
 
     // Range, optional level set and filter, oldest first.
     private List<LogRecord> Select(LogQuery query, bool applyLevels, out ResolvedRange range)

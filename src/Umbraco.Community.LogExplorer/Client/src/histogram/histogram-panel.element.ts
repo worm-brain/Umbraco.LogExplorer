@@ -117,7 +117,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
     this.consumeContext(LOG_EXPLORER_QUERY_CONTEXT, (context) => {
       this.#context = context;
       this.observe(
-        context?.state,
+        context?.queryState,
         (viewState) => {
           this.#viewState = viewState;
           this._levels = viewState?.levels ?? null;

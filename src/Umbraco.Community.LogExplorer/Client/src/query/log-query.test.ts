@@ -64,6 +64,14 @@ describe("toLogQuery", () => {
     });
   });
 
+  it("sends the native query", () => {
+    expect(toLogQuery({ ...createDefaultViewState("1h"), native: "Has(x)" }, 60).nativeQuery).toBe("Has(x)");
+  });
+
+  it("runs native mode with nothing typed as simple mode", () => {
+    expect(toLogQuery({ ...createDefaultViewState("1h"), native: "  " }, 60).nativeQuery).toBeNull();
+  });
+
   it("runs over the time zoom instead of the picker's range", () => {
     const state = {
       ...createDefaultViewState("1h"),

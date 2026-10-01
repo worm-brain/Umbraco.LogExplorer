@@ -114,14 +114,16 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
     });
     this.consumeContext(LOG_EXPLORER_QUERY_CONTEXT, (context) => {
       this.#context = context;
+      // The chips, by position, for selection and toggling; the query runs from queryState,
+      // which leaves out chips the source cannot run (ADR 0016).
+      this.observe(context?.state, (viewState) => (this._chips = viewState?.chips ?? []), "_observeState");
       this.observe(
-        context?.state,
+        context?.queryState,
         (viewState) => {
           this.#viewState = viewState;
-          this._chips = viewState?.chips ?? [];
           this.#requery();
         },
-        "_observeState",
+        "_observeQueryState",
       );
       this.observe(
         context?.activeSource,

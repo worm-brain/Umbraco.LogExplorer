@@ -155,6 +155,27 @@ public class LogSourceRegistryTests
         Assert.Equal(["fine"], sources.Select(source => source.Alias));
     }
 
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void GetForUser_AllowNativeQuery_WrapsOnlyWhenNativeQueriesAreOff(
+        bool allowNativeQuery,
+        bool wrapped
+    )
+    {
+        // Arrange
+        LogSourceRegistry registry = CreateRegistry(
+            [Definition("one", "Fake") with { AllowNativeQuery = allowNativeQuery }],
+            StubFactory("Fake")
+        );
+
+        // Act
+        ILogSource source = registry.GetForUser("one", Editor);
+
+        // Assert
+        Assert.Equal(wrapped, source is NativeQueryDisabledSource);
+    }
+
     [Fact]
     public void GetForUser_UnknownAlias_ThrowsKeyNotFoundException()
     {

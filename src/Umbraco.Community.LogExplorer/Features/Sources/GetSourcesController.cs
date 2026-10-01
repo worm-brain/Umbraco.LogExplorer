@@ -15,12 +15,18 @@ namespace Umbraco.Community.LogExplorer.Features.Sources;
 /// <param name="Type">The provider type, for example <c>UmbracoFiles</c>.</param>
 /// <param name="Sensitive">Whether the source is sensitive (shows a lock, queries are audited).</param>
 /// <param name="Capabilities">What the source supports, so the UI can hide or disable the rest.</param>
+/// <param name="AllowNativeQuery">
+/// Whether users may run native queries: the source declares <c>nativeQuery</c> and its
+/// configuration does not turn them off (<c>AllowNativeQuery</c>, BRIEF §12). When false the UI
+/// hides native mode; "Show query" still works for any source declaring <c>nativeQuery</c>.
+/// </param>
 public sealed record SourceResponseModel(
     string Alias,
     string DisplayName,
     string Type,
     bool Sensitive,
-    SourceCapabilitiesResponseModel Capabilities
+    SourceCapabilitiesResponseModel Capabilities,
+    bool AllowNativeQuery
 );
 
 /// <summary>
@@ -86,7 +92,9 @@ public sealed class GetSourcesController(
                     source.DisplayName,
                     source.Type,
                     source.Sensitive,
-                    SourceCapabilitiesResponseModel.From(source.Capabilities)
+                    SourceCapabilitiesResponseModel.From(source.Capabilities),
+                    source is not NativeQueryDisabledSource
+                        && source.Capabilities.Supports(LogSourceFeatures.NativeQuery)
                 )),
         ];
 }

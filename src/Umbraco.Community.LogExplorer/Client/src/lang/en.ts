@@ -175,6 +175,20 @@ export default {
     savedViewsCaption: "Saved views",
     savedViewsSaveCurrent: "Save current view…",
     showQueryEditAsNative: "Edit as native",
+    showQueryButton: "Show generated query",
+    showQueryLabel: (language: string) => `Generated ${language} query`,
+    showQueryEmpty: "(no filter: every entry in the time range)",
+    showQueryError: (message: string) => `Could not compile the query: ${message}`,
+    chipUnsupported: (source: string) => `Not supported by ${source}`,
+    chipUnsupportedDescription: (description: string, source: string) => `${description}, not supported by ${source}`,
+
+    // Native mode in the search box (BRIEF §6.2, UI brief §4.15).
+    nativeModeLabel: (language: string) => `Search logs with a ${language} query`,
+    nativeModePlaceholder: (language: string) => `Type a ${language} query, then press Enter`,
+    nativeModeLeave: (language: string) => `Leave ${language} mode and return to simple search`,
+    nativeInvalid: (message: string) => `Invalid query: ${message}`,
+    nativeInvalidAt: (message: string, position: string) => `Invalid query at character ${position}: ${message}`,
+    nativeValidateError: (message: string) => `Could not check the query: ${message}`,
 
     // Overview (UI brief §4.13).
     overviewEntriesByLevel: (range: string) => `Entries by level · ${range}`,
