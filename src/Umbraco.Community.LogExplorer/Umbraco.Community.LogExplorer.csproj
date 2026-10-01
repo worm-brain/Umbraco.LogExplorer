@@ -25,6 +25,7 @@
     <!-- Range per major, set in Directory.Packages.props (ADR 0010). -->
     <PackageReference Include="Umbraco.Cms.Web.Website" />
     <PackageReference Include="Umbraco.Cms.Api.Management" />
+    <PackageReference Include="Serilog.Formatting.Compact.Reader" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,6 +40,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Umbraco.Community.LogExplorer.Api.Tests" />
+    <InternalsVisibleTo Include="Umbraco.Community.LogExplorer.Files.Tests" />
   </ItemGroup>
 
   <!--
