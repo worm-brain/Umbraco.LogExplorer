@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -5,6 +6,7 @@ using Microsoft.Extensions.Logging.Testing;
 using Umbraco.Community.LogExplorer.Core.Query;
 using Umbraco.Community.LogExplorer.Core.Results;
 using Umbraco.Community.LogExplorer.Core.Sources;
+using Umbraco.Community.LogExplorer.Features.Sources;
 using Umbraco.Community.LogExplorer.Features.Sources.Files;
 using Umbraco.Community.LogExplorer.Files.Tests.TestSupport;
 
@@ -12,7 +14,7 @@ namespace Umbraco.Community.LogExplorer.Files.Tests.Features.Sources.Files;
 
 /// <summary>
 /// The <c>UmbracoFiles</c> source and its factory (#35): what the source adds on top of the
-/// readers (alias, page size, native-query switch) and the rolling-interval warning. The shared
+/// readers (alias, page size, native queries behind the registry's switch) and the rolling-interval warning. The shared
 /// behaviour is covered by <see cref="UmbracoFilesContractTests"/>.
 /// </summary>
 public sealed class UmbracoFilesLogSourceTests : IDisposable
@@ -115,19 +117,40 @@ public sealed class UmbracoFilesLogSourceTests : IDisposable
     }
 
     [Fact]
-    public void Capabilities_NativeQueriesNotAllowed_DoesNotDeclareNativeQuery()
+    public void Capabilities_NativeQueriesNotAllowed_StillDeclaresNativeQueryForShowQuery()
     {
         // Arrange
-        ILogSource source = FileSources.Create(_directory.Path, NoNative());
+        NativeQueryDisabledSource source = NativeDisabled();
 
         // Act
         LogSourceCapabilities capabilities = source.Capabilities;
 
         // Assert
         Assert.Equal(
-            (false, (string?)null),
+            (true, "Serilog Expressions"),
             (capabilities.Supports(LogSourceFeatures.NativeQuery), capabilities.NativeLanguage)
         );
+    }
+
+    [Fact]
+    public void Compile_NativeQueriesNotAllowed_StillCompilesTheChips()
+    {
+        // Arrange
+        NativeQueryDisabledSource source = NativeDisabled();
+        LogQuery query = Query() with
+        {
+            Filter = new ConditionNode(
+                "SourceContext",
+                FilterOperator.StartsWith,
+                JsonSerializer.SerializeToElement("Umbraco")
+            ),
+        };
+
+        // Act
+        CompileResult result = source.Compile(query);
+
+        // Assert
+        Assert.Equal("StartsWith(SourceContext, 'Umbraco') ci", result.Native);
     }
 
     [Fact]
@@ -135,7 +158,7 @@ public sealed class UmbracoFilesLogSourceTests : IDisposable
     {
         // Arrange
         WriteMinutes(1);
-        ILogSource source = FileSources.Create(_directory.Path, NoNative());
+        NativeQueryDisabledSource source = NativeDisabled();
 
         // Act
         Task Act() =>
@@ -144,28 +167,6 @@ public sealed class UmbracoFilesLogSourceTests : IDisposable
                 {
                     NativeQuery = "Minute >= 0",
                 },
-                TestContext.Current.CancellationToken
-            );
-
-        // Assert
-        await Assert.ThrowsAsync<NotSupportedException>(Act);
-    }
-
-    [Fact]
-    public async Task GetHistogramAsync_NativeQueryWhenNotAllowed_ThrowsNotSupportedException()
-    {
-        // Arrange
-        WriteMinutes(1);
-        ILogSource source = FileSources.Create(_directory.Path, NoNative());
-
-        // Act
-        Task Act() =>
-            source.GetHistogramAsync(
-                Query() with
-                {
-                    NativeQuery = "Minute >= 0",
-                },
-                30,
                 TestContext.Current.CancellationToken
             );
 
@@ -276,7 +277,11 @@ public sealed class UmbracoFilesLogSourceTests : IDisposable
     private static LogSourceDefinition Definition() =>
         new() { Alias = "files", Type = UmbracoFilesLogSource.SourceType };
 
-    private static LogSourceDefinition NoNative() => Definition() with { AllowNativeQuery = false };
+    // As the registry builds a source configured with AllowNativeQuery: false (ADR 0016).
+    private NativeQueryDisabledSource NativeDisabled() =>
+        new NativeQueryDisabledSource(
+            FileSources.Create(_directory.Path, Definition() with { AllowNativeQuery = false })
+        );
 
     // One WORM event a minute from noon, each with a "Minute" property; bodies read "Minute N".
     private void WriteMinutes(int count) =>
