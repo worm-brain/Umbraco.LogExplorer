@@ -4,11 +4,98 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44370' | (string & {});
 };
 
+export type AndNode = {
+    kind: 'and';
+    children: Array<AndNode | OrNode | NotNode | ConditionNode | TextNode>;
+};
+
+export type ConditionNode = {
+    kind: 'condition';
+    field: string;
+    op: FilterOperator;
+    value?: unknown;
+    caseInsensitive?: boolean;
+};
+
+export type FilterOperator = 'equals' | 'notEquals' | 'contains' | 'startsWith' | 'endsWith' | 'greaterThan' | 'greaterOrEqual' | 'lessThan' | 'lessOrEqual' | 'in' | 'exists' | 'notExists' | 'matches';
+
+export type LogException = {
+    type?: string | null;
+    message?: string | null;
+    stackTrace?: string | null;
+};
+
+export type LogPage = {
+    records: Array<LogRecord>;
+    nextCursor?: string | null;
+    range: ResolvedRange;
+    totalCount?: number | null;
+    totalIsLowerBound: boolean;
+    warnings: Array<string>;
+};
+
+export type LogQuery = {
+    range: TimeRange;
+    levels?: Array<string> | null;
+    filter?: AndNode | OrNode | NotNode | ConditionNode | TextNode | null;
+    nativeQuery?: string | null;
+    take: number;
+    cursor?: string | null;
+    sort: SortDirection;
+};
+
+export type LogRecord = {
+    id: string;
+    timestamp: string;
+    severityNumber: number;
+    severityText?: string | null;
+    body?: string | null;
+    messageTemplate?: string | null;
+    templateHash?: string | null;
+    traceId?: string | null;
+    spanId?: string | null;
+    scope?: string | null;
+    exception?: LogException | null;
+    attributes: {
+        [key: string]: unknown;
+    };
+    resource: {
+        [key: string]: unknown;
+    };
+    sourceAlias: string;
+};
+
+export type NotNode = {
+    kind: 'not';
+    child: AndNode | OrNode | NotNode | ConditionNode | TextNode;
+};
+
+export type OrNode = {
+    kind: 'or';
+    children: Array<AndNode | OrNode | NotNode | ConditionNode | TextNode>;
+};
+
+export type ProblemDetails = {
+    type?: string | null;
+    title?: string | null;
+    status?: number | null;
+    detail?: string | null;
+    instance?: string | null;
+    [key: string]: unknown;
+};
+
+export type ResolvedRange = {
+    from: string;
+    to: string;
+};
+
 export type SettingsResponseModel = {
     hideCoreLogViewer: boolean;
     defaultSource: string;
     defaultTimeRange: string;
 };
+
+export type SortDirection = 'descending' | 'ascending';
 
 export type SourceCapabilitiesResponseModel = {
     features: Array<string>;
@@ -25,6 +112,57 @@ export type SourceResponseModel = {
     sensitive: boolean;
     capabilities: SourceCapabilitiesResponseModel;
 };
+
+export type TextNode = {
+    kind: 'text';
+    text: string;
+    phrase?: boolean;
+};
+
+export type TimeRange = {
+    from?: string | null;
+    to?: string | null;
+    relative?: string | null;
+};
+
+export type SearchData = {
+    body?: LogQuery;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/search';
+};
+
+export type SearchErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type SearchError = SearchErrors[keyof SearchErrors];
+
+export type SearchResponses = {
+    /**
+     * OK
+     */
+    200: LogPage;
+};
+
+export type SearchResponse = SearchResponses[keyof SearchResponses];
 
 export type GetSettingsData = {
     body?: never;
