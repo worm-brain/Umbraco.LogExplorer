@@ -59,6 +59,49 @@ public class LogExplorerProblemFilterTests
     }
 
     [Fact]
+    public void OnException_InvalidNativeQuery_WritesInvalidNativeQueryWithThePosition()
+    {
+        // Arrange
+        ExceptionContext context = Context(
+            new InvalidNativeQueryException("Syntax error (line 1, column 5): unexpected `)`.")
+            {
+                Position = 4,
+            }
+        );
+
+        // Act
+        _filter.OnException(context);
+
+        // Assert
+        var details = (ProblemDetails)((ObjectResult)context.Result!).Value!;
+        Assert.Equal(
+            (400, "invalid_native_query", (int?)4),
+            (
+                details.Status!.Value,
+                (string)details.Extensions["code"]!,
+                (int?)details.Extensions["position"]
+            )
+        );
+    }
+
+    [Fact]
+    public void OnException_InvalidNativeQueryWithoutPosition_WritesANullPosition()
+    {
+        // Arrange
+        ExceptionContext context = Context(new InvalidNativeQueryException("Unknown function."));
+
+        // Act
+        _filter.OnException(context);
+
+        // Assert
+        var details = (ProblemDetails)((ObjectResult)context.Result!).Value!;
+        Assert.True(
+            details.Extensions.TryGetValue("position", out object? position) && position is null,
+            "The position extension should be present and null."
+        );
+    }
+
+    [Fact]
     public void OnException_UnknownException_LeavesItUnhandled()
     {
         // Arrange
