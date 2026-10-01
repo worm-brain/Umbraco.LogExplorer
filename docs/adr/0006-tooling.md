@@ -10,7 +10,7 @@
 | Client package manager and script runner | Bun (replacing the npm setup the Umbraco extension template generates) |
 | Client build | Vite, TypeScript strict, Lit, `@umbraco-cms/backoffice` |
 | Client unit tests | Vitest |
-| Client end-to-end tests | Playwright (Umbraco's Playwright helpers if they fit 17/18; Verify) |
+| Client end-to-end tests | Playwright, without Umbraco's helpers (ADR 0020) |
 | Client formatting | Prettier |
 | .NET tests | xUnit v3, Arrange-Act-Assert, `MethodName_Scenario_ExpectedBehaviour` names |
 | .NET mocking | NSubstitute |

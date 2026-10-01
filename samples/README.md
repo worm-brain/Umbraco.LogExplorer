@@ -28,6 +28,22 @@ For client work, keep `bun run watch` running in `src/Umbraco.Community.LogExplo
 refresh the backoffice after each rebuild. Static web asset folders are discovered when the site
 starts, so restart the site once after the very first client build on a fresh clone.
 
+## End-to-end tests
+
+The Playwright suite (ADR 0020) starts both sites itself, on https://localhost:44374 (17) and
+https://localhost:44384 (18), with the log generator on:
+
+```sh
+cd src/Umbraco.Community.LogExplorer/Client
+bunx playwright install chromium   # once
+bun run e2e                        # builds the client and both sites, then runs every spec on each
+E2E_SITES=18 bun run e2e           # one site only
+bun run e2e:report                 # the HTML report of the last run
+```
+
+`E2E_SITE17_PORT` / `E2E_SITE18_PORT` change the ports. A site already running on its e2e port is
+reused; run with `E2E_SKIP_BUILD=1` then, because the build cannot replace its locked DLLs.
+
 ## Sample sources
 
 `appsettings.Development.json` configures the site's own log files as the default source and two
