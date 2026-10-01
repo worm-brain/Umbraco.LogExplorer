@@ -23,9 +23,9 @@ public class SimpleSyntaxParserTests
         ["other backslash in phrase is literal"] = ("\"a\\nb\"", [Phrase("a\\nb")]),
         ["unicode word"] = ("café 日本", [Text("café 日本")]),
         ["text chip sits at its first word"] = (
-            "Status:500 slow path:/api crash",
+            "Code:500 slow path:/api crash",
             [
-                Cond("Status", FilterOperator.Equals, "\"500\""),
+                Cond("Code", FilterOperator.Equals, "\"500\""),
                 Text("slow crash"),
                 Cond("RequestPath", FilterOperator.Equals, "\"/api\""),
             ]
@@ -131,6 +131,18 @@ public class SimpleSyntaxParserTests
         ),
         ["alias path"] = ("path:/", [Cond("RequestPath", FilterOperator.Equals, "\"/\"")]),
         ["alias ignores case"] = ("PATH:/", [Cond("RequestPath", FilterOperator.Equals, "\"/\"")]),
+        ["alias status"] = (
+            "-status:200",
+            [Not(Cond("StatusCode", FilterOperator.Equals, "\"200\""))]
+        ),
+        ["alias status comparison"] = (
+            "status>=500",
+            [Cond("StatusCode", FilterOperator.GreaterOrEqual, "500")]
+        ),
+        ["alias machine"] = (
+            "machine:WORM",
+            [Cond("MachineName", FilterOperator.Equals, "\"WORM\"")]
+        ),
         // Not filters, so kept as words
         ["field without value is a word"] = ("Status:", [Text("Status:")]),
         ["equals sign on a field is a word"] = ("Status=500", [Text("Status=500")]),

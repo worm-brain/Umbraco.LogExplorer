@@ -8,6 +8,7 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Added
 
+- Search box aliases `status:` (for `StatusCode`) and `machine:` (for `MachineName`), so `-status:200` filters out successful requests.
 - Histogram on the Search view: entry volume over time with bars stacked by level and a tooltip of counts per bar. Its level toggles (TRACE to FATAL) are the level filter and keep showing how many entries each hidden level holds. Clicking a bar zooms to five minutes around it and dragging across bars zooms to any range; the zoom shows as a "Time: 00:40 to 00:45" chip, is kept in the URL (`zf`, `zt`) and is cleared by the chip's remove button or by choosing a new time range.
 - `POST /umbraco/log-explorer/api/v1/sources/{alias}/histogram` counts entries per time bucket and level for a query (`{ query, targetBuckets }`, 1 to 1000 buckets); the level counts ignore the query's level set.
 - Search box on the Search view: type text or `field:value` filters and press Enter to turn them into chips (`level:` and `level=` set the level filter instead). Two chips on the same field match either value; chips on different fields must all match. Click a chip to change its operator or value, or exclude it; Backspace in the empty box removes the last chip and Escape clears the box. An unbalanced quote searches the input as plain text and says so. Chips are kept in the URL.

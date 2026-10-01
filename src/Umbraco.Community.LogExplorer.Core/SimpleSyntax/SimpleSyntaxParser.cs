@@ -46,6 +46,9 @@ public static partial class SimpleSyntaxParser
         ["ex"] = LogFields.ExceptionType,
         ["exception"] = LogFields.ExceptionType,
         ["path"] = "RequestPath",
+        // Short names for two pinned facets, so the search box hint (`-status:200`) works.
+        ["status"] = "StatusCode",
+        ["machine"] = "MachineName",
     };
 
     /// <summary>Parses one search box input.</summary>

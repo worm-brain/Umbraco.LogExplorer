@@ -26,3 +26,9 @@ already contains a third, informal version.
 - Enter costs one local round trip, which is acceptable for a backoffice tool talking to its own
   server. If that ever proves noticeable, revisit with a generated TS port tested against the same
   table, not a hand-written one.
+
+## Addendum (2026-10-01)
+
+Two aliases join the BRIEF §6.2 list: `status` -> `StatusCode` and `machine` -> `MachineName`.
+They are pinned facets with short chip labels already, and the search box's own hint
+(`-status:200`, UI brief §4.3) matched nothing without them. Decided by Jack after #39.
