@@ -33,6 +33,21 @@ export default {
     sensitiveSource: "Sensitive source",
     retry: "Retry",
 
+    // Time range picker (UI brief §4.2).
+    timeRangePickerLabel: (range: string) => `Time range: ${range}`,
+    timeRangeLast15m: "Last 15 minutes",
+    timeRangeLast1h: "Last 1 hour",
+    timeRangeLast4h: "Last 4 hours",
+    timeRangeLast24h: "Last 24 hours",
+    timeRangeLast7d: "Last 7 days",
+    timeRangeLast30d: "Last 30 days",
+    timeRangeCustom: "Custom range…",
+    timeRangeFrom: "From",
+    timeRangeTo: "To",
+    timeRangeTimezone: (zone: string) => `Times are in ${zone}`,
+    timeRangeInvalid: "Choose a start that is before the end.",
+    timeRangeApply: "Apply",
+
     // Fields panel and results list (UI brief §4.8, §4.9).
     fieldsHeader: "Fields",
     fieldsSubheader: "top values in results",
