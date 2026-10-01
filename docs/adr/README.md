@@ -16,6 +16,7 @@ brief assumed. Update the brief in the same change.
 | [0005](0005-one-simple-syntax-parser-on-the-server.md) | One simple-syntax parser, in Core, called over the API | Accepted |
 | [0006](0006-tooling.md) | Tooling: Bun, Vitest, Prettier, xUnit v3, NSubstitute, CSharpier | Accepted |
 | [0007](0007-hide-core-log-viewer-by-default.md) | Hide the core Log Viewer by default | Accepted |
+| [0008](0008-core-contract-refinements.md) | Core contract refinements from Phase 0 | Accepted |
 
 ## Template
 
