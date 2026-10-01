@@ -1,15 +1,20 @@
 import { css, customElement, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import "../histogram/histogram-panel.element.js";
+import "../histogram/zoom-chip.element.js";
 import "../results/results-panel.element.js";
 import "../time-range/time-range-picker.element.js";
 
 /**
  * The Search workspace view of the Log Explorer workspace (UI brief §3).
  *
- * Holds the query bar, which so far has only the time range picker, above the results list. The
- * view fills the workspace body and never scrolls itself; only the results list does (UI brief
- * §2). The workspace editor renders it when its "Search" tab is active; both children read and
- * write `LogExplorerQueryContext`, which `log-explorer-workspace` provides.
+ * Stacks the query bar (so far the time range picker and the time-zoom chip), the histogram and
+ * the results list. The view fills the workspace body and never scrolls itself; only the results
+ * list does (UI brief §2). The workspace editor renders it when its "Search" tab is active; every
+ * child reads and writes `LogExplorerQueryContext`, which `log-explorer-workspace` provides.
+ *
+ * The zoom chip sits beside the time picker only until the search box's chip list (#39) exists;
+ * it then moves to the start of that list (UI brief §4.3).
  *
  * Bound by the `Umbraco.Community.LogExplorer.WorkspaceView.Search` manifest.
  *
@@ -18,7 +23,7 @@ import "../time-range/time-range-picker.element.js";
 @customElement("log-explorer-search-view")
 export class LogExplorerSearchViewElement extends UmbLitElement {
   /**
-   * Renders the query bar and the results list.
+   * Renders the query bar, the histogram and the results list.
    *
    * @returns The template.
    */
@@ -26,7 +31,9 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
     return html`
       <div class="query-bar">
         <log-explorer-time-range-picker></log-explorer-time-range-picker>
+        <log-explorer-zoom-chip></log-explorer-zoom-chip>
       </div>
+      <log-explorer-histogram></log-explorer-histogram>
       <log-explorer-results></log-explorer-results>
     `;
   }

@@ -63,6 +63,25 @@ describe("encodeViewState / decodeViewState", () => {
     expect(params.toString()).toBe("range=15m");
   });
 
+  it("round-trips a time zoom alongside the relative range it narrows", () => {
+    const state = {
+      ...defaults,
+      range: { relative: "24h" as const },
+      zoom: { from: "2026-09-02T00:40:00.000Z", to: "2026-09-02T00:45:00.000Z" },
+    };
+
+    expect(roundTrip(state)).toEqual(state);
+  });
+
+  it("writes the zoom as zf and zt", () => {
+    const params = encodeViewState(
+      { ...defaults, zoom: { from: "2026-09-02T00:40:00.000Z", to: "2026-09-02T00:45:00.000Z" } },
+      defaults,
+    );
+
+    expect(params.toString()).toBe("zf=2026-09-02T00%3A40%3A00.000Z&zt=2026-09-02T00%3A45%3A00.000Z");
+  });
+
   it("treats all six levels as no level filter", () => {
     const params = encodeViewState(
       { ...defaults, levels: ["trace", "debug", "info", "warn", "error", "fatal"] },
@@ -90,6 +109,14 @@ describe("decodeViewState with invalid input", () => {
     ["chips with an unknown operator", `f=${b64url(JSON.stringify([{ kind: "condition", field: "a", op: "like" }]))}`],
   ])("falls back to no chips for %s", (_name, search) => {
     expect(decodeViewState(new URLSearchParams(search), defaults).chips).toEqual([]);
+  });
+
+  it.each([
+    ["a zoom missing its end", "zf=2026-09-02T00:40:00Z"],
+    ["a zoom that ends before it starts", "zf=2026-09-02T00:45:00Z&zt=2026-09-02T00:40:00Z"],
+    ["an unparsable zoom", "zf=soon&zt=later"],
+  ])("ignores %s", (_name, search) => {
+    expect(decodeViewState(new URLSearchParams(search), defaults).zoom).toBeUndefined();
   });
 
   it("falls back to no level filter for an unknown level name", () => {

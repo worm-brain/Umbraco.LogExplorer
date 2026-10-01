@@ -13,6 +13,7 @@ import {
   encodeViewState,
   hasViewState,
   mergeViewStateIntoSearch,
+  type AbsoluteRange,
   type LogExplorerViewState,
   type ViewTimeRange,
 } from "./view-state.js";
@@ -62,6 +63,9 @@ export class LogExplorerQueryContext extends UmbContextBase {
 
   /** The time range alone, for controls that only care about it. */
   readonly range = this.#state.asObservablePart((state) => state.range);
+
+  /** The histogram's time zoom alone, for the time chip; `undefined` when not zoomed. */
+  readonly zoom = this.#state.asObservablePart((state) => state.zoom);
 
   /** The `src` alias in the view state; `undefined` means "use the default". Not validated. */
   readonly source = this.#state.asObservablePart((state) => state.source);
@@ -127,12 +131,23 @@ export class LogExplorerQueryContext extends UmbContextBase {
   }
 
   /**
-   * Sets the time range and records it in the URL.
+   * Sets the time range and records it in the URL. Clears any time zoom, because a zoom is a
+   * window inside the old range (UI brief §4.2).
    *
    * @param range - The new range.
    */
   setRange(range: ViewTimeRange): void {
-    this.update({ range });
+    this.update({ range, zoom: undefined });
+  }
+
+  /**
+   * Zooms queries into an absolute window, or clears the zoom, and records it in the URL. The
+   * picker's range is kept, so clearing the zoom returns to it.
+   *
+   * @param zoom - The window; `undefined` clears the zoom.
+   */
+  setZoom(zoom: AbsoluteRange | undefined): void {
+    this.update({ zoom });
   }
 
   /**

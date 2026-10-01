@@ -78,6 +78,31 @@ describe("LogExplorerQueryContext", () => {
     expect(window.history.length).toBe(before);
   });
 
+  it("writes a time zoom into the URL and keeps the range it narrows", async () => {
+    const context = await connectContext();
+
+    context.setZoom({ from: "2026-09-02T00:40:00.000Z", to: "2026-09-02T00:45:00.000Z" });
+
+    expect(new URLSearchParams(window.location.search).get("zf")).toBe("2026-09-02T00:40:00.000Z");
+  });
+
+  it("clears the time zoom when a new range is chosen", async () => {
+    const context = await connectContext();
+    context.setZoom({ from: "2026-09-02T00:40:00.000Z", to: "2026-09-02T00:45:00.000Z" });
+
+    context.setRange({ relative: "4h" });
+
+    expect([context.getState().zoom, window.location.search]).toEqual([undefined, "?range=4h"]);
+  });
+
+  it("restores a time zoom from the URL it opens on", async () => {
+    window.history.replaceState({}, "", `${SEARCH_PATH}?zf=2026-09-02T00:40:00Z&zt=2026-09-02T00:45:00Z`);
+
+    const context = await connectContext();
+
+    expect(context.getState().zoom).toEqual({ from: "2026-09-02T00:40:00.000Z", to: "2026-09-02T00:45:00.000Z" });
+  });
+
   it("follows the URL when the router announces a change", async () => {
     const context = await connectContext();
 
