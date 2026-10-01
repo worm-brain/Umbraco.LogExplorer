@@ -7,6 +7,7 @@ const defaults: SettingsResponseModel = {
   defaultSource: "files",
   defaultTimeRange: "1h",
   pinnedFacets: ["SourceContext"],
+  correlationFields: ["@traceId"],
 };
 
 /** A registry fake that records which aliases were excluded. */

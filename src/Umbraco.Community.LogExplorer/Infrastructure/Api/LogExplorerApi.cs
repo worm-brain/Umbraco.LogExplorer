@@ -15,6 +15,9 @@ public static class LogExplorerApi
         /// <summary>No source has the requested alias.</summary>
         public const string SourceNotFound = "source_not_found";
 
+        /// <summary>The source has no record with the requested id (for example its log file was deleted).</summary>
+        public const string RecordNotFound = "record_not_found";
+
         /// <summary>The source exists but the user may not use it.</summary>
         public const string ForbiddenSource = "forbidden_source";
 

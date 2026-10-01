@@ -18,11 +18,16 @@ namespace Umbraco.Community.LogExplorer.Features.Settings;
 /// Fields the fields panel always shows first, in this order (BRIEF §6.6, §13); the BRIEF §13
 /// defaults when configuration leaves the list empty.
 /// </param>
+/// <param name="CorrelationFields">
+/// Fields tried in order for the drawer's Same request; the first with a value on the entry wins
+/// (BRIEF §6.8, §10.1, §13). Portable names such as <c>@traceId</c> or attribute paths.
+/// </param>
 public sealed record SettingsResponseModel(
     bool HideCoreLogViewer,
     string DefaultSource,
     string DefaultTimeRange,
-    IReadOnlyList<string> PinnedFacets
+    IReadOnlyList<string> PinnedFacets,
+    IReadOnlyList<string> CorrelationFields
 );
 
 /// <summary>Returns the client-facing settings (BRIEF §11.1 <c>GET /settings</c>).</summary>
@@ -42,7 +47,8 @@ public sealed class GetSettingsController(IOptions<LogExplorerOptions> options)
             value.HideCoreLogViewer,
             value.DefaultSource,
             value.DefaultTimeRange,
-            [.. value.PinnedFacets]
+            [.. value.PinnedFacets],
+            [.. value.CorrelationFields]
         );
     }
 }

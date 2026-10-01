@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Routing;
 using NSubstitute;
 using Umbraco.Community.LogExplorer.Core.Sources;
+using Umbraco.Community.LogExplorer.Features.Context;
 using Umbraco.Community.LogExplorer.Infrastructure.Api;
 
 namespace Umbraco.Community.LogExplorer.Api.Tests.Infrastructure.Api;
@@ -20,6 +21,7 @@ public class LogExplorerProblemFilterTests
 
     [Theory]
     [InlineData(typeof(KeyNotFoundException), 404, "source_not_found")]
+    [InlineData(typeof(RecordNotFoundException), 404, "record_not_found")]
     [InlineData(typeof(ForbiddenSourceException), 403, "forbidden_source")]
     [InlineData(typeof(NotSupportedException), 400, "unsupported_feature")]
     [InlineData(typeof(ArgumentException), 400, "invalid_query")]

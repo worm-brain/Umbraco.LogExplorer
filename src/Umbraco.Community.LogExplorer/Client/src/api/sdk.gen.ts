@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CompileData, CompileErrors, CompileResponses, GetFacetsData, GetFacetsErrors, GetFacetsResponses, GetFieldsData, GetFieldsErrors, GetFieldsResponses, GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetPatternsData, GetPatternsErrors, GetPatternsResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses, ValidateData, ValidateErrors, ValidateResponses } from './types.gen';
+import type { CompileData, CompileErrors, CompileResponses, GetContextData, GetContextErrors, GetContextResponses, GetFacetsData, GetFacetsErrors, GetFacetsResponses, GetFieldsData, GetFieldsErrors, GetFieldsResponses, GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetPatternsData, GetPatternsErrors, GetPatternsResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses, ValidateData, ValidateErrors, ValidateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,16 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+export class ContextService {
+    public static getContext<ThrowOnError extends boolean = false>(options: Options<GetContextData, ThrowOnError>): RequestResult<GetContextResponses, GetContextErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetContextResponses, GetContextErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/records/{id}/context',
+            ...options
+        });
+    }
+}
 
 export class FacetsService {
     public static getFacets<ThrowOnError extends boolean = false>(options: Options<GetFacetsData, ThrowOnError>): RequestResult<GetFacetsResponses, GetFacetsErrors, ThrowOnError> {
