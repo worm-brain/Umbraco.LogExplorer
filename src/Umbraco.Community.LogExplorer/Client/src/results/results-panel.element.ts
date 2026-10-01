@@ -4,6 +4,7 @@ import {
   customElement,
   html,
   nothing,
+  property,
   query,
   state,
   styleMap,
@@ -25,7 +26,7 @@ import {
   type SearchFn,
 } from "./results-loader.js";
 import { formatRowTime, formatShowing, levelOf, shortenSource } from "./row-format.js";
-import { rowWindow, type RowWindow } from "./virtual-window.js";
+import { rowWindow, scrollTopToReveal, type RowWindow } from "./virtual-window.js";
 
 /** How close (in rows) to the end of the loaded rows scrolling must get to fetch the next page. */
 const LOAD_MORE_THRESHOLD = 15;
@@ -98,9 +99,12 @@ export class LogExplorerResultsElement extends UmbLitElement {
   @state()
   private _sort: LogExplorerViewState["sort"] = "desc";
 
-  /** Id of the row last opened, highlighted until another is opened. */
-  @state()
-  private _selectedId: string | undefined;
+  /**
+   * Id of the entry open in the detail drawer; its row shows the selected state (accent tint and
+   * left bar). Set by the Search view, which owns the open entry; `undefined` selects nothing.
+   */
+  @property({ attribute: false })
+  selectedId: string | undefined;
 
   /** The rows currently rendered; recomputed on scroll, resize and new results. */
   @state()
@@ -225,8 +229,31 @@ export class LogExplorerResultsElement extends UmbLitElement {
   };
 
   #open(record: LogRecord): void {
-    this._selectedId = record.id;
     this.dispatchEvent(new LogExplorerEntryOpenEvent(record));
+  }
+
+  /**
+   * Focuses the row of an entry, for returning focus when the drawer closes. Rows are reused
+   * positionally as the window slides (ADR 0015), so the element that was clicked may now show
+   * another entry or be gone: the row is found by id, scrolled into view first when it is outside
+   * the window, and focused once the window has re-rendered.
+   *
+   * @param id - `LogRecord.id`.
+   * @returns `true` when the row was focused; `false` when the entry is no longer loaded (for
+   *   example after the query changed).
+   */
+  async focusRow(id: string): Promise<boolean> {
+    const index = this._results.records.findIndex((record) => record.id === id);
+    const list = this._list;
+    if (index === -1 || !list) return false;
+
+    list.scrollTop = scrollTopToReveal(index, this.#rowHeight, list.scrollTop, list.clientHeight);
+    this.#updateWindow();
+    await this.updateComplete;
+    const row = [...list.querySelectorAll<HTMLElement>(".row")].find((element) => element.dataset.id === id);
+    // preventScroll: the row is already in view, and the list must not jump to align it.
+    row?.focus({ preventScroll: true });
+    return row !== undefined;
   }
 
   #renderRow(record: LogRecord, index: number) {
@@ -236,7 +263,8 @@ export class LogExplorerResultsElement extends UmbLitElement {
     return html`
       <button
         type="button"
-        class=${classMap({ row: true, selected: record.id === this._selectedId })}
+        class=${classMap({ row: true, selected: record.id === this.selectedId })}
+        data-id=${record.id}
         style=${styleMap({ transform: `translateY(${index * this.#rowHeight}px)` })}
         aria-label=${this.localize.term("logExplorer_resultsOpenEntry", time, levelText)}
         @click=${() => this.#open(record)}
@@ -472,8 +500,10 @@ export class LogExplorerResultsElement extends UmbLitElement {
         outline-offset: -2px;
       }
 
+      /* The accent tint of UI brief §4.9 (prototype #e8ebfa). --uui-color-current is the pink of
+         the active tab and tree item, so the tint is mixed from the accent instead. */
       .row.selected {
-        background-color: var(--uui-color-current);
+        background-color: color-mix(in srgb, var(--uui-color-interactive-emphasis) 12%, var(--uui-color-surface));
         border-left-color: var(--uui-color-interactive-emphasis);
       }
 

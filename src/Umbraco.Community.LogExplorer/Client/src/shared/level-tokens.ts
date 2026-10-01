@@ -34,3 +34,35 @@ export const LEVEL_TOKENS = css`
     --log-explorer-level-fatal-contrast: #ffffff;
   }
 `;
+
+/**
+ * Fill and text colour for a level badge: put `class="level-{level}"` (or `level-none`) on a
+ * `uui-tag`. Needs {@link LEVEL_TOKENS} in the same `styles`. Badges always carry the level name,
+ * never colour alone (UI brief §5.1).
+ */
+export const LEVEL_BADGE_STYLES = css`
+  .level-trace {
+    background-color: var(--log-explorer-level-trace);
+    color: var(--log-explorer-level-trace-contrast);
+  }
+  .level-debug {
+    background-color: var(--log-explorer-level-debug);
+    color: var(--log-explorer-level-debug-contrast);
+  }
+  .level-info {
+    background-color: var(--log-explorer-level-info);
+    color: var(--log-explorer-level-info-contrast);
+  }
+  .level-warn {
+    background-color: var(--log-explorer-level-warn);
+    color: var(--log-explorer-level-warn-contrast);
+  }
+  .level-error {
+    background-color: var(--log-explorer-level-error);
+    color: var(--log-explorer-level-error-contrast);
+  }
+  .level-fatal {
+    background-color: var(--log-explorer-level-fatal);
+    color: var(--log-explorer-level-fatal-contrast);
+  }
+`;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rowWindow } from "./virtual-window.js";
+import { rowWindow, scrollTopToReveal } from "./virtual-window.js";
 
 describe("rowWindow", () => {
   it("renders the visible rows plus the overscan below at the top of the list", () => {
@@ -28,5 +28,24 @@ describe("rowWindow", () => {
 
   it("treats overscroll above the top as the top", () => {
     expect(rowWindow(-200, 400, 40, 1000, 0)).toEqual({ first: 0, end: 10 });
+  });
+});
+
+describe("scrollTopToReveal", () => {
+  // Rows 40 px tall in a 400 px viewport.
+  it("leaves the offset alone when the row is fully visible", () => {
+    expect(scrollTopToReveal(5, 40, 100, 400)).toBe(100);
+  });
+
+  it("aligns a row above the viewport to the top", () => {
+    expect(scrollTopToReveal(2, 40, 400, 400)).toBe(80);
+  });
+
+  it("aligns a row below the viewport to the bottom", () => {
+    expect(scrollTopToReveal(30, 40, 0, 400)).toBe(840);
+  });
+
+  it("scrolls a partly hidden row at the bottom just enough", () => {
+    expect(scrollTopToReveal(10, 40, 20, 400)).toBe(40);
   });
 });
