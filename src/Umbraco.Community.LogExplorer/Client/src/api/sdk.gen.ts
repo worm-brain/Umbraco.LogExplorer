@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetPatternsData, GetPatternsErrors, GetPatternsResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses } from './types.gen';
+import type { GetFacetsData, GetFacetsErrors, GetFacetsResponses, GetFieldsData, GetFieldsErrors, GetFieldsResponses, GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetPatternsData, GetPatternsErrors, GetPatternsResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,30 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+export class FacetsService {
+    public static getFacets<ThrowOnError extends boolean = false>(options: Options<GetFacetsData, ThrowOnError>): RequestResult<GetFacetsResponses, GetFacetsErrors, ThrowOnError> {
+        return (options.client ?? client).post<GetFacetsResponses, GetFacetsErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/facets',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class FieldsService {
+    public static getFields<ThrowOnError extends boolean = false>(options: Options<GetFieldsData, ThrowOnError>): RequestResult<GetFieldsResponses, GetFieldsErrors, ThrowOnError> {
+        return (options.client ?? client).get<GetFieldsResponses, GetFieldsErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/fields',
+            ...options
+        });
+    }
+}
 
 export class HistogramService {
     public static getHistogram<ThrowOnError extends boolean = false>(options: Options<GetHistogramData, ThrowOnError>): RequestResult<GetHistogramResponses, GetHistogramErrors, ThrowOnError> {

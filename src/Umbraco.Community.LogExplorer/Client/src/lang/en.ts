@@ -112,6 +112,17 @@ export default {
     // Fields panel and results list (UI brief §4.8, §4.9).
     fieldsHeader: "Fields",
     fieldsSubheader: "top values in results",
+    fieldsHide: "Hide fields panel",
+    fieldsShow: "Show fields panel",
+    fieldsFilterLabel: "Filter fields",
+    fieldsPresence: (percent: string) => `${percent}% of entries`,
+    fieldsInclude: (field: string, value: string, count: string) => `Include ${field} ${value}, ${count} entries`,
+    fieldsExclude: (field: string, value: string) => `Exclude ${field} ${value}`,
+    fieldsApproximateHint: (from: string, to: string) =>
+      `The source sampled or stopped at its scan budget, so these counts cover ${from} to ${to} only.`,
+    fieldsEmpty: "No field values in the current results.",
+    fieldsNoMatch: "No fields match the filter.",
+    fieldsError: (message: string) => `Could not load fields: ${message}`,
     columnTime: "Time",
     columnLevel: "Level",
     columnMessage: "Message",
