@@ -9,3 +9,4 @@ All notable user-visible changes to this project are documented here. The format
 ### Added
 
 - Log Explorer item under Settings > Advanced with an empty Search, Patterns and Overview workspace.
+- Simple search syntax parser in Core: `field:value`, `-field:value`, wildcards, comparisons, `has:field`, field aliases and `level:`/`level=` turn search box input into filter chips and a level set, with a plain-text fallback for an unbalanced quote.

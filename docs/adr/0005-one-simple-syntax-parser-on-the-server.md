@@ -14,7 +14,9 @@ already contains a third, informal version.
 
 - The parser lives only in Core (C#), with the exhaustive table-driven tests.
 - The package exposes `POST /parse` (`{ input }` -> chips as `FilterNode`s, the resolved level set,
-  leftover text, and any fallback explanation such as an unbalanced quote).
+  leftover text, and any fallback explanation such as an unbalanced quote). Leftover text is
+  returned as text chips in the chip list (all bare words as one `TextNode`, each quoted phrase
+  as its own), not as a separate string.
 - The client calls it on Enter. It does not parse locally. Autocomplete suggestions are a separate
   concern and may be computed client-side from cached field and facet data.
 
