@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The provider contract suite (BRIEF §16): LogSourceContractTests<TFixture> is subclassed by every
+    provider's test project with its own fixture. FakeLogSource runs it here as the reference.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Umbraco.Community.LogExplorer.ContractTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Umbraco.Community.LogExplorer.Core\Umbraco.Community.LogExplorer.Core.csproj" />
+  </ItemGroup>
+</Project>
