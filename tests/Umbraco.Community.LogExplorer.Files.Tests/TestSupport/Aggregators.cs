@@ -21,10 +21,17 @@ internal static class Aggregators
     /// <summary>A file name for WORM on 2026-10-01.</summary>
     public const string DayFile = "UmbracoTraceLog.WORM.20261001.json";
 
+    /// <summary>Creates an aggregator over WORM's log files in a test directory.</summary>
+    /// <param name="directory">The log directory.</param>
+    /// <param name="scanBudgetMegabytes">The <c>Files:ScanBudgetMegabytes</c> option.</param>
+    /// <param name="cache">The cache to use; a fresh one when null.</param>
+    /// <param name="clock">The clock relative ranges resolve against; fixed at <see cref="Now"/> when null.</param>
+    /// <returns>The aggregator.</returns>
     public static FileAggregator Create(
         string directory,
         int scanBudgetMegabytes = 256,
-        IMemoryCache? cache = null
+        IMemoryCache? cache = null,
+        TimeProvider? clock = null
     )
     {
         var configuration = Substitute.For<ILoggingConfiguration>();
@@ -35,7 +42,7 @@ internal static class Aggregators
         options.Files.ScanBudgetMegabytes = scanBudgetMegabytes;
         return new FileAggregator(
             new UmbracoLogFileLocator(configuration, currentMachineName: "WORM"),
-            new FakeTimeProvider(Now),
+            clock ?? new FakeTimeProvider(Now),
             cache ?? new MemoryCache(new MemoryCacheOptions()),
             Options.Create(options)
         );

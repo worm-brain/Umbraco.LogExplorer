@@ -44,8 +44,8 @@ internal sealed record FileAggregate<T>(T Result, ResolvedRange ScannedRange, lo
 /// Results are cached in <see cref="IMemoryCache"/> for 60 seconds, keyed by a SHA-256 hash of
 /// the operation, its parameters and the query with its range resolved, plus each candidate
 /// file's name, length and last-write time, so appending to a file misses the cache. A relative
-/// range resolves to the clock's "now", so the same relative query a moment later is a different
-/// key; only an identical absolute range (a zoomed histogram, a shared link) hits.
+/// range ends at "now" rounded up to its bucket width (see <see cref="ResolveForAggregation"/>),
+/// so repeating "last 1 h" within the same minute hits the cache too.
 /// </para>
 /// <para>
 /// <see cref="IMemoryCache"/> needs no registration of our own: Umbraco 17.7 and 18.2 register
@@ -158,6 +158,7 @@ internal sealed class FileAggregator
             query,
             target,
             applyLevels: false,
+            roundingBuckets: target,
             range =>
             {
                 TimeSpan size = ChooseBucketSize(range.To - range.From, target);
@@ -224,6 +225,7 @@ internal sealed class FileAggregator
             query,
             new { fields = requested, top = take },
             applyLevels: true,
+            roundingBuckets: SparklineBuckets,
             _ =>
             {
                 long matched = 0;
@@ -324,6 +326,7 @@ internal sealed class FileAggregator
             query,
             top,
             applyLevels: true,
+            roundingBuckets: SparklineBuckets,
             range =>
             {
                 // At least one tick, so a range shorter than 30 ticks still divides.
@@ -399,6 +402,7 @@ internal sealed class FileAggregator
             query,
             parameters: null,
             applyLevels: true,
+            roundingBuckets: SparklineBuckets,
             _ =>
             {
                 long matched = 0;
@@ -474,13 +478,52 @@ internal sealed class FileAggregator
         return TimeSpan.FromDays(Math.Ceiling(length.TotalDays / target));
     }
 
+    /// <summary>
+    /// Resolves a query's range for an aggregation. An absolute range is used as given. A relative
+    /// range ("last 1 h") ends at "now" rounded up to the bucket width that range would get with
+    /// <paramref name="roundingBuckets"/> buckets, so repeating the query within one bucket gives
+    /// the same range and hits the 60-second cache instead of rescanning.
+    /// </summary>
+    /// <param name="range">The query's time range.</param>
+    /// <param name="roundingBuckets">The bucket count whose width "now" is rounded to.</param>
+    /// <param name="clock">Supplies "now".</param>
+    /// <returns>
+    /// The range to scan. Rounding up rather than down keeps the newest entries in the window; the
+    /// end can then be up to one bucket in the future, which matches nothing.
+    /// </returns>
+    /// <exception cref="ArgumentException">The range is invalid (see <see cref="RelativeRange.Resolve"/>).</exception>
+    internal static ResolvedRange ResolveForAggregation(
+        TimeRange range,
+        int roundingBuckets,
+        TimeProvider clock
+    )
+    {
+        ResolvedRange resolved = RelativeRange.Resolve(range, clock);
+        if (range.Relative is null)
+        {
+            return resolved;
+        }
+
+        TimeSpan length = resolved.To - resolved.From;
+        TimeSpan width = ChooseBucketSize(length, roundingBuckets);
+        DateTimeOffset to = AlignDown(resolved.To, width);
+        if (to < resolved.To)
+        {
+            to += width;
+        }
+
+        return new ResolvedRange(to - length, to);
+    }
+
     // The shared scan: resolve, check the cache, read newest first until the stream ends or the
-    // budget is spent, then cache what was built.
+    // budget is spent, then cache what was built. Relative ranges are rounded first (see
+    // ResolveForAggregation) so repeated queries share a cache entry.
     private FileAggregate<T> Aggregate<T>(
         string operation,
         LogQuery query,
         object? parameters,
         bool applyLevels,
+        int roundingBuckets,
         Func<ResolvedRange, Accumulator<T>> start,
         CancellationToken cancellationToken
     )
@@ -490,7 +533,7 @@ internal sealed class FileAggregator
         // Compiled before the cache lookup, so an invalid query fails whether or not it is cached.
         Func<LogEvent, bool> native = NativeFilter.Compile(query.NativeQuery);
 
-        ResolvedRange range = RelativeRange.Resolve(query.Range, _clock);
+        ResolvedRange range = ResolveForAggregation(query.Range, roundingBuckets, _clock);
         string key = CacheKey(operation, query, range, parameters);
         if (_cache.TryGetValue(key, out (T Result, ResolvedRange Scanned) cached))
         {
