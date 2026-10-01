@@ -378,7 +378,10 @@ export class LogExplorerResultsElement extends UmbLitElement {
               @click=${this.#toggleSort}
             >
               ${this.localize.term("logExplorer_columnTime")}
-              <uui-symbol-sort active ?descending=${this._sort === "desc"}></uui-symbol-sort>
+              <!-- uui-symbol-sort draws "descending" as an up chevron (the table convention of
+                   "values grow upwards"); newest first must read as the brief's "Time ↓", so the
+                   attribute is set for oldest first instead. -->
+              <uui-symbol-sort active ?descending=${this._sort === "asc"}></uui-symbol-sort>
             </uui-button>
             <span>${this.localize.term("logExplorer_columnLevel")}</span>
             <span>${this.localize.term("logExplorer_columnMessage")}</span>

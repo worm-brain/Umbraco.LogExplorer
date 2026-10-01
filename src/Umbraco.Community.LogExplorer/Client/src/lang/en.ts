@@ -54,14 +54,18 @@ export default {
     // Histogram and its level toggles (UI brief §4.7), and the time chip (§4.4).
     histogramLabel: "Entries over time",
     histogramLevelsLabel: "Show or hide levels",
-    histogramLevelLabel: (level: string, count: string) => `${level}, ${count} entries`,
+    // Counts take the number (for the singular) and its locale-formatted text.
+    histogramLevelLabel: (level: string, count: number, formatted: string) =>
+      `${level}, ${formatted} ${count === 1 ? "entry" : "entries"}`,
     histogramLevelHide: (level: string) => `Hide ${level} entries`,
     histogramLevelShow: (level: string) => `Show ${level} entries`,
-    histogramSummary: (count: string, from: string, to: string) => `${count} entries · ${from} to ${to}`,
+    histogramSummary: (count: number, formatted: string, from: string, to: string) =>
+      `${formatted} ${count === 1 ? "entry" : "entries"} · ${from} to ${to}`,
     histogramApproximate: "Approximate",
     histogramApproximateHint:
       "Counts cover only part of the range: the source sampled its data or stopped at its scan budget.",
-    histogramBarLabel: (time: string, count: string) => `${time}, ${count} entries, select to zoom in`,
+    histogramBarLabel: (time: string, count: number, formatted: string) =>
+      `${time}, ${formatted} ${count === 1 ? "entry" : "entries"}, select to zoom in`,
     histogramError: (message: string) => `Could not load the histogram: ${message}`,
     histogramAlreadyZoomed: "Already zoomed in. Clear the time chip to zoom out.",
     zoomChip: (from: string, to: string) => `Time: ${from} to ${to}`,
