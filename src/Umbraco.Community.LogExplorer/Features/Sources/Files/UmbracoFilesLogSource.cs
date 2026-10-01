@@ -17,8 +17,9 @@ namespace Umbraco.Community.LogExplorer.Features.Sources.Files;
 /// </para>
 /// <para>
 /// Tail and Export are not declared: neither exists yet (Phase 3 and Phase 2). NativeQuery is
-/// declared only when the definition allows native queries; without it a query carrying one is
-/// refused rather than run.
+/// always declared, because it also gates <see cref="ILogSource.Compile"/> ("Show query").
+/// <c>AllowNativeQuery: false</c> is enforced by the registry's
+/// <see cref="NativeQueryDisabledSource"/> wrapper, as for every other source (ADR 0016).
 /// </para>
 /// </remarks>
 internal sealed class UmbracoFilesLogSource : LogSourceBase
@@ -35,13 +36,14 @@ internal sealed class UmbracoFilesLogSource : LogSourceBase
     /// </summary>
     public const int MaxPageSize = 1000;
 
-    private const LogSourceFeatures BaseFeatures =
+    private const LogSourceFeatures Features =
         LogSourceFeatures.Facets
         | LogSourceFeatures.Histogram
         | LogSourceFeatures.Patterns
         | LogSourceFeatures.Context
         | LogSourceFeatures.TraceCorrelation
-        | LogSourceFeatures.FieldDiscovery;
+        | LogSourceFeatures.FieldDiscovery
+        | LogSourceFeatures.NativeQuery;
 
     private readonly LogSourceDefinition _definition;
     private readonly LogFilePager _pager;
@@ -50,8 +52,8 @@ internal sealed class UmbracoFilesLogSource : LogSourceBase
 
     /// <summary>Creates the source for one configuration entry.</summary>
     /// <param name="definition">
-    /// The entry; its alias, display name (the alias when empty), sensitivity and
-    /// <see cref="LogSourceDefinition.AllowNativeQuery"/> are used. It has no settings of its own:
+    /// The entry; its alias, display name (the alias when empty) and sensitivity are used. It has
+    /// no settings of its own:
     /// the log directory comes from Umbraco's logging configuration.
     /// </param>
     /// <param name="pager">Reads search pages.</param>
@@ -75,12 +77,10 @@ internal sealed class UmbracoFilesLogSource : LogSourceBase
         _contextReader = contextReader;
 
         Capabilities = new LogSourceCapabilities(
-            definition.AllowNativeQuery
-                ? BaseFeatures | LogSourceFeatures.NativeQuery
-                : BaseFeatures,
+            Features,
             // LogRecordFilter evaluates every operator on the mapped records.
             new HashSet<FilterOperator>(Enum.GetValues<FilterOperator>()),
-            definition.AllowNativeQuery ? NativeLanguage : null,
+            NativeLanguage,
             MaxRange: null,
             MaxPageSize
         );
@@ -105,12 +105,8 @@ internal sealed class UmbracoFilesLogSource : LogSourceBase
     public override LogSourceCapabilities Capabilities { get; }
 
     /// <inheritdoc />
-    /// <exception cref="NotSupportedException">
-    /// The query has a native query and the source does not allow them.
-    /// </exception>
     protected override Task<LogPage> QueryCoreAsync(LogQuery query, CancellationToken ct)
     {
-        RequireNativeAllowed(query);
         return Task.Run(
             () =>
             {
@@ -128,7 +124,6 @@ internal sealed class UmbracoFilesLogSource : LogSourceBase
         CancellationToken ct
     )
     {
-        RequireNativeAllowed(query);
         return Task.Run(() => _aggregator.GetHistogram(query, targetBuckets, ct).Result, ct);
     }
 
@@ -140,7 +135,6 @@ internal sealed class UmbracoFilesLogSource : LogSourceBase
         CancellationToken ct
     )
     {
-        RequireNativeAllowed(query);
         return Task.Run(() => _aggregator.GetFacets(query, fields, top, ct).Result, ct);
     }
 
@@ -151,7 +145,6 @@ internal sealed class UmbracoFilesLogSource : LogSourceBase
         CancellationToken ct
     )
     {
-        RequireNativeAllowed(query);
         return Task.Run(
             () =>
             {
@@ -199,7 +192,6 @@ internal sealed class UmbracoFilesLogSource : LogSourceBase
         CancellationToken ct
     )
     {
-        RequireNativeAllowed(query);
         return Task.Run(() => _aggregator.GetFields(query, ct).Result, ct);
     }
 
@@ -210,21 +202,6 @@ internal sealed class UmbracoFilesLogSource : LogSourceBase
     /// <inheritdoc />
     protected override ValidationResult ValidateNativeCore(string nativeQuery) =>
         NativeFilter.Validate(nativeQuery);
-
-    // With native queries switched off (AllowNativeQuery: false) the pager would still run one,
-    // so it is refused here, for every member that takes a query.
-    private void RequireNativeAllowed(LogQuery query)
-    {
-        if (
-            !string.IsNullOrWhiteSpace(query.NativeQuery)
-            && !Capabilities.Supports(LogSourceFeatures.NativeQuery)
-        )
-        {
-            throw new NotSupportedException(
-                $"Log source '{Alias}' does not accept native queries."
-            );
-        }
-    }
 
     // The readers leave SourceAlias empty because they do not know which source they serve.
     private LogRecord WithAlias(LogRecord record) => record with { SourceAlias = Alias };

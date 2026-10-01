@@ -136,7 +136,7 @@ describe("LogExplorerQueryContext", () => {
     expect(context.getState().range).toEqual({ relative: "1h" });
   });
 
-  it("leaves chips the compile reports unsupported out of the query state but keeps them in the view", async () => {
+  it("keeps chips the compile could not express in the query state and reports them as not shown", async () => {
     const pathApi: FilterNode = { kind: "condition", field: "RequestPath", op: "startsWith", value: "/api" };
     const timeout: FilterNode = { kind: "text", text: "timeout" };
     const context = await connectContext({
@@ -146,13 +146,41 @@ describe("LogExplorerQueryContext", () => {
       compileDebounceMs: 0,
     });
     let queryState: LogExplorerViewState | undefined;
+    let notExpressible: ReadonlyArray<number> = [];
     context.queryState.subscribe((state) => (queryState = state));
+    context.notExpressibleChips.subscribe((indices) => (notExpressible = indices));
 
     context.addChips([pathApi, timeout]);
     await new Promise((resolve) => setTimeout(resolve, 0));
     await Promise.resolve();
 
-    expect([context.getState().chips, queryState?.chips]).toEqual([[pathApi, timeout], [timeout]]);
+    expect([queryState?.chips, notExpressible]).toEqual([[pathApi, timeout], [0]]);
+  });
+
+  it("leaves chips the source cannot run out of the query state and the compile", async () => {
+    const status200: FilterNode = { kind: "condition", field: "StatusCode", op: "equals", value: "200" };
+    const timeout: FilterNode = { kind: "text", text: "timeout" };
+    const compiledFilters: Array<unknown> = [];
+    const context = await connectContext({
+      loadDefaultSource: async () => "sample",
+      loadSources: async () => ({ status: "loaded", sources: [nativeSource("sample")] }),
+      compile: async (_, query) => {
+        compiledFilters.push(query.filter);
+        return { data: { native: 'text("timeout")', unsupported: [] } };
+      },
+      compileDebounceMs: 0,
+    });
+    let queryState: LogExplorerViewState | undefined;
+    context.queryState.subscribe((state) => (queryState = state));
+
+    context.addChips([status200, timeout]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect([context.getState().chips, queryState?.chips, compiledFilters.at(-1)]).toEqual([
+      [status200, timeout],
+      [timeout],
+      timeout,
+    ]);
   });
 
   it("does not compile for a source without a native language", async () => {

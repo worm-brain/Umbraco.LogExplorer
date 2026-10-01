@@ -168,3 +168,47 @@ describe("log-explorer-search-box with a native-capable source", () => {
     expect(context.getState().native).toBeUndefined();
   });
 });
+
+describe("log-explorer-search-box with a chip the source runs but cannot show", () => {
+  const sample: SourceResponseModel = {
+    alias: "sample",
+    displayName: "Sample data",
+    type: "Fake",
+    sensitive: false,
+    capabilities: {
+      features: ["nativeQuery"],
+      operators: ["startsWith"],
+      nativeLanguage: "Sample",
+      maxRangeSeconds: null,
+      maxPageSize: 1000,
+    },
+    allowNativeQuery: true,
+  };
+
+  beforeEach(async () => {
+    workspace.remove();
+    workspace = new TestWorkspaceElement();
+    context = new LogExplorerQueryContext(workspace, {
+      loadDefaultTimeRange: async () => undefined,
+      loadDefaultSource: async () => "sample",
+      loadSources: async () => ({ status: "loaded", sources: [sample] }),
+      compile: async () => ({ data: { native: 'text("timeout")', unsupported: [pathApi] } }),
+      compileDebounceMs: 0,
+    });
+    box = new LogExplorerSearchBoxElement();
+    workspace.appendChild(box);
+    document.body.appendChild(workspace);
+    await settle();
+    context.addChips([pathApi, timeout]);
+    await settle();
+  });
+
+  it("keeps the chip active and notes only the language it is not shown in", () => {
+    const chips = [...box.shadowRoot!.querySelectorAll("log-explorer-filter-chip")];
+
+    expect(chips.map((chip) => [chip.unsupported, chip.notShownIn])).toEqual([
+      [false, "Sample"],
+      [false, ""],
+    ]);
+  });
+});

@@ -30,7 +30,9 @@ const TAG_STYLE: Readonly<Record<ChipKind, { look: string; color: string }>> = {
  *
  * A chip the active source cannot run ({@link unsupported}) stays in place but is drawn disabled
  * (reduced opacity, label struck through) with the tooltip "Not supported by {source}" (UI brief
- * §4.4); it can still be edited into something the source supports, or removed.
+ * §4.4); it can still be edited into something the source supports, or removed. A chip the source
+ * runs but "Show query" cannot express ({@link notShownIn}) looks like any other chip; only its
+ * tooltip says it is missing from the generated query (ADR 0016).
  *
  * The chip does not write the context. The search box listens for its events and knows which
  * chip, by position, fired them.
@@ -50,6 +52,13 @@ export class LogExplorerFilterChipElement extends UmbLitElement {
   /** Whether the active source cannot run this chip; draws it disabled. */
   @property({ type: Boolean, reflect: true })
   unsupported = false;
+
+  /**
+   * The source's query language when the generated query leaves this chip out although the
+   * source runs it; adds a note to the tooltip. Empty when the query shows the chip.
+   */
+  @property({ attribute: false })
+  notShownIn = "";
 
   /** The active source's display name, for the unsupported tooltip. */
   @property({ attribute: false })
@@ -115,7 +124,11 @@ export class LogExplorerFilterChipElement extends UmbLitElement {
     const description = this.unsupported
       ? this.localize.term("logExplorer_chipUnsupportedDescription", display.description, this.sourceName)
       : display.description;
-    const title = this.unsupported ? this.localize.term("logExplorer_chipUnsupported", this.sourceName) : description;
+    const title = this.unsupported
+      ? this.localize.term("logExplorer_chipUnsupported", this.sourceName)
+      : this.notShownIn
+        ? this.localize.term("logExplorer_chipNotShown", description, this.notShownIn)
+        : description;
 
     return html`
       <uui-tag
