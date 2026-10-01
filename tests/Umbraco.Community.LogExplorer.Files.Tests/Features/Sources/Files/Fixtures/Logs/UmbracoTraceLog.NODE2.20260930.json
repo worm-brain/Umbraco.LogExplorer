@@ -1,0 +1,1 @@
+{"@t":"2026-09-30T09:00:01.0000000Z","@mt":"HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Duration} ms","RequestMethod":"GET","RequestPath":"/","StatusCode":200,"Duration":65,"SourceContext":"Umbraco.Cms.Web.Common.Middleware.UmbracoRequestMiddleware"}

@@ -35,6 +35,8 @@
     <!-- Versions Umbraco 17.7 depends on (Umbraco.Cms.Infrastructure nuspec), so tests write and read the same formats. -->
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Serilog.Formatting.Compact" Version="3.0.0" />
+    <!-- The files provider reads compact JSON with the same reader Umbraco 17 and 18 ship (4.0.0 from 17.0.0 to 18.2.0). -->
+    <PackageVersion Include="Serilog.Formatting.Compact.Reader" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup Label="Testing">

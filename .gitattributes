@@ -3,3 +3,6 @@
 * text=auto eol=lf
 *.png binary
 *.ico binary
+# Log fixtures are byte-exact: the files provider's record ids and cursors are byte offsets, and one
+# fixture deliberately uses CRLF line endings.
+tests/**/Fixtures/** -text
