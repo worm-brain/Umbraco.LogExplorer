@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Core contracts, simple-syntax parser, filter predicate, severity mapping and FakeLogSource.
+    Must never reference an Umbraco package (BRIEF §7.1, CLAUDE.md); a Core.Tests test enforces it.
+  -->
+  <PropertyGroup>
+    <RootNamespace>Umbraco.Community.LogExplorer.Core</RootNamespace>
+    <PackageId>Umbraco.Community.LogExplorer.Core</PackageId>
+    <Version>0.0.1</Version>
+    <Description>Provider contracts and shared logic for Umbraco Log Explorer. Reference this to write a log source provider.</Description>
+    <PackageTags>umbraco;logs;serilog;opentelemetry</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umbraco.Community.LogExplorer.Core.Tests" />
+  </ItemGroup>
+</Project>

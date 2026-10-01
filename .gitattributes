@@ -1,0 +1,5 @@
+# Keep LF in the working tree for text files, so Prettier's format:check (which expects LF)
+# passes on Windows checkouts too.
+* text=auto eol=lf
+*.png binary
+*.ico binary
