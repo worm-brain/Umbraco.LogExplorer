@@ -19,7 +19,8 @@ adding to the core document.
 ## Decision
 
 - Base route: `/umbraco/log-explorer/api/v1/...` (for example `GET /umbraco/log-explorer/api/v1/sources`).
-- Swagger document: `log-explorer`, served at `/umbraco/swagger/log-explorer/swagger.json`, with backoffice
+- Swagger document: `log-explorer`, served at `/umbraco/swagger/log-explorer/swagger.json` on 17 and
+  `/umbraco/openapi/log-explorer.json` on 18 (ADR 0010), with backoffice
   OAuth security requirements so the Swagger UI and the generated client authenticate as the signed-in user.
 - Every controller derives from `LogExplorerApiControllerBase`, which sets the route, the
   `SectionAccessSettings` policy (verified present in 17.0.0), the backoffice JSON options and the ProblemDetails

@@ -3,10 +3,14 @@
 Two Umbraco sites for developing and testing the package. Both reference the package as a
 project, install themselves unattended on first run (SQLite), and are never packed.
 
-| Site | Umbraco | URL |
-| --- | --- | --- |
-| `LogExplorer.Site17` | 17.7.0 (pinned in `Directory.Packages.props`) | https://localhost:44370/umbraco |
-| `LogExplorer.Site18` | 18.2.0 (`VersionOverride` in its csproj) | https://localhost:44380/umbraco |
+| Site | Umbraco | Build with | URL |
+| --- | --- | --- | --- |
+| `LogExplorer.Site17` | 17.7.0 | default (`UmbracoMajor=17`) | https://localhost:44370/umbraco |
+| `LogExplorer.Site18` | 18.2.0 | `-p:UmbracoMajor=18` | https://localhost:44380/umbraco |
+
+The package is built once per Umbraco major (ADR 0010), selected by the `UmbracoMajor` MSBuild
+property; versions per major live in `Directory.Packages.props`. Each site refuses to start on the
+wrong major, so its database is never upgraded or downgraded by accident.
 
 Backoffice login on both: `admin@example.com` / `1234567890` (development only, set in
 `appsettings.Development.json`).
@@ -17,6 +21,7 @@ Backoffice login on both: `admin@example.com` / `1234567890` (development only, 
 # Build the backoffice client once (its output is gitignored), then run a site.
 cd src/Umbraco.Community.LogExplorer/Client && bun install && bun run build
 dotnet run --project samples/LogExplorer.Site17
+dotnet run --project samples/LogExplorer.Site18 -p:UmbracoMajor=18
 ```
 
 For client work, keep `bun run watch` running in `src/Umbraco.Community.LogExplorer/Client` and
@@ -38,6 +43,7 @@ it on in `appsettings.Development.json` or with environment variables:
 
 ```sh
 LogGenerator__Enabled=true LogGenerator__WriteFileScenarios=true dotnet run --project samples/LogExplorer.Site17
+dotnet run --project samples/LogExplorer.Site18 -p:UmbracoMajor=18
 ```
 
 The 2 GB, 7-day bulk mode for the performance check is added with #36.

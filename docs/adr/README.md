@@ -9,7 +9,7 @@ brief assumed. Update the brief in the same change.
 
 | ADR | Decision | Status |
 | --- | --- | --- |
-| [0001](0001-one-source-for-umbraco-17-and-18.md) | One source tree serves Umbraco 17 and 18 | Accepted |
+| [0001](0001-one-source-for-umbraco-17-and-18.md) | One source tree serves Umbraco 17 and 18 | Superseded by 0010 |
 | [0002](0002-organise-by-feature.md) | Organise code by feature (vertical slices) | Accepted |
 | [0003](0003-read-stores-directly.md) | Read log stores directly, never query through `ILogViewerService` | Accepted |
 | [0004](0004-level-filter-is-a-set.md) | The level filter is a set of levels, not a minimum | Accepted |
@@ -18,6 +18,7 @@ brief assumed. Update the brief in the same change.
 | [0007](0007-hide-core-log-viewer-by-default.md) | Hide the core Log Viewer by default | Accepted |
 | [0008](0008-core-contract-refinements.md) | Core contract refinements from Phase 0 | Accepted |
 | [0009](0009-package-api-route.md) | The package API lives at `/umbraco/log-explorer/api/v1` | Accepted |
+| [0010](0010-one-package-per-umbraco-major.md) | Build one package per Umbraco major from one source tree | Accepted |
 
 ## Template
 

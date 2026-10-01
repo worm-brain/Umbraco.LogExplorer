@@ -1,6 +1,6 @@
 # ADR 0001: One source tree serves Umbraco 17 and 18
 
-- Status: Accepted
+- Status: Superseded by 0010
 - Date: 2026-10-01
 
 ## Context

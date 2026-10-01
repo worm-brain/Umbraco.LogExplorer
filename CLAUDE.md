@@ -15,5 +15,6 @@ An Umbraco 17/18 backoffice log explorer: click-to-filter search over Umbraco's 
 - Organise by feature folder, not technical layer (ADR 0002).
 - UI: UUI and `umb-*` components first, with their variants (UI brief §4.0); use the `umbraco-backoffice-ui-developer` agent for client work.
 - Tooling (ADR 0006): Bun + Vitest + Prettier for the client; xUnit v3 + NSubstitute + CSharpier for .NET.
-- Run `dotnet test` and `bun run test` (client) before every commit. Conventional commits, ASCII only. Update `CHANGELOG.md` per user-visible change.
+- One package per Umbraco major (ADR 0010): `dotnet build` targets 17, `-p:UmbracoMajor=18` targets 18. Major-specific code goes in paired `*.V17.cs` / `*.V18.cs` files. Build and test both majors before committing anything that touches Umbraco APIs.
+- Run `dotnet test` and `bun run test` (client) before every commit, and read the build summary: stop any running sample site first, because a locked DLL shows up as build errors. Conventional commits, ASCII only. Update `CHANGELOG.md` per user-visible change.
 - Branching: Phase 0 commits go to `main`; from Phase 1, one branch and PR per phase. Parallel lanes (BRIEF §15) use their own worktree branches merged into the phase branch.

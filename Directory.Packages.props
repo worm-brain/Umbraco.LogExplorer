@@ -5,15 +5,29 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
+  <!--
+    Umbraco versions per major (ADR 0010; UmbracoMajor comes from Directory.Build.props).
+    UmbracoPackageRange: what the package compiles against (the floor) and declares to NuGet.
+    UmbracoDevVersion: the concrete version sample sites and tests run, pinned with VersionOverride
+    where a project references a package that also carries the range.
+  -->
+  <PropertyGroup Condition="'$(UmbracoMajor)' == '17'">
+    <UmbracoPackageRange>[17.0.0, 18.0.0)</UmbracoPackageRange>
+    <UmbracoDevVersion>17.7.0</UmbracoDevVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UmbracoMajor)' == '18'">
+    <UmbracoPackageRange>[18.0.0, 19.0.0)</UmbracoPackageRange>
+    <UmbracoDevVersion>18.2.0</UmbracoDevVersion>
+  </PropertyGroup>
+
   <ItemGroup Label="Umbraco">
-    <!--
-      The package floor and range (ADR 0001): compile against 17.0.0, install on any 17.x or 18.x site.
-      Sample sites and tests pin concrete versions with VersionOverride.
-    -->
-    <PackageVersion Include="Umbraco.Cms.Web.Website" Version="[17.0.0, 19.0.0)" />
-    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.0.0, 19.0.0)" />
-    <PackageVersion Include="Umbraco.Cms" Version="17.7.0" />
-    <PackageVersion Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="17.7.0" />
+    <PackageVersion Include="Umbraco.Cms.Web.Website" Version="$(UmbracoPackageRange)" />
+    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="$(UmbracoPackageRange)" />
+    <PackageVersion Include="Umbraco.Cms" Version="$(UmbracoDevVersion)" />
+    <PackageVersion
+      Include="Umbraco.Cms.DevelopmentMode.Backoffice"
+      Version="$(UmbracoDevVersion)"
+    />
     <PackageVersion Include="Microsoft.ICU.ICU4C.Runtime" Version="72.1.0.3" />
   </ItemGroup>
 

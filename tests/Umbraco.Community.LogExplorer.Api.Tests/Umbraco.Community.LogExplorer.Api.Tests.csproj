@@ -6,9 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Pin the Umbraco version we develop against (the package itself floats from the 17.0.0 floor). -->
-    <PackageReference Include="Umbraco.Cms.Web.Website" VersionOverride="17.7.0" />
-    <PackageReference Include="Umbraco.Cms.Api.Management" VersionOverride="17.7.0" />
+    <!-- Pin the Umbraco version we develop against for this major (the package itself floats from the floor). -->
+    <PackageReference Include="Umbraco.Cms.Web.Website" VersionOverride="$(UmbracoDevVersion)" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" VersionOverride="$(UmbracoDevVersion)" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />

@@ -3,6 +3,22 @@
     Shared build settings for every project in the repo (ADR 0006).
     Strict by default: nullable on, warnings are errors, the recommended analyzer set is on.
   -->
+  <!--
+    Which Umbraco major this build targets (ADR 0010). One source tree builds one package per major:
+    `dotnet build` targets 17; `dotnet build -p:UmbracoMajor=18` targets 18. It must be a global
+    property (command line) so it reaches project references and restore alike.
+    Each major gets its own bin/obj folders so switching between them never mixes restore assets.
+  -->
+  <PropertyGroup>
+    <UmbracoMajor Condition="'$(UmbracoMajor)' == ''">17</UmbracoMajor>
+    <BaseIntermediateOutputPath Condition="'$(UmbracoMajor)' != '17'"
+      >obj\u$(UmbracoMajor)\</BaseIntermediateOutputPath>
+    <BaseOutputPath Condition="'$(UmbracoMajor)' != '17'">bin\u$(UmbracoMajor)\</BaseOutputPath>
+    <DefineConstants>$(DefineConstants);UMBRACO_$(UmbracoMajor)</DefineConstants>
+    <!-- The SDK only excludes the active major's bin/obj from item globs; exclude the other majors' too. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**</DefaultItemExcludes>
+  </PropertyGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>

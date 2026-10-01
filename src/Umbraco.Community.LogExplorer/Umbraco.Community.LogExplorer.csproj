@@ -13,12 +13,16 @@
     <Title>Umbraco Log Explorer</Title>
     <Description>A click-to-filter log explorer for the Umbraco backoffice: search, facets, histogram, patterns and request correlation over Umbraco's log files, with Application Insights and Seq providers.</Description>
     <PackageTags>umbraco;umbraco-marketplace;logs;log-viewer;serilog</PackageTags>
-    <!-- The one place the version is defined: the client build stamps it into umbraco-package.json (Client/scripts/umbraco-package-version.ts). -->
-    <Version>0.0.1</Version>
+    <!--
+      One package version line per Umbraco major (ADR 0010): 17.x.y for Umbraco 17, 18.x.y for 18. Releases set
+      the full version from the tag; local builds are $(UmbracoMajor).0.0-dev. The client build stamps it into
+      umbraco-package.json (Client/scripts/umbraco-package-version.ts).
+    -->
+    <Version>$(UmbracoMajor).0.0-dev</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Range set in Directory.Packages.props: [17.0.0, 19.0.0) so one package serves Umbraco 17 and 18 (ADR 0001). -->
+    <!-- Range per major, set in Directory.Packages.props (ADR 0010). -->
     <PackageReference Include="Umbraco.Cms.Web.Website" />
     <PackageReference Include="Umbraco.Cms.Api.Management" />
   </ItemGroup>

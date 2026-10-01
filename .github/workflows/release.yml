@@ -1,6 +1,8 @@
-# Packs every package when a version tag (v1.2.3, v1.0.0-alpha.1) is pushed.
+# Packs every package when a version tag is pushed. One package line per Umbraco major (ADR 0010):
+# the tag's first number selects the major, so v17.0.0-alpha.1 packs the Umbraco 17 build and
+# v18.0.0-alpha.1 packs the Umbraco 18 build, each at the tag's version.
 #
-# Publishing to nuget.org is a separate job that stays disabled until the first alpha (issue #50, P1-25).
+# Publishing to nuget.org is a separate job that stays disabled until the first alpha (issue #52).
 # It uses NuGet trusted publishing, so no API key is stored: the job exchanges its GitHub OIDC token for a
 # short-lived key. One-off setup before enabling: add a trusted publishing policy on nuget.org for this
 # repository and release.yml, create the `nuget` environment with a required reviewer, and set the
@@ -32,15 +34,23 @@ jobs:
         with:
           bun-version: 1.3.3
 
-      # The tag sets the version for every package, so a CI test tag (v0.0.1-ci.1) needs no csproj edit.
-      - name: Resolve the version from the tag
+      # The tag sets the version for every package; its major (17 or 18) selects the Umbraco build.
+      - name: Resolve the version and Umbraco major from the tag
         id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          major="${version%%.*}"
+          if [ "$major" != "17" ] && [ "$major" != "18" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME must start with the Umbraco major (v17.x.y or v18.x.y)."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "major=$major" >> "$GITHUB_OUTPUT"
 
-      - run: dotnet test --solution Umbraco.Community.LogExplorer.slnx
+      - run: dotnet test --solution Umbraco.Community.LogExplorer.slnx -p:UmbracoMajor=${{ steps.version.outputs.major }}
 
       # Builds the client too, and produces each .nupkg with its .snupkg symbol package.
-      - run: dotnet pack Umbraco.Community.LogExplorer.slnx -o artifacts -p:Version=${{ steps.version.outputs.version }}
+      - run: dotnet pack Umbraco.Community.LogExplorer.slnx -o artifacts -p:UmbracoMajor=${{ steps.version.outputs.major }} -p:Version=${{ steps.version.outputs.version }}
 
       - uses: actions/upload-artifact@v7
         with:
@@ -48,7 +58,7 @@ jobs:
           path: artifacts/
 
   publish:
-    # Off until the first alpha release (P1-25). Remove this condition to enable publishing.
+    # Off until the first alpha release (#52). Remove this condition to enable publishing.
     if: false
     needs: pack
     runs-on: ubuntu-latest

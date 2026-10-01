@@ -1,4 +1,5 @@
-# Builds and tests everything (.NET and the Lit client) on every pull request and push to main.
+# Builds, tests and packs everything (.NET and the Lit client) for each Umbraco major (ADR 0010)
+# on every pull request and push to main.
 name: CI
 
 on:
@@ -21,7 +22,19 @@ env:
 
 jobs:
   build:
+    name: Umbraco ${{ matrix.umbraco }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # umbraco: the -p:UmbracoMajor value; backoffice-floor: the lowest @umbraco-cms/backoffice of that major.
+        include:
+          - umbraco: 17
+            backoffice-floor: 17.0.0
+          - umbraco: 18
+            backoffice-floor: 18.0.0
+    env:
+      UMBRACO_MAJOR: ${{ matrix.umbraco }}
     steps:
       - uses: actions/checkout@v7
 
@@ -37,20 +50,20 @@ jobs:
       # .NET: format, build (warnings are errors), test.
       - run: dotnet tool restore
       - run: dotnet csharpier check .
-      - run: dotnet build Umbraco.Community.LogExplorer.slnx -warnaserror
+      - run: dotnet build Umbraco.Community.LogExplorer.slnx -warnaserror -p:UmbracoMajor=$UMBRACO_MAJOR
       - name: Test
-        run: dotnet test --solution Umbraco.Community.LogExplorer.slnx --no-build --report-xunit-trx --results-directory test-results
+        run: dotnet test --solution Umbraco.Community.LogExplorer.slnx --no-build -p:UmbracoMajor=$UMBRACO_MAJOR --report-xunit-trx --results-directory test-results
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: test-results
+          name: test-results-umbraco-${{ matrix.umbraco }}
           path: test-results/
           if-no-files-found: ignore
 
-      # Client: format, typecheck, unit tests, then a typecheck against the oldest supported backoffice
-      # (17.0.0) so the client never uses an API that arrived after the package's floor (ADR 0001).
+      # Client: format, typecheck, unit tests, then a typecheck against the oldest backoffice of this major
+      # so the client never uses an API that arrived after the package's floor (ADR 0010).
       - name: Client checks
         working-directory: src/Umbraco.Community.LogExplorer/Client
         run: |
@@ -58,12 +71,12 @@ jobs:
           bun run format:check
           bun run typecheck
           bun run test
-          bun add -d @umbraco-cms/backoffice@17.0.0 --no-save
+          bun add -d @umbraco-cms/backoffice@${{ matrix.backoffice-floor }} --no-save
           bun run typecheck
 
       # Packing builds the client itself; this proves a clean checkout produces a complete package.
-      - run: dotnet pack Umbraco.Community.LogExplorer.slnx -o artifacts
+      - run: dotnet pack Umbraco.Community.LogExplorer.slnx -o artifacts -p:UmbracoMajor=$UMBRACO_MAJOR
       - uses: actions/upload-artifact@v7
         with:
-          name: packages
+          name: packages-umbraco-${{ matrix.umbraco }}
           path: artifacts/
