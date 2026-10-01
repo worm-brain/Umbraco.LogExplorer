@@ -79,7 +79,9 @@ export class LogExplorerPatternsElement extends UmbLitElement {
     this.consumeContext(LOG_EXPLORER_QUERY_CONTEXT, (context) => {
       this.#context = context;
       this.observe(
-        context?.state,
+        // queryState, not state: chips the source cannot run and a disallowed native query
+        // never reach the server, as on the Search view.
+        context?.queryState,
         (viewState) => {
           this.#viewState = viewState;
           this._levels = viewState?.levels ?? null;

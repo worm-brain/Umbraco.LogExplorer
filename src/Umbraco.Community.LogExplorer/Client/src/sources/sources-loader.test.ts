@@ -8,6 +8,7 @@ const sample: SourceResponseModel = {
   type: "Fake",
   sensitive: false,
   capabilities: { features: [], operators: [], nativeLanguage: null, maxRangeSeconds: null, maxPageSize: 1000 },
+  allowNativeQuery: false,
 };
 
 describe("loadSources", () => {

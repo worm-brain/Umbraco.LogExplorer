@@ -466,15 +466,46 @@ public class FakeLogSourceTests
     }
 
     [Theory]
-    [InlineData("anything at all", true)]
-    [InlineData("   ", false)]
-    public void ValidateNative_Text_IsValidUnlessBlank(string native, bool expected)
+    [InlineData("anything at all")]
+    [InlineData("(a = [1, 2]) and text(\"say \\\"(hi\\\"\")")]
+    public void ValidateNative_BalancedText_IsValid(string native)
     {
         // Act
         ValidationResult result = CreateSource().ValidateNative(native);
 
         // Assert
-        Assert.Equal(expected, result.Valid);
+        Assert.True(result.Valid);
+    }
+
+    [Theory]
+    [InlineData("   ", 0)]
+    [InlineData("a and (b", 6)]
+    [InlineData("a)", 1)]
+    [InlineData("(a]", 2)]
+    [InlineData("text(\"open)", 5)]
+    public void ValidateNative_Unbalanced_ReportsThePositionOfTheProblem(
+        string native,
+        int position
+    )
+    {
+        // Act
+        ValidationResult result = CreateSource().ValidateNative(native);
+
+        // Assert
+        Assert.Equal((false, position), (result.Valid, result.Position));
+    }
+
+    [Fact]
+    public async Task QueryAsync_InvalidNativeQuery_ThrowsInvalidNativeQueryWithItsPosition()
+    {
+        // Act
+        Exception? thrown = await Record.ExceptionAsync(() =>
+            CreateSource()
+                .QueryAsync(LastHour with { NativeQuery = "a and (b" }, CancellationToken.None)
+        );
+
+        // Assert
+        Assert.Equal(6, Assert.IsType<InvalidNativeQueryException>(thrown).Position);
     }
 
     [Fact]

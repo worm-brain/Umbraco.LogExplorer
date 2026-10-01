@@ -22,6 +22,10 @@ namespace Umbraco.Community.LogExplorer.Features.Sources;
 /// visible to members of those groups; a sensitive source with no groups listed is visible to the
 /// <c>admin</c> group only; any other source is visible to everyone with Settings access.
 /// </para>
+/// <para>
+/// A source configured with <c>AllowNativeQuery: false</c> is wrapped in
+/// <see cref="NativeQueryDisabledSource"/>, so every caller gets the restriction.
+/// </para>
 /// </remarks>
 internal sealed partial class LogSourceRegistry : ILogSourceRegistry
 {
@@ -178,7 +182,13 @@ internal sealed partial class LogSourceRegistry : ILogSourceRegistry
 
             try
             {
-                sources.Add(new RegisteredSource(definition, factory.Create(definition, services)));
+                ILogSource source = factory.Create(definition, services);
+                sources.Add(
+                    new RegisteredSource(
+                        definition,
+                        definition.AllowNativeQuery ? source : new NativeQueryDisabledSource(source)
+                    )
+                );
             }
             catch (ArgumentException ex)
             {

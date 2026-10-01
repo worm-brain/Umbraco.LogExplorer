@@ -2,14 +2,17 @@ import { css, customElement, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../histogram/zoom-chip.element.js";
 import "../search/search-box.element.js";
+import "../show-query/show-query-button.element.js";
+import "../show-query/show-query-panel.element.js";
 import "../time-range/time-range-picker.element.js";
 import "./patterns-list.element.js";
 
 /**
  * The Patterns workspace view of the Log Explorer workspace (UI brief §4.12).
  *
- * Keeps the Search view's query bar (time range picker, then the search box with the time-zoom
- * chip), which still filters, and replaces the histogram and results with the patterns list. The
+ * Keeps the Search view's query bar (time range picker, the search box with the time-zoom chip,
+ * the show-query button) and its show-query panel, which still filter and show what runs, and
+ * replaces the histogram and results with the patterns list. The
  * bar is repeated here rather than shared as an element: it is three children of a flex row,
  * and both views read and write the same `LogExplorerQueryContext`, so the two stay in step
  * without a wrapper. Only the list scrolls; the view itself never does (UI brief §2).
@@ -32,7 +35,9 @@ export class LogExplorerPatternsViewElement extends UmbLitElement {
         <log-explorer-search-box>
           <log-explorer-zoom-chip slot="before-chips"></log-explorer-zoom-chip>
         </log-explorer-search-box>
+        <log-explorer-show-query-button></log-explorer-show-query-button>
       </div>
+      <log-explorer-show-query-panel></log-explorer-show-query-panel>
       <log-explorer-patterns></log-explorer-patterns>
     `;
   }

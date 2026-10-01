@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetFacetsData, GetFacetsErrors, GetFacetsResponses, GetFieldsData, GetFieldsErrors, GetFieldsResponses, GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetPatternsData, GetPatternsErrors, GetPatternsResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses } from './types.gen';
+import type { CompileData, CompileErrors, CompileResponses, GetFacetsData, GetFacetsErrors, GetFacetsResponses, GetFieldsData, GetFieldsErrors, GetFieldsResponses, GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetPatternsData, GetPatternsErrors, GetPatternsResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses, ValidateData, ValidateErrors, ValidateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -47,6 +47,32 @@ export class HistogramService {
         return (options.client ?? client).post<GetHistogramResponses, GetHistogramErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/log-explorer/api/v1/sources/{alias}/histogram',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class NativeQueryService {
+    public static compile<ThrowOnError extends boolean = false>(options: Options<CompileData, ThrowOnError>): RequestResult<CompileResponses, CompileErrors, ThrowOnError> {
+        return (options.client ?? client).post<CompileResponses, CompileErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/compile',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public static validate<ThrowOnError extends boolean = false>(options: Options<ValidateData, ThrowOnError>): RequestResult<ValidateResponses, ValidateErrors, ThrowOnError> {
+        return (options.client ?? client).post<ValidateResponses, ValidateErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/sources/{alias}/validate',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

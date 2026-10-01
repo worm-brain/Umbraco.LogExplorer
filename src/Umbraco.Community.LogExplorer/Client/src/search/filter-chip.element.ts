@@ -28,6 +28,10 @@ const TAG_STYLE: Readonly<Record<ChipKind, { look: string; color: string }>> = {
  * tag's text: a `uui-button` brings its own height and padding, which would break the pill.
  * Chips the editor cannot represent (and/or groups, `in`, `matches`) show their label as text.
  *
+ * A chip the active source cannot run ({@link unsupported}) stays in place but is drawn disabled
+ * (reduced opacity, label struck through) with the tooltip "Not supported by {source}" (UI brief
+ * §4.4); it can still be edited into something the source supports, or removed.
+ *
  * The chip does not write the context. The search box listens for its events and knows which
  * chip, by position, fired them.
  *
@@ -42,6 +46,14 @@ export class LogExplorerFilterChipElement extends UmbLitElement {
   /** The chip to show; a new chip re-renders the label and resets the editor. */
   @property({ attribute: false })
   chip?: FilterNode;
+
+  /** Whether the active source cannot run this chip; draws it disabled. */
+  @property({ type: Boolean, reflect: true })
+  unsupported = false;
+
+  /** The active source's display name, for the unsupported tooltip. */
+  @property({ attribute: false })
+  sourceName = "";
 
   /** Whether the editor popover is open; drives `aria-expanded`. */
   @state()
@@ -99,9 +111,19 @@ export class LogExplorerFilterChipElement extends UmbLitElement {
     const display = describeChip(this.chip, term);
     const style = TAG_STYLE[display.kind];
     const editable = draftFromChip(this.chip) !== undefined;
+    // The accessible names say why the chip is disabled, so screen readers hear it too.
+    const description = this.unsupported
+      ? this.localize.term("logExplorer_chipUnsupportedDescription", display.description, this.sourceName)
+      : display.description;
+    const title = this.unsupported ? this.localize.term("logExplorer_chipUnsupported", this.sourceName) : description;
 
     return html`
-      <uui-tag class=${display.kind} look=${style.look} color=${style.color} title=${display.description}>
+      <uui-tag
+        class="${display.kind}${this.unsupported ? " unsupported" : ""}"
+        look=${style.look}
+        color=${style.color}
+        title=${title}
+      >
         <span class="content">
           ${
             editable
@@ -111,7 +133,7 @@ export class LogExplorerFilterChipElement extends UmbLitElement {
                   popovertarget="editor"
                   aria-haspopup="dialog"
                   aria-expanded=${this._open ? "true" : "false"}
-                  aria-label=${this.localize.term("logExplorer_chipEdit", display.description)}
+                  aria-label=${this.localize.term("logExplorer_chipEdit", description)}
                 >
                   ${display.label}
                 </button>`
@@ -120,7 +142,7 @@ export class LogExplorerFilterChipElement extends UmbLitElement {
           <uui-button
             compact
             look="default"
-            label=${this.localize.term("logExplorer_chipRemove", display.description)}
+            label=${this.localize.term("logExplorer_chipRemove", description)}
             @click=${this.#remove}
           >
             <umb-icon name="icon-wrong"></umb-icon>
@@ -157,6 +179,15 @@ export class LogExplorerFilterChipElement extends UmbLitElement {
         --uui-tag-padding: 0 0 0 var(--uui-size-space-3);
         /* A pill, as the level toggles are (UI brief §5.3). */
         --uui-tag-border-radius: var(--uui-size-layout-1);
+      }
+
+      /* Not supported by the active source: still shown, visibly not part of the query. */
+      uui-tag.unsupported {
+        opacity: 0.6;
+      }
+
+      uui-tag.unsupported .label {
+        text-decoration: line-through;
       }
 
       /* Text chips are neutral: the secondary look's surface and border, body text colour. */

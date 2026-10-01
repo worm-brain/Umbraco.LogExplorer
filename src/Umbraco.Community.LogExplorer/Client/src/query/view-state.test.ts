@@ -73,6 +73,16 @@ describe("encodeViewState / decodeViewState", () => {
     expect(roundTrip(state)).toEqual(state);
   });
 
+  it("round-trips the open show-query panel as sq=1", () => {
+    const state = { ...defaults, showQuery: true };
+
+    expect([encodeViewState(state, defaults).toString(), roundTrip(state).showQuery]).toEqual(["sq=1", true]);
+  });
+
+  it("keeps native mode with an empty native query across a reload", () => {
+    expect(roundTrip({ ...defaults, native: "" }).native).toBe("");
+  });
+
   it("writes the zoom as zf and zt", () => {
     const params = encodeViewState(
       { ...defaults, zoom: { from: "2026-09-02T00:40:00.000Z", to: "2026-09-02T00:45:00.000Z" } },

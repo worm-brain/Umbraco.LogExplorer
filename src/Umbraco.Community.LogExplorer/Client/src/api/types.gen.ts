@@ -9,6 +9,11 @@ export type AndNode = {
     children: Array<AndNode | OrNode | NotNode | ConditionNode | TextNode>;
 };
 
+export type CompileResult = {
+    native?: string | null;
+    unsupported: Array<AndNode | OrNode | NotNode | ConditionNode | TextNode>;
+};
+
 export type ConditionNode = {
     kind: 'condition';
     field: string;
@@ -196,6 +201,7 @@ export type SourceResponseModel = {
     type: string;
     sensitive: boolean;
     capabilities: SourceCapabilitiesResponseModel;
+    allowNativeQuery: boolean;
 };
 
 export type TextNode = {
@@ -208,6 +214,16 @@ export type TimeRange = {
     from?: string | null;
     to?: string | null;
     relative?: string | null;
+};
+
+export type ValidateRequest = {
+    native?: string | null;
+};
+
+export type ValidationResult = {
+    valid: boolean;
+    error?: string | null;
+    position?: number | null;
 };
 
 export type GetFacetsData = {
@@ -330,6 +346,84 @@ export type GetHistogramResponses = {
 };
 
 export type GetHistogramResponse = GetHistogramResponses[keyof GetHistogramResponses];
+
+export type CompileData = {
+    body?: LogQuery;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/compile';
+};
+
+export type CompileErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type CompileError = CompileErrors[keyof CompileErrors];
+
+export type CompileResponses = {
+    /**
+     * OK
+     */
+    200: CompileResult;
+};
+
+export type CompileResponse = CompileResponses[keyof CompileResponses];
+
+export type ValidateData = {
+    body?: ValidateRequest;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/validate';
+};
+
+export type ValidateErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type ValidateError = ValidateErrors[keyof ValidateErrors];
+
+export type ValidateResponses = {
+    /**
+     * OK
+     */
+    200: ValidationResult;
+};
+
+export type ValidateResponse = ValidateResponses[keyof ValidateResponses];
 
 export type ParseData = {
     body?: ParseRequest;

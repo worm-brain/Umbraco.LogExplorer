@@ -85,6 +85,53 @@ public class FakeLogSourceFactoryTests
     }
 
     [Fact]
+    public void Create_OperatorsSetting_DeclaresOnlyThoseOperators()
+    {
+        // Arrange
+        var factory = new FakeLogSourceFactory(_clock);
+
+        // Act
+        ILogSource source = factory.Create(
+            new LogSourceDefinition
+            {
+                Alias = "sample",
+                Type = "Fake",
+                Settings = new Dictionary<string, string> { ["Operators"] = "equals, NotEquals" },
+            },
+            Substitute.For<IServiceProvider>()
+        );
+
+        // Assert
+        Assert.Equal(
+            [FilterOperator.Equals, FilterOperator.NotEquals],
+            source.Capabilities.Operators.Order()
+        );
+    }
+
+    [Fact]
+    public void Create_UnknownOperatorInTheSetting_ThrowsArgumentException()
+    {
+        // Arrange
+        var factory = new FakeLogSourceFactory(_clock);
+
+        // Act
+        Exception? thrown = Record.Exception(() =>
+            factory.Create(
+                new LogSourceDefinition
+                {
+                    Alias = "sample",
+                    Type = "Fake",
+                    Settings = new Dictionary<string, string> { ["Operators"] = "equals,like" },
+                },
+                Substitute.For<IServiceProvider>()
+            )
+        );
+
+        // Assert
+        Assert.IsType<ArgumentException>(thrown);
+    }
+
+    [Fact]
     public async Task QueryAsync_TwoHoursAfterCreation_StillReturnsEntriesFromTheLastHour()
     {
         // Arrange

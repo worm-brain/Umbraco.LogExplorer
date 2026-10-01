@@ -24,6 +24,8 @@ brief assumed. Update the brief in the same change.
 | [0013](0013-files-native-dialect-is-the-core-viewers.md) | The files source's native dialect is the core Log Viewer's own Serilog.Expressions setup | Accepted |
 | [0014](0014-package-api-json-and-query-errors.md) | The package API formats JSON with `LogJson`; malformed queries return `invalid_query` | Accepted |
 | [0015](0015-results-list-virtual-window.md) | The results list virtualises with its own fixed-height row window | Accepted |
+| [0016](0016-show-query-and-native-mode.md) | Show query compiles on every change; native mode is gated by `allowNativeQuery` | Accepted |
+| [0017](0017-files-filter-on-partial-records.md) | The files pager tests filters on partially mapped records, not on a LogEvent predicate | Accepted |
 
 ## Template
 

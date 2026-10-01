@@ -24,4 +24,23 @@ public sealed class LogGeneratorOptions
 
     /// <summary>Gets or sets the machine name used for the second machine's files.</summary>
     public string SecondMachineName { get; set; } = "LOGEXPLORER-NODE2";
+
+    /// <summary>
+    /// Gets or sets how many gigabytes the bulk mode writes, once at start-up, for the files
+    /// provider's performance check (#36); 0, the default, turns it off. About 2 is the brief's
+    /// size. The set is skipped when the bulk machines' files already exist in the directory.
+    /// </summary>
+    public double BulkGigabytes { get; set; }
+
+    /// <summary>
+    /// Gets or sets where the bulk mode writes; null means the site's own log directory, so the
+    /// site's files source reads the set.
+    /// </summary>
+    public string? BulkDirectory { get; set; }
+
+    /// <summary>Gets or sets how many simulated days, ending now, the bulk set covers.</summary>
+    public int BulkDays { get; set; } = 7;
+
+    /// <summary>Gets or sets the size, in megabytes, at which a bulk file rolls to <c>_001</c> and on.</summary>
+    public int BulkRollMegabytes { get; set; } = 100;
 }
