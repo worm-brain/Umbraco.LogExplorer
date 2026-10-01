@@ -394,25 +394,28 @@ export class LogExplorerResultsElement extends UmbLitElement {
   /**
    * The Around-this banner (UI brief §4.10): the anchor's time once it has loaded, and the way
    * back to the filtered list in every state, including a failed load.
+   *
+   * Back comes before the text, not after it: the entry drawer that offered Around this is
+   * usually still open over the right of the results panel, and would cover a trailing button.
    */
   #renderAroundBanner() {
     const { anchor } = this._around;
     return html`
-      <div class="around-banner" role="status">
+      <div class="around-banner">
         <uui-icon name="icon-navigation-vertical"></uui-icon>
-        <span class="around-text">
-          ${
-            anchor
-              ? this.localize.term("logExplorer_aroundBanner", formatRowTime(anchor.timestamp))
-              : this.localize.term("logExplorer_aroundBannerNoAnchor")
-          }
-        </span>
         <uui-button
           look="secondary"
           compact
           label=${this.localize.term("logExplorer_aroundBack")}
           @click=${() => this.#context?.clearAround()}
         ></uui-button>
+        <span class="around-text" role="status">
+          ${
+            anchor
+              ? this.localize.term("logExplorer_aroundBanner", formatRowTime(anchor.timestamp))
+              : this.localize.term("logExplorer_aroundBannerNoAnchor")
+          }
+        </span>
       </div>
     `;
   }
@@ -625,9 +628,8 @@ export class LogExplorerResultsElement extends UmbLitElement {
         font-size: var(--uui-type-small-size);
       }
 
-      /* Back sits right after the text, not at the far right: the entry drawer that offered
-         Around this covers the right of the results panel. */
       .around-text {
+        flex: 1;
         min-width: 0;
       }
 
