@@ -1,0 +1,69 @@
+# Builds and tests everything (.NET and the Lit client) on every pull request and push to main.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore: ["**.md", "docs/**", "LICENSE"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Version comes from global.json so CI and local builds use the same SDK band.
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.3
+
+      # .NET: format, build (warnings are errors), test.
+      - run: dotnet tool restore
+      - run: dotnet csharpier check .
+      - run: dotnet build Umbraco.Community.LogExplorer.slnx -warnaserror
+      - name: Test
+        run: dotnet test --solution Umbraco.Community.LogExplorer.slnx --no-build --report-trx --results-directory test-results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: test-results/
+          if-no-files-found: ignore
+
+      # Client: format, typecheck, unit tests, then a typecheck against the oldest supported backoffice
+      # (17.0.0) so the client never uses an API that arrived after the package's floor (ADR 0001).
+      - name: Client checks
+        working-directory: src/Umbraco.Community.LogExplorer/Client
+        run: |
+          bun install --frozen-lockfile
+          bun run format:check
+          bun run typecheck
+          bun run test
+          bun add -d @umbraco-cms/backoffice@17.0.0 --no-save
+          bun run typecheck
+
+      # Packing builds the client itself; this proves a clean checkout produces a complete package.
+      - run: dotnet pack Umbraco.Community.LogExplorer.slnx -o artifacts
+      - uses: actions/upload-artifact@v7
+        with:
+          name: packages
+          path: artifacts/
