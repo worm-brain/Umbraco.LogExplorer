@@ -30,19 +30,12 @@ export default defineConfig<E2eOptions>({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: sites.flatMap((site): Array<PlaywrightTestProject<E2eOptions>> => [
-    {
-      name: `setup-${site.name}`,
-      testMatch: /auth\.setup\.ts/,
-      use: { site, baseURL: site.baseURL },
-    },
-    {
-      name: site.name,
-      testMatch: /\.spec\.ts/,
-      dependencies: [`setup-${site.name}`],
-      use: { site, baseURL: site.baseURL, storageState: site.storageState },
-    },
-  ]),
+  // One project per site. There is no shared saved login: each test logs in (e2e/support/auth.ts).
+  projects: sites.map((site): PlaywrightTestProject<E2eOptions> => ({
+    name: site.name,
+    testMatch: /\.spec\.ts/,
+    use: { site, baseURL: site.baseURL },
+  })),
   webServer: sites.map((site) => ({
     // --no-build: e2e/prepare.ts has built the client and the site, in that order.
     command: `dotnet run --no-build --no-launch-profile -p:UmbracoMajor=${site.major} --urls https://localhost:${site.port}`,
@@ -52,12 +45,17 @@ export default defineConfig<E2eOptions>({
       // Fill the files source with live events and the multi-machine/rolled-file scenarios.
       LogGenerator__Enabled: "true",
       LogGenerator__WriteFileScenarios: "true",
+      // Every test logs in as the same admin (e2e/support/auth.ts). With concurrent logins off,
+      // each login revokes every other session of that user, so parallel tests would sign each
+      // other out (issue #50, ADR 0020).
+      Umbraco__CMS__Security__AllowConcurrentLogins: "true",
     },
     // Answers once Umbraco has booted; on a fresh database that includes the unattended install.
     url: `${site.baseURL}/umbraco`,
     ignoreHTTPSErrors: true,
     timeout: 300_000,
-    // Locally, a site already running on the e2e port is used as is.
+    // Locally, a site already running on the e2e port is used as is, so start it with the env
+    // above (at least AllowConcurrentLogins), or parallel tests sign each other out.
     reuseExistingServer: !ci,
     stdout: "ignore",
     stderr: "pipe",

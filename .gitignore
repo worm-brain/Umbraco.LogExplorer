@@ -492,8 +492,7 @@ samples/*/umbraco-package-schema.json
 node_modules/
 src/Umbraco.Community.LogExplorer/wwwroot/App_Plugins/
 
-## Playwright e2e suite: saved logins, results and the HTML report (ADR 0020)
-src/Umbraco.Community.LogExplorer/Client/e2e/.auth/
+## Playwright e2e suite: results and the HTML report (ADR 0020)
 src/Umbraco.Community.LogExplorer/Client/e2e/test-results/
 src/Umbraco.Community.LogExplorer/Client/e2e/playwright-report/
 

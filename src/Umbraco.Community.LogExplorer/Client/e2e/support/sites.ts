@@ -11,8 +11,6 @@ export interface E2eSite {
   baseURL: string;
   /** The site's project folder; `dotnet run` uses it as the content root. */
   projectDir: string;
-  /** Saved login for the site, written by `auth.setup.ts`. */
-  storageState: string;
 }
 
 const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -37,7 +35,6 @@ function site(major: 17 | 18): E2eSite {
     port: sitePort,
     baseURL: `https://localhost:${sitePort}`,
     projectDir: `${repoRoot}samples/LogExplorer.Site${major}`,
-    storageState: fileURLToPath(new URL(`../.auth/site${major}.json`, import.meta.url)),
   };
 }
 

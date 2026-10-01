@@ -1,6 +1,7 @@
 // BRIEF §5 J5 and §6.11: Share copies a URL that reproduces the view, for a colleague who opens it
 // in their own browser. Runs on the `sample` source so the same absolute zoom shows the same data.
 import type { Page } from "@playwright/test";
+import { logIn, NO_SESSION } from "./support/auth.js";
 import { dragAcrossBars, openExplorer, pressedLevels, searchView } from "./support/explorer.js";
 import { expect, test, watchConsole } from "./support/test.js";
 
@@ -39,7 +40,10 @@ test("Copy link to this view copies a URL that opens the identical view in a fre
   await page.getByRole("tab", { name: "Patterns" }).click();
   await expect(page).toHaveURL(/\/view\/patterns/);
   const patterns = page.getByRole("region", { name: "Message patterns" });
-  await expect(patterns).toBeVisible();
+  // The header appears once the patterns have loaded; reading earlier captures an empty list.
+  await expect
+    .poll(() => patterns.innerText(), { message: "Patterns tab loaded" })
+    .toMatch(/patterns? in the current results/);
   const sharedPatterns = await patterns.innerText();
 
   // Act
@@ -47,14 +51,16 @@ test("Copy link to this view copies a URL that opens the identical view in a fre
   await expect(page.getByRole("alert").filter({ hasText: "Link to this exact view copied" })).toBeVisible();
   const link = await page.evaluate(() => navigator.clipboard.readText());
 
-  // Assert: a new context shares only the login, so the view comes from the URL alone.
+  // Assert: a new, logged-out context that logs in as the colleague would, so the view comes from
+  // the URL alone and the colleague's session never shares the test's refresh token.
   const fresh = await browser.newContext({
-    storageState: site.storageState,
+    storageState: NO_SESSION,
     ignoreHTTPSErrors: true,
     viewport: { width: 1440, height: 900 },
     locale: "en-GB",
   });
   const colleague = await fresh.newPage();
+  await logIn(colleague, site);
   const problems = watchConsole(colleague);
   await colleague.goto(link);
 
