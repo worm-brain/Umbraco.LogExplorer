@@ -8,6 +8,7 @@ import "../histogram/histogram-panel.element.js";
 import "../histogram/zoom-chip.element.js";
 import "../results/results-panel.element.js";
 import type { LogExplorerEntryOpenEvent, LogExplorerResultsElement } from "../results/results-panel.element.js";
+import "../share/share-button.element.js";
 import "../show-query/show-query-button.element.js";
 import "../show-query/show-query-panel.element.js";
 import "../time-range/time-range-picker.element.js";
@@ -17,7 +18,8 @@ import "./search-box.element.js";
  * The Search workspace view of the Log Explorer workspace (UI brief §3).
  *
  * Stacks the query bar (the time range picker, then the search box with the time-zoom chip and the
- * filter chips, then the icon buttons of UI brief §4.5: "Show generated query" so far), the
+ * filter chips, then the icon buttons of UI brief §4.5: "Show generated query" and "Copy link to
+ * this view" so far), the
  * show-query panel when open, the histogram, then the fields panel beside the results list. The
  * view fills the workspace body and never scrolls itself; only the fields panel and the results
  * list do (UI brief §2). Opening a row shows the entry detail drawer over the right of the view
@@ -77,6 +79,7 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
           <log-explorer-zoom-chip slot="before-chips"></log-explorer-zoom-chip>
         </log-explorer-search-box>
         <log-explorer-show-query-button></log-explorer-show-query-button>
+        <log-explorer-share-button></log-explorer-share-button>
       </div>
       <log-explorer-show-query-panel></log-explorer-show-query-panel>
       <log-explorer-histogram></log-explorer-histogram>

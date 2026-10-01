@@ -5,6 +5,7 @@ import {
   decodeViewState,
   encodeViewState,
   mergeViewStateIntoSearch,
+  VIEW_STATE_KEYS,
   type LogExplorerViewState,
 } from "./view-state.js";
 
@@ -109,6 +110,48 @@ describe("encodeViewState / decodeViewState", () => {
     );
 
     expect(params.has("levels")).toBe(false);
+  });
+});
+
+/**
+ * A non-default value for every view-state field. Typed against every key of the state, so adding
+ * a field to `LogExplorerViewState` fails type-checking here until it is given a value, and the
+ * tests below then prove a shared link carries it.
+ */
+const EVERY_FIELD: Required<LogExplorerViewState> = {
+  source: "sample",
+  range: { from: "2026-09-02T00:00:00.000Z", to: "2026-09-02T01:00:00.000Z" },
+  chips,
+  levels: ["warn", "error"],
+  native: "@Level = 'Error'",
+  sort: "asc",
+  zoom: { from: "2026-09-02T00:40:00.000Z", to: "2026-09-02T00:45:00.000Z" },
+  showQuery: true,
+  around: "VW1icmFjb1RyYWNlTG9nLldPUk0uMjAyNjEwMDEuanNvbjozMjU2MzU",
+};
+
+describe("a shared link's view state", () => {
+  it("round-trips a fully populated state", () => {
+    expect(roundTrip(EVERY_FIELD)).toEqual(EVERY_FIELD);
+  });
+
+  it.each(Object.keys(EVERY_FIELD) as Array<keyof LogExplorerViewState>)(
+    "round-trips %s changed on its own",
+    (field) => {
+      const state: LogExplorerViewState = { ...defaults, [field]: EVERY_FIELD[field] };
+
+      expect(roundTrip(state)[field]).toEqual(EVERY_FIELD[field]);
+    },
+  );
+
+  it("is written only under the view-state keys, and uses every one of them", () => {
+    // A relative and an absolute range use different keys, so together they cover them all.
+    const written = new Set([
+      ...encodeViewState(EVERY_FIELD, defaults).keys(),
+      ...encodeViewState({ ...EVERY_FIELD, range: { relative: "24h" } }, defaults).keys(),
+    ]);
+
+    expect([...written].sort()).toEqual([...VIEW_STATE_KEYS].sort());
   });
 });
 
