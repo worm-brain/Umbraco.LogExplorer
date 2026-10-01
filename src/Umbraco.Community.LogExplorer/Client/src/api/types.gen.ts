@@ -118,6 +118,10 @@ export type LogRecord = {
     sourceAlias: string;
 };
 
+export type MinimumLevelsResult = {
+    sinks: Array<SinkMinimumLevel>;
+};
+
 export type NotNode = {
     kind: 'not';
     child: AndNode | OrNode | NotNode | ConditionNode | TextNode;
@@ -183,6 +187,11 @@ export type SettingsResponseModel = {
     defaultSource: string;
     defaultTimeRange: string;
     pinnedFacets: Array<string>;
+};
+
+export type SinkMinimumLevel = {
+    name: string;
+    level: string;
 };
 
 export type SortDirection = 'descending' | 'ascending';
@@ -346,6 +355,45 @@ export type GetHistogramResponses = {
 };
 
 export type GetHistogramResponse = GetHistogramResponses[keyof GetHistogramResponses];
+
+export type GetMinimumLevelsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: never;
+    url: '/umbraco/log-explorer/api/v1/sources/{alias}/minimum-levels';
+};
+
+export type GetMinimumLevelsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetMinimumLevelsError = GetMinimumLevelsErrors[keyof GetMinimumLevelsErrors];
+
+export type GetMinimumLevelsResponses = {
+    /**
+     * OK
+     */
+    200: MinimumLevelsResult;
+};
+
+export type GetMinimumLevelsResponse = GetMinimumLevelsResponses[keyof GetMinimumLevelsResponses];
 
 export type CompileData = {
     body?: LogQuery;
