@@ -23,7 +23,7 @@ export type ViewTimeRange = { relative: RelativeRange } | { from: string; to: st
  * is the workspace view's route path and so is already in the URL.
  */
 export interface LogExplorerViewState {
-  /** Source alias; `undefined` means the configured `DefaultSource`, resolved by the source picker. */
+  /** Source alias; `undefined` means the configured `DefaultSource`. `LogExplorerQueryContext.activeSource` resolves it. */
   source: string | undefined;
   range: ViewTimeRange;
   /** Filter chips; chips on the same field OR together, different fields AND (BRIEF §6.3). */

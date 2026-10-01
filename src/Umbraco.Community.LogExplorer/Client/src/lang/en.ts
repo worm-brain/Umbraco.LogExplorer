@@ -30,6 +30,10 @@ export default {
     sourcesEmpty: "No log sources are available. Add one under LogExplorer:Sources in appsettings.json.",
     sourcesError: (message: string) => `Could not load log sources: ${message}`,
     sourcesMenuCaption: "Log sources (from appsettings)",
+    sourcePickerLabel: (name: string) => `Log source: ${name}`,
+    sourceNote: (language: string, type: string) => `${language} · ${type}`,
+    sourceItemLabel: (name: string, note: string) => `${name}, ${note}`,
+    sourceItemLabelSensitive: (name: string, note: string) => `${name}, sensitive source, ${note}`,
     sensitiveSource: "Sensitive source",
     retry: "Retry",
 
