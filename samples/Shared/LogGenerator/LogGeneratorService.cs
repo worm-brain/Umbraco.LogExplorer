@@ -7,7 +7,8 @@ namespace LogExplorer.Samples.LogGenerator;
 
 /// <summary>
 /// Background service that keeps a sample site's logs busy with realistic events while it runs
-/// (BRIEF Appendix C). Off unless <c>LogGenerator:Enabled</c> is true.
+/// (BRIEF Appendix C). Off unless <c>LogGenerator:Enabled</c> is true; the file scenarios and the
+/// bulk set (<see cref="BulkLogWriter"/>) are separate one-off switches.
 /// </summary>
 /// <remarks>
 /// Cadence, per second: requests at <see cref="LogGeneratorOptions.RequestsPerSecond"/>; every
@@ -38,6 +39,12 @@ internal sealed class LogGeneratorService(
                 "Log generator wrote the file scenarios to {LogDirectory}",
                 loggingConfiguration.LogDirectory
             );
+        }
+
+        if (settings.BulkGigabytes > 0)
+        {
+            // Off the start-up path: 2 GB takes a while, and the site is usable meanwhile.
+            _ = Task.Run(() => WriteBulk(settings), stoppingToken);
         }
 
         if (!settings.Enabled)
@@ -91,6 +98,54 @@ internal sealed class LogGeneratorService(
             {
                 events.NotFoundStorm(25);
             }
+        }
+    }
+
+    // Writes the bulk set once: a directory that already holds the first bulk machine's files is
+    // left alone, so restarts do not rewrite 2 GB.
+    private void WriteBulk(LogGeneratorOptions settings)
+    {
+        string directory = settings.BulkDirectory ?? loggingConfiguration.LogDirectory;
+        var bulk = new BulkLogSettings
+        {
+            Directory = directory,
+            TargetBytes = (long)(settings.BulkGigabytes * 1024 * 1024 * 1024),
+            End = DateTimeOffset.UtcNow,
+            Span = TimeSpan.FromDays(settings.BulkDays),
+            RollSizeBytes = settings.BulkRollMegabytes * 1024L * 1024,
+        };
+        if (
+            Directory.Exists(directory)
+            && Directory
+                .EnumerateFiles(directory, $"UmbracoTraceLog.{bulk.MachineNames[0]}.*.json")
+                .Any()
+        )
+        {
+            logger.LogInformation(
+                "Log generator bulk files already exist in {LogDirectory}",
+                directory
+            );
+            return;
+        }
+
+        try
+        {
+            BulkLogResult result = BulkLogWriter.Write(bulk);
+            logger.LogInformation(
+                "Log generator wrote {Bytes} bytes of bulk logs ({Events} events, {Files} files) to {LogDirectory}",
+                result.Bytes,
+                result.Events,
+                result.Files.Count,
+                directory
+            );
+        }
+        catch (IOException ex)
+        {
+            logger.LogError(
+                ex,
+                "Log generator could not write bulk logs to {LogDirectory}",
+                directory
+            );
         }
     }
 }

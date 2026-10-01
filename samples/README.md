@@ -56,7 +56,38 @@ LogGenerator__Enabled=true LogGenerator__WriteFileScenarios=true dotnet run --pr
 dotnet run --project samples/LogExplorer.Site18 -p:UmbracoMajor=18
 ```
 
-The 2 GB, 7-day bulk mode for the performance check is added with #36.
+### Bulk mode and the first-page benchmark
+
+For the performance check (BRIEF §17, #36) the generator also writes about 2 GB of logs covering
+7 days, ending now, in seconds: lines go straight to disk as Umbraco's compact JSON (not through
+`ILogger`) under two machines, `BULK-NODE1` and `BULK-NODE2`, named and rolled like Umbraco's own
+files (`UmbracoTraceLog.BULK-NODE1.20261001.json`, then `_001`, ...). The mix is mostly requests
+(2% slow), a noisy job, content publishes, surface-controller and SQL timeout exceptions, rare 404
+storms and one fatal boot failure an hour in.
+
+| Setting | Default | Effect |
+| --- | --- | --- |
+| `LogGenerator:BulkGigabytes` | `0` (off) | Size of the set, written once at start-up in the background; skipped if `BULK-NODE1` files already exist in the directory. |
+| `LogGenerator:BulkDirectory` | the site's log directory | Where to write it. |
+| `LogGenerator:BulkDays` | `7` | Simulated days, ending now. |
+| `LogGenerator:BulkRollMegabytes` | `100` | Size at which a day's file rolls to `_001` and on. |
+
+```sh
+LogGenerator__BulkGigabytes=2 dotnet run --project samples/LogExplorer.Site17
+```
+
+The benchmark needs no site: it writes the set itself into
+`%TEMP%/LogExplorer.Benchmarks/bulk` (reused on later runs), then times the first page of the
+files provider over the last 7 days. It is a console app, built by CI but never run there.
+
+```sh
+dotnet run -c Release --project tests/Umbraco.Community.LogExplorer.Benchmarks
+dotnet run -c Release --project tests/Umbraco.Community.LogExplorer.Benchmarks -- --delete   # remove the 2 GB set
+```
+
+Other arguments: `--data <dir>`, `--gigabytes <n>`, `--runs <n>`, `--regenerate`; set
+`LOG_EXPLORER_BENCHMARK_VERBOSE=1` to print every run's time. It exits 1 if a budgeted case's
+median is 500 ms or more. ADR 0017 has the last recorded numbers.
 
 Runtime state (`umbraco/` with the SQLite database and logs, `wwwroot/media/`, generated schema
 files) is gitignored. Delete a site's `umbraco/` folder to reinstall it from scratch.
