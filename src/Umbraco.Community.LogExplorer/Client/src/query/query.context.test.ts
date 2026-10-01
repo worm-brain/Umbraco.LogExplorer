@@ -227,3 +227,44 @@ describe("LogExplorerQueryContext active source", () => {
     expect(context.getActiveSource()?.alias).toBe("files");
   });
 });
+
+describe("LogExplorerQueryContext chips", () => {
+  const pathApi = { kind: "condition", field: "RequestPath", op: "startsWith", value: "/api" } as const;
+  const timeout = { kind: "text", text: "timeout" } as const;
+
+  it("adds chips and records them in the URL", async () => {
+    const context = await connectContext();
+
+    context.addChips([pathApi]);
+
+    expect(new URLSearchParams(window.location.search).has("f")).toBe(true);
+  });
+
+  it("pushes no history entry when every added chip is already there", async () => {
+    const context = await connectContext();
+    context.addChips([pathApi]);
+    const before = window.history.length;
+
+    context.addChips([{ ...pathApi }]);
+
+    expect(window.history.length).toBe(before);
+  });
+
+  it("replaces a chip in place", async () => {
+    const context = await connectContext();
+    context.addChips([pathApi, timeout]);
+
+    context.replaceChip(0, { ...pathApi, op: "contains" });
+
+    expect(context.getState().chips).toEqual([{ ...pathApi, op: "contains" }, timeout]);
+  });
+
+  it("removes a chip", async () => {
+    const context = await connectContext();
+    context.addChips([pathApi, timeout]);
+
+    context.removeChip(1);
+
+    expect(context.getState().chips).toEqual([pathApi]);
+  });
+});

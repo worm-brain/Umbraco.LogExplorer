@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, SearchData, SearchErrors, SearchResponses } from './types.gen';
+import type { GetHistogramData, GetHistogramErrors, GetHistogramResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSourcesData, GetSourcesErrors, GetSourcesResponses, ParseData, ParseErrors, ParseResponses, SearchData, SearchErrors, SearchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -27,6 +27,20 @@ export class HistogramService {
             headers: {
                 'Content-Type': 'application/json',
                 ...options.headers
+            }
+        });
+    }
+}
+
+export class ParseService {
+    public static parse<ThrowOnError extends boolean = false>(options?: Options<ParseData, ThrowOnError>): RequestResult<ParseResponses, ParseErrors, ThrowOnError> {
+        return (options?.client ?? client).post<ParseResponses, ParseErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/log-explorer/api/v1/parse',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options?.headers
             }
         });
     }

@@ -26,7 +26,8 @@ public static class LogExplorerApi
 
         /// <summary>
         /// The query is malformed: an unknown relative range, <c>From</c> not before <c>To</c>, a
-        /// cursor from another source, a page size below 1 or an invalid regular expression.
+        /// cursor from another source, a page size below 1, an invalid regular expression, or search box input over
+        /// the <c>POST /parse</c> length limit.
         /// </summary>
         public const string InvalidQuery = "invalid_query";
     }

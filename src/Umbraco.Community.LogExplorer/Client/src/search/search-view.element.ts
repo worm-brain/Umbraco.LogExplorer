@@ -4,17 +4,16 @@ import "../histogram/histogram-panel.element.js";
 import "../histogram/zoom-chip.element.js";
 import "../results/results-panel.element.js";
 import "../time-range/time-range-picker.element.js";
+import "./search-box.element.js";
 
 /**
  * The Search workspace view of the Log Explorer workspace (UI brief §3).
  *
- * Stacks the query bar (so far the time range picker and the time-zoom chip), the histogram and
- * the results list. The view fills the workspace body and never scrolls itself; only the results
- * list does (UI brief §2). The workspace editor renders it when its "Search" tab is active; every
- * child reads and writes `LogExplorerQueryContext`, which `log-explorer-workspace` provides.
- *
- * The zoom chip sits beside the time picker only until the search box's chip list (#39) exists;
- * it then moves to the start of that list (UI brief §4.3).
+ * Stacks the query bar (the time range picker, then the search box with the time-zoom chip and the
+ * filter chips; the icon buttons of UI brief §4.5 follow it in later slices), the histogram and the
+ * results list. The view fills the workspace body and never scrolls itself; only the results list
+ * does (UI brief §2). The workspace editor renders it when its "Search" tab is active; every child
+ * reads and writes `LogExplorerQueryContext`, which `log-explorer-workspace` provides.
  *
  * Bound by the `Umbraco.Community.LogExplorer.WorkspaceView.Search` manifest.
  *
@@ -31,7 +30,9 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
     return html`
       <div class="query-bar">
         <log-explorer-time-range-picker></log-explorer-time-range-picker>
-        <log-explorer-zoom-chip></log-explorer-zoom-chip>
+        <log-explorer-search-box>
+          <log-explorer-zoom-chip slot="before-chips"></log-explorer-zoom-chip>
+        </log-explorer-search-box>
       </div>
       <log-explorer-histogram></log-explorer-histogram>
       <log-explorer-results></log-explorer-results>
@@ -53,6 +54,10 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
         display: flex;
         align-items: stretch;
         gap: var(--uui-size-space-3);
+      }
+
+      log-explorer-search-box {
+        flex: 1;
       }
 
       log-explorer-results {
