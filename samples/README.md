@@ -30,11 +30,12 @@ starts, so restart the site once after the very first client build on a fresh cl
 
 ## Sample sources
 
-`appsettings.Development.json` configures two `Fake` sources (in-memory sample data, UI brief §12)
-next to whatever else is set up:
+`appsettings.Development.json` configures the site's own log files as the default source and two
+`Fake` sources (in-memory sample data, UI brief §12):
 
 | Alias | Data | Use |
 | --- | --- | --- |
+| `files` (default) | This site's Umbraco log files (`umbraco/Logs`); turn on the log generator below to fill them | Checking the real files provider |
 | `sample` | The prototype's sample hour (238 entries), ending now | Everyday UI work |
 | `sample-48h` | The same hour repeated 48 times (11,424 entries); `Settings: { "SampleHours": "48" }` | Volume checks such as scrolling 10,000 rows: open `...?src=sample-48h&range=7d` |
 
