@@ -64,15 +64,34 @@ internal static class CompactLogEventMapper
     /// <see cref="LogRecord.SourceAlias"/> is left for the source to set.
     /// </returns>
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
-    public static LogRecord Map(LogEvent logEvent, LogFile file, long offset)
+    public static LogRecord Map(LogEvent logEvent, LogFile file, long offset) =>
+        Map(logEvent, file, offset, RecordParts.All);
+
+    /// <summary>
+    /// Maps one event, leaving out the parts not asked for: their members keep their defaults
+    /// (null, or empty dictionaries). The parts that are mapped are exactly what
+    /// <see cref="Map(LogEvent, LogFile, long)"/> gives, so a filter that reads only them matches
+    /// the partial record as it matches the whole one (ADR 0017).
+    /// </summary>
+    /// <param name="logEvent">The event as <c>LogEventReader</c> parsed it.</param>
+    /// <param name="file">The file the event came from.</param>
+    /// <param name="offset">Byte offset of the event's line in <paramref name="file"/>.</param>
+    /// <param name="parts">The costly parts to map; the cheap members are always mapped.</param>
+    /// <returns>The record, complete when <paramref name="parts"/> is <see cref="RecordParts.All"/>.</returns>
+    /// <exception cref="ArgumentNullException">An argument is null.</exception>
+    public static LogRecord Map(LogEvent logEvent, LogFile file, long offset, RecordParts parts)
     {
         ArgumentNullException.ThrowIfNull(logEvent);
         ArgumentNullException.ThrowIfNull(file);
 
-        string template = logEvent.MessageTemplate.Text;
         // Compact JSON omits @l for Information, which the reader already turns into that level.
         string level = logEvent.Level.ToString();
-        string? machineName = GetString(logEvent, MachineNameProperty) ?? file.MachineName;
+        string? template = parts.HasFlag(RecordParts.Template)
+            ? logEvent.MessageTemplate.Text
+            : null;
+        string? machineName = parts.HasFlag(RecordParts.Resource)
+            ? GetString(logEvent, MachineNameProperty) ?? file.MachineName
+            : null;
 
         return new LogRecord
         {
@@ -80,16 +99,21 @@ internal static class CompactLogEventMapper
             Timestamp = logEvent.Timestamp,
             SeverityNumber = SeverityMap.FromSerilog(level),
             SeverityText = level,
-            Body = logEvent.RenderMessage(CultureInfo.InvariantCulture),
+            Body = parts.HasFlag(RecordParts.Body)
+                ? logEvent.RenderMessage(CultureInfo.InvariantCulture)
+                : null,
             MessageTemplate = template,
-            TemplateHash = TemplateHash.Compute(template),
+            TemplateHash = template is null ? null : TemplateHash.Compute(template),
             TraceId = logEvent.TraceId?.ToHexString(),
             SpanId = logEvent.SpanId?.ToHexString(),
             Scope = GetString(logEvent, SourceContextProperty),
-            Exception = logEvent.Exception is { } exception
-                ? ParseException(exception.ToString())
-                : null,
-            Attributes = ToAttributes(logEvent.Properties),
+            Exception =
+                parts.HasFlag(RecordParts.Exception) && logEvent.Exception is { } exception
+                    ? ParseException(exception.ToString())
+                    : null,
+            Attributes = parts.HasFlag(RecordParts.Attributes)
+                ? ToAttributes(logEvent.Properties)
+                : new Dictionary<string, JsonElement>(),
             Resource = machineName is null
                 ? new Dictionary<string, JsonElement>()
                 : new Dictionary<string, JsonElement>
