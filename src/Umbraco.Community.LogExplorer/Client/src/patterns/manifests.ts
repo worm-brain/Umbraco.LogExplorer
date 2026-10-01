@@ -13,8 +13,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     element: () => import("./patterns-view.element.js"),
     weight: 200,
     meta: {
-      // TODO: localise (UI brief §8) once the package registers a localization manifest.
-      label: "Patterns",
+      label: "#logExplorer_tabPatterns",
       pathname: "patterns",
       icon: "icon-layers",
     },

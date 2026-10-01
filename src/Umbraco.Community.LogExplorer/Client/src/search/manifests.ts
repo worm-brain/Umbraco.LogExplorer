@@ -13,8 +13,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     element: () => import("./search-view.element.js"),
     weight: 300,
     meta: {
-      // TODO: localise (UI brief §8) once the package registers a localization manifest.
-      label: "Search",
+      label: "#logExplorer_tabSearch",
       pathname: "search",
       icon: "icon-search",
     },

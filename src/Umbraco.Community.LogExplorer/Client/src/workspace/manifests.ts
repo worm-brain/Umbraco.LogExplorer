@@ -24,8 +24,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     name: "Log Explorer Menu Item",
     weight: MENU_ITEM_WEIGHT,
     meta: {
-      // TODO: localise (UI brief §8) once the package registers a localization manifest.
-      label: "Log Explorer",
+      label: "#logExplorer_title",
       icon: "icon-search",
       entityType: LOG_EXPLORER_ENTITY_TYPE,
       menus: [UMB_ADVANCED_SETTINGS_MENU_ALIAS],
@@ -39,7 +38,8 @@ export const manifests: Array<UmbExtensionManifest> = [
     element: () => import("./workspace.element.js"),
     meta: {
       entityType: LOG_EXPLORER_ENTITY_TYPE,
-      headline: "Log Explorer",
+      // The default workspace kind localises `#` keys for the browser title.
+      headline: "#logExplorer_title",
     },
   },
 ];
