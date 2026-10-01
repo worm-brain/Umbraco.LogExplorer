@@ -54,14 +54,18 @@ export default {
     // Histogram and its level toggles (UI brief §4.7), and the time chip (§4.4).
     histogramLabel: "Entries over time",
     histogramLevelsLabel: "Show or hide levels",
-    histogramLevelLabel: (level: string, count: string) => `${level}, ${count} entries`,
+    // Counts take the number (for the singular) and its locale-formatted text.
+    histogramLevelLabel: (level: string, count: number, formatted: string) =>
+      `${level}, ${formatted} ${count === 1 ? "entry" : "entries"}`,
     histogramLevelHide: (level: string) => `Hide ${level} entries`,
     histogramLevelShow: (level: string) => `Show ${level} entries`,
-    histogramSummary: (count: string, from: string, to: string) => `${count} entries · ${from} to ${to}`,
+    histogramSummary: (count: number, formatted: string, from: string, to: string) =>
+      `${formatted} ${count === 1 ? "entry" : "entries"} · ${from} to ${to}`,
     histogramApproximate: "Approximate",
     histogramApproximateHint:
       "Counts cover only part of the range: the source sampled its data or stopped at its scan budget.",
-    histogramBarLabel: (time: string, count: string) => `${time}, ${count} entries, select to zoom in`,
+    histogramBarLabel: (time: string, count: number, formatted: string) =>
+      `${time}, ${formatted} ${count === 1 ? "entry" : "entries"}, select to zoom in`,
     histogramError: (message: string) => `Could not load the histogram: ${message}`,
     histogramAlreadyZoomed: "Already zoomed in. Clear the time chip to zoom out.",
     zoomChip: (from: string, to: string) => `Time: ${from} to ${to}`,
@@ -140,6 +144,26 @@ export default {
     detailMessageTemplate: "Message template",
     detailProperties: "Properties",
     detailException: "Exception",
+    detailLabel: "Entry details",
+    detailClose: "Close entry details",
+    detailFilterOn: (field: string) => `Filter on ${field}`,
+    detailInclude: (name: string, value: string) => `Include ${name} ${value}`,
+    detailExclude: (name: string, value: string) => `Exclude ${name} ${value}`,
+    detailExpand: (name: string) => `Expand ${name}`,
+    detailCollapse: (name: string) => `Collapse ${name}`,
+    detailPropertyName: "Name",
+    detailPropertyValue: "Value",
+    detailPropertyFilter: "Filter",
+    detailNoProperties: "This entry has no properties.",
+    detailObjectSummary: (count: number) => (count === 1 ? "1 property" : `${count} properties`),
+    detailArraySummary: (count: number) => (count === 1 ? "1 item" : `${count} items`),
+    detailShowFrameworkFrames: "Show framework frames",
+    detailHideFrameworkFrames: "Hide framework frames",
+    detailFrameworkFramesHidden: (count: number) =>
+      count === 1 ? "… 1 framework frame hidden" : `… ${count} framework frames hidden`,
+    detailCopied: "Entry copied as JSON",
+    detailCopyFailed: "Could not copy the entry to the clipboard",
+    detailSamePatternApplied: (template: string) => `Filtering on the message template ${template}`,
     actionSameRequest: "Same request",
     actionAroundThis: "Around this",
     actionSamePattern: "Same pattern",
