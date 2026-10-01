@@ -57,4 +57,13 @@ describe("toLogQuery", () => {
       sort: "ascending",
     });
   });
+
+  it("runs over the time zoom instead of the picker's range", () => {
+    const state = {
+      ...createDefaultViewState("1h"),
+      zoom: { from: "2026-10-01T10:40:00.000Z", to: "2026-10-01T10:45:00.000Z" },
+    };
+
+    expect(toLogQuery(state, 60).range).toEqual({ from: "2026-10-01T10:40:00.000Z", to: "2026-10-01T10:45:00.000Z" });
+  });
 });

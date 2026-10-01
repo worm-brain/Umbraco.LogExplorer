@@ -51,6 +51,22 @@ export default {
     timeRangeInvalid: "Choose a start that is before the end.",
     timeRangeApply: "Apply",
 
+    // Histogram and its level toggles (UI brief §4.7), and the time chip (§4.4).
+    histogramLabel: "Entries over time",
+    histogramLevelsLabel: "Show or hide levels",
+    histogramLevelLabel: (level: string, count: string) => `${level}, ${count} entries`,
+    histogramLevelHide: (level: string) => `Hide ${level} entries`,
+    histogramLevelShow: (level: string) => `Show ${level} entries`,
+    histogramSummary: (count: string, from: string, to: string) => `${count} entries · ${from} to ${to}`,
+    histogramApproximate: "Approximate",
+    histogramApproximateHint:
+      "Counts cover only part of the range: the source sampled its data or stopped at its scan budget.",
+    histogramBarLabel: (time: string, count: string) => `${time}, ${count} entries, select to zoom in`,
+    histogramError: (message: string) => `Could not load the histogram: ${message}`,
+    histogramAlreadyZoomed: "Already zoomed in. Clear the time chip to zoom out.",
+    zoomChip: (from: string, to: string) => `Time: ${from} to ${to}`,
+    zoomChipRemove: (chip: string) => `Remove filter ${chip}`,
+
     // Fields panel and results list (UI brief §4.8, §4.9).
     fieldsHeader: "Fields",
     fieldsSubheader: "top values in results",

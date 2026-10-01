@@ -34,15 +34,17 @@ export function chipsToFilter(chips: ReadonlyArray<FilterNode>): FilterNode | nu
 /**
  * Builds the `POST /search` body for the view state (BRIEF §8.2).
  *
- * @param state - The view state; only range, levels, chips, native query and sort are used.
+ * @param state - The view state; only range (or the zoom, which replaces it), levels, chips,
+ *   native query and sort are used.
  * @param take - Page size.
  * @param cursor - The previous page's `nextCursor`, or `undefined` for the first page.
  * @returns The query.
  */
 export function toLogQuery(state: LogExplorerViewState, take: number, cursor?: string): LogQuery {
+  // The histogram's time zoom narrows whatever range the picker holds (UI brief §4.7).
+  const range = state.zoom ?? state.range;
   return {
-    range:
-      "relative" in state.range ? { relative: state.range.relative } : { from: state.range.from, to: state.range.to },
+    range: "relative" in range ? { relative: range.relative } : { from: range.from, to: range.to },
     levels: state.levels,
     filter: chipsToFilter(state.chips),
     nativeQuery: state.native ?? null,

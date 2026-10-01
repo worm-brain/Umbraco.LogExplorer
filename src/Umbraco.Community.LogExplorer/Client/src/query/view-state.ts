@@ -16,7 +16,13 @@ export type Level = (typeof LEVELS)[number];
  * A time range as the URL and saved views keep it (BRIEF §6.5): relative ranges stay relative so a
  * shared link always means "the last hour from now"; absolute ranges are ISO 8601 UTC instants.
  */
-export type ViewTimeRange = { relative: RelativeRange } | { from: string; to: string };
+export type ViewTimeRange = { relative: RelativeRange } | AbsoluteRange;
+
+/** An absolute time range as ISO 8601 UTC instants, `from` before `to`. */
+export interface AbsoluteRange {
+  from: string;
+  to: string;
+}
 
 /**
  * Everything that defines what the explorer shows (BRIEF §6.11), apart from the active tab, which
@@ -34,6 +40,12 @@ export interface LogExplorerViewState {
   native: string | undefined;
   /** `desc` is newest first. */
   sort: "desc" | "asc";
+  /**
+   * The histogram's time zoom (UI brief §4.7), shown as the time chip. While set, queries run over
+   * it instead of {@link range}; clearing it returns to {@link range} unchanged, so zooming into a
+   * relative "last hour" and back keeps the range relative. `undefined` means not zoomed.
+   */
+  zoom?: AbsoluteRange;
 }
 
 /** Fallback when the server's `DefaultTimeRange` is unknown or not a supported preset (BRIEF §6.5). */
@@ -43,7 +55,7 @@ export const FALLBACK_RELATIVE_RANGE: RelativeRange = "1h";
  * The query-string keys the view state owns. Other keys in the URL are left untouched, so the
  * backoffice or other extensions can use the query string too.
  */
-export const VIEW_STATE_KEYS = ["src", "range", "from", "to", "levels", "f", "native", "sort"] as const;
+export const VIEW_STATE_KEYS = ["src", "range", "from", "to", "levels", "f", "native", "sort", "zf", "zt"] as const;
 
 /**
  * Builds the default view state.
@@ -68,7 +80,8 @@ export function createDefaultViewState(defaultTimeRange?: string): LogExplorerVi
  * its default so the plain workspace URL means "the defaults".
  *
  * Keys: `src`; `range` (relative) or `from` + `to` (absolute ISO); `levels` (comma list, empty
- * value when every level is hidden); `f` (base64url JSON of the chips); `native`; `sort=asc`.
+ * value when every level is hidden); `f` (base64url JSON of the chips); `native`; `sort=asc`;
+ * `zf` + `zt` (ISO) for the time zoom.
  *
  * @param state - The state to encode.
  * @param defaults - The defaults to compare against.
@@ -93,6 +106,10 @@ export function encodeViewState(state: LogExplorerViewState, defaults: LogExplor
   if (state.chips.length > 0) params.set("f", toBase64Url(JSON.stringify(state.chips)));
   if (state.native) params.set("native", state.native);
   if (state.sort !== defaults.sort) params.set("sort", state.sort);
+  if (state.zoom) {
+    params.set("zf", state.zoom.from);
+    params.set("zt", state.zoom.to);
+  }
   return params;
 }
 
@@ -113,6 +130,7 @@ export function decodeViewState(params: URLSearchParams, defaults: LogExplorerVi
     levels: decodeLevels(params.get("levels"), defaults.levels),
     native: params.get("native") || defaults.native,
     sort: params.get("sort") === "asc" ? "asc" : params.get("sort") === "desc" ? "desc" : defaults.sort,
+    zoom: decodeAbsolute(params.get("zf"), params.get("zt")),
   };
 }
 
@@ -157,16 +175,22 @@ function sameRange(a: ViewTimeRange, b: ViewTimeRange): boolean {
 }
 
 /**
- * Absolute wins over relative when both are present and valid, because only a time zoom or a
- * custom range writes `from`/`to`. An absolute range needs both ends, parsable, and `from < to`.
+ * Absolute wins over relative when both are present and valid, because only a custom range
+ * writes `from`/`to` (the time zoom has its own keys).
  */
 function decodeRange(params: URLSearchParams): ViewTimeRange | undefined {
-  const from = parseInstant(params.get("from"));
-  const to = parseInstant(params.get("to"));
-  if (from && to && from < to) return { from: from.toISOString(), to: to.toISOString() };
+  const absolute = decodeAbsolute(params.get("from"), params.get("to"));
+  if (absolute) return absolute;
 
   const relative = params.get("range");
   return isRelativeRange(relative) ? { relative } : undefined;
+}
+
+/** An absolute range needs both ends, parsable, and `from < to`; anything else is no range. */
+function decodeAbsolute(fromValue: string | null, toValue: string | null): AbsoluteRange | undefined {
+  const from = parseInstant(fromValue);
+  const to = parseInstant(toValue);
+  return from && to && from < to ? { from: from.toISOString(), to: to.toISOString() } : undefined;
 }
 
 function parseInstant(value: string | null): Date | undefined {
