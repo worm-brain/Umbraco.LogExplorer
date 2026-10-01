@@ -194,8 +194,14 @@ function decodeLevels(value: string | null, fallback: Array<Level> | null): Arra
   return normaliseLevels(names);
 }
 
-/** Sorts into severity order and drops duplicates; all six levels is the same as no filter. */
-function normaliseLevels(levels: ReadonlyArray<Level> | null): Array<Level> | null {
+/**
+ * Puts a level set into the form the view state keeps (ADR 0004).
+ *
+ * @param levels - Levels in any order, possibly repeated; `null` for no filter.
+ * @returns The levels in {@link LEVELS} order without duplicates, or `null` when all six are
+ *   present, because all six is the same as no filter.
+ */
+export function normaliseLevels(levels: ReadonlyArray<Level> | null): Array<Level> | null {
   if (levels === null) return null;
   const set = new Set(levels);
   return set.size === LEVELS.length ? null : LEVELS.filter((level) => set.has(level));

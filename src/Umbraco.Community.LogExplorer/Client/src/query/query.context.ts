@@ -7,6 +7,8 @@ import { loadSettings } from "../settings/settings.js";
 import { findSource, resolveActiveSource } from "../sources/active-source.js";
 import { loadSources, type SourcesState } from "../sources/sources-loader.js";
 import { LOG_EXPLORER_ENTITY_TYPE } from "../workspace/constants.js";
+import { appendChips, removeChipAt, replaceChipAt } from "./chips.js";
+import type { FilterNode } from "./filter-node.js";
 import {
   createDefaultViewState,
   decodeViewState,
@@ -143,6 +145,38 @@ export class LogExplorerQueryContext extends UmbContextBase {
    */
   setSource(alias: string | undefined): void {
     this.update({ source: alias });
+  }
+
+  /**
+   * Appends filter chips, skipping any already present (see `appendChips`), and records the
+   * result in the URL. Does nothing when every chip is a duplicate.
+   *
+   * @param chips - The chips to add, in order.
+   */
+  addChips(chips: ReadonlyArray<FilterNode>): void {
+    const current = this.getState().chips;
+    const next = appendChips(current, chips);
+    if (next !== current) this.update({ chips: next });
+  }
+
+  /**
+   * Replaces one chip in place, as the chip editor does on Save (see `replaceChipAt` for what
+   * happens when the result duplicates another chip).
+   *
+   * @param index - Position of the chip in {@link LogExplorerViewState.chips}.
+   * @param chip - The replacement.
+   */
+  replaceChip(index: number, chip: FilterNode): void {
+    this.update({ chips: replaceChipAt(this.getState().chips, index, chip) });
+  }
+
+  /**
+   * Removes one chip.
+   *
+   * @param index - Position of the chip in {@link LogExplorerViewState.chips}.
+   */
+  removeChip(index: number): void {
+    this.update({ chips: removeChipAt(this.getState().chips, index) });
   }
 
   /** @returns The active source right now; see {@link activeSource}. */

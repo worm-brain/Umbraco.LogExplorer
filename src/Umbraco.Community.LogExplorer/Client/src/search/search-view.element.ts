@@ -2,11 +2,13 @@ import { css, customElement, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../results/results-panel.element.js";
 import "../time-range/time-range-picker.element.js";
+import "./search-box.element.js";
 
 /**
  * The Search workspace view of the Log Explorer workspace (UI brief §3).
  *
- * Holds the query bar, which so far has only the time range picker, above the results list. The
+ * Holds the query bar (the time range picker, then the search box with the filter chips; the icon
+ * buttons of UI brief §4.5 follow it in later slices) above the results list. The
  * view fills the workspace body and never scrolls itself; only the results list does (UI brief
  * §2). The workspace editor renders it when its "Search" tab is active; both children read and
  * write `LogExplorerQueryContext`, which `log-explorer-workspace` provides.
@@ -26,6 +28,7 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
     return html`
       <div class="query-bar">
         <log-explorer-time-range-picker></log-explorer-time-range-picker>
+        <log-explorer-search-box></log-explorer-search-box>
       </div>
       <log-explorer-results></log-explorer-results>
     `;
@@ -46,6 +49,10 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
         display: flex;
         align-items: stretch;
         gap: var(--uui-size-space-3);
+      }
+
+      log-explorer-search-box {
+        flex: 1;
       }
 
       log-explorer-results {

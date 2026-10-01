@@ -21,6 +21,12 @@ describe("chipsToFilter", () => {
     expect(chipsToFilter([pathApi, pathUmbraco])).toEqual({ kind: "or", children: [pathApi, pathUmbraco] });
   });
 
+  it("ANDs include chips on different fields", () => {
+    const status500: FilterNode = { kind: "condition", field: "StatusCode", op: "equals", value: "500" };
+
+    expect(chipsToFilter([pathApi, status500])).toEqual({ kind: "and", children: [pathApi, status500] });
+  });
+
   it("ANDs chips on different fields, exclude chips and text", () => {
     expect(chipsToFilter([pathApi, notOk, timeout, pathUmbraco])).toEqual({
       kind: "and",
