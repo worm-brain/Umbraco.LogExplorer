@@ -69,5 +69,7 @@ errors. It creates no CMS content.
 - Tests depend on accessible names (roles and labels from the UI brief's copy deck), not on
   `data-testid`s; no product code changed for the suite. Changing a label means changing the
   locator in `e2e/support/explorer.ts`.
-- Criterion 1 (Same request, #42) and the share-link round trip (#44) are `test.fixme`
-  placeholders until those issues land.
+- The share-link test (#44) reads the copied URL through granted clipboard permissions and opens
+  it in a new browser context that shares only the saved login, so the view comes from the URL
+  alone. Pages a test opens outside the `page` fixture call `watchConsole` to get the same guard.
+- Criterion 1 (Same request, #42) is a `test.fixme` placeholder until that issue lands.
