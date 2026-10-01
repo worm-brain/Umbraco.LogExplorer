@@ -203,7 +203,11 @@ export class LogExplorerPatternsElement extends UmbLitElement {
     const summary =
       pattern.count === 1
         ? this.localize.term("logExplorer_patternsVolumeOne")
-        : this.localize.term("logExplorer_patternsVolume", pattern.count.toLocaleString(lang), peak.toLocaleString(lang));
+        : this.localize.term(
+            "logExplorer_patternsVolume",
+            pattern.count.toLocaleString(lang),
+            peak.toLocaleString(lang),
+          );
     return html`
       <div class="spark" aria-hidden="true" title=${summary}>
         ${sparkBars(pattern.sparkline).map((bar) =>
