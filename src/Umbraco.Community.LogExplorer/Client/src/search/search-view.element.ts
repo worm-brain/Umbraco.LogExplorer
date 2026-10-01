@@ -20,9 +20,8 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
    * @returns The template.
    */
   override render() {
-    // TODO: localise (UI brief §8) once the package registers a localization manifest.
-    return html`<log-explorer-empty-state headline="Search"
-      ><p>No entries to show yet. Search, the histogram and the fields panel arrive here.</p></log-explorer-empty-state
+    return html`<log-explorer-empty-state headline=${this.localize.term("logExplorer_tabSearch")}
+      ><p>${this.localize.term("logExplorer_searchEmpty")}</p></log-explorer-empty-state
     >`;
   }
 }

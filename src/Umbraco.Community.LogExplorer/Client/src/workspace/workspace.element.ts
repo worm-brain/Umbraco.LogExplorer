@@ -25,9 +25,8 @@ export class LogExplorerWorkspaceElement extends UmbLitElement {
    * @returns The template.
    */
   override render() {
-    // TODO: localise the headline (UI brief §8) once the package registers a localization manifest.
     return html`
-      <umb-workspace-editor headline="Log Explorer" .enforceNoFooter=${true}>
+      <umb-workspace-editor headline=${this.localize.term("logExplorer_title")} .enforceNoFooter=${true}>
         <log-explorer-source-picker slot="header"></log-explorer-source-picker>
       </umb-workspace-editor>
     `;

@@ -20,11 +20,8 @@ export class LogExplorerOverviewViewElement extends UmbLitElement {
    * @returns The template.
    */
   override render() {
-    // TODO: localise (UI brief §8) once the package registers a localization manifest.
-    return html`<log-explorer-empty-state headline="Overview"
-      ><p>
-        Nothing to summarise yet. Counts by level, frequent messages and exception types arrive here.
-      </p></log-explorer-empty-state
+    return html`<log-explorer-empty-state headline=${this.localize.term("logExplorer_tabOverview")}
+      ><p>${this.localize.term("logExplorer_overviewEmpty")}</p></log-explorer-empty-state
     >`;
   }
 }

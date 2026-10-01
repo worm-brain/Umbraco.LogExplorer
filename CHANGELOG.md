@@ -9,3 +9,4 @@ All notable user-visible changes to this project are documented here. The format
 ### Added
 
 - Log Explorer item under Settings > Advanced with an empty Search, Patterns and Overview workspace.
+- English localization dictionary for every Log Explorer string; other backoffice languages fall back to it.

@@ -20,9 +20,8 @@ export class LogExplorerPatternsViewElement extends UmbLitElement {
    * @returns The template.
    */
   override render() {
-    // TODO: localise (UI brief §8) once the package registers a localization manifest.
-    return html`<log-explorer-empty-state headline="Patterns"
-      ><p>No patterns to show yet. Message templates grouped by count arrive here.</p></log-explorer-empty-state
+    return html`<log-explorer-empty-state headline=${this.localize.term("logExplorer_tabPatterns")}
+      ><p>${this.localize.term("logExplorer_patternsEmpty")}</p></log-explorer-empty-state
     >`;
   }
 }

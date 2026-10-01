@@ -4,23 +4,13 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { SourceResponseModel } from "../api/index.js";
 import { loadSources, type SourcesState } from "./sources-loader.js";
 
-// TODO: route these strings through the backoffice localization system (UI brief §8) once the
-// package registers its localization manifest.
-const copy = {
-  loading: "Loading log sources…",
-  empty: "No log sources are available. Add one under LogExplorer:Sources in appsettings.json.",
-  errorPrefix: "Could not load log sources:",
-  retry: "Retry",
-  sensitive: "Sensitive source",
-};
-
 /**
  * The source picker in the Log Explorer workspace header (UI brief §4.1).
  *
  * For now it only displays the active source: database icon, display name, a lock when the
  * source is sensitive and a tag with the source's native query language. The active source is
  * the first one `/sources` returns. The menu for switching sources, honouring `DefaultSource`
- * and moving this state into `LogExplorerQueryContext` come with #29.
+ * and moving this state into `LogExplorerQueryContext` come with #46.
  *
  * It fetches `GET /sources` itself on connect and renders the loading, empty and error states
  * inline, with a Retry button on error. Because it is not interactive yet it renders plain
@@ -57,16 +47,21 @@ export class LogExplorerSourcePickerElement extends UmbLitElement {
   override render() {
     switch (this._state.status) {
       case "loading":
-        return html`<span class="muted">${copy.loading}</span>`;
+        return html`<span class="muted">${this.localize.term("logExplorer_sourcesLoading")}</span>`;
       case "empty":
-        return html`<span class="muted">${copy.empty}</span>`;
+        return html`<span class="muted">${this.localize.term("logExplorer_sourcesEmpty")}</span>`;
       case "error":
         return html`
           <span class="error" role="alert">
             <umb-icon name="icon-alert"></umb-icon>
-            ${copy.errorPrefix} ${this._state.message}
+            ${this.localize.term("logExplorer_sourcesError", this._state.message)}
           </span>
-          <uui-button look="secondary" compact label=${copy.retry} @click=${() => this.#load()}></uui-button>
+          <uui-button
+            look="secondary"
+            compact
+            label=${this.localize.term("logExplorer_retry")}
+            @click=${() => this.#load()}
+          ></uui-button>
         `;
       case "loaded":
         return this.#renderSource(this._state.sources[0]!);
@@ -85,7 +80,11 @@ export class LogExplorerSourcePickerElement extends UmbLitElement {
       <strong class="name">${source.displayName}</strong>
       ${
         source.sensitive
-          ? html`<span role="img" aria-label=${copy.sensitive} title=${copy.sensitive}>
+          ? html`<span
+              role="img"
+              aria-label=${this.localize.term("logExplorer_sensitiveSource")}
+              title=${this.localize.term("logExplorer_sensitiveSource")}
+            >
               <umb-icon name="icon-lock"></umb-icon>
             </span>`
           : nothing

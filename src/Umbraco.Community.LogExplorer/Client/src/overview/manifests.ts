@@ -13,8 +13,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     element: () => import("./overview-view.element.js"),
     weight: 100,
     meta: {
-      // TODO: localise (UI brief §8) once the package registers a localization manifest.
-      label: "Overview",
+      label: "#logExplorer_tabOverview",
       pathname: "overview",
       icon: "icon-bar-chart",
     },
