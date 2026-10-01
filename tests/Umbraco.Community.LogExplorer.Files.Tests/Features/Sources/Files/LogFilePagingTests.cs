@@ -373,20 +373,6 @@ public class LogFilePagingTests
     }
 
     [Fact]
-    public void Query_NativeQuery_ThrowsNotSupported()
-    {
-        // Arrange
-        LogFilePager pager = CreatePager(LogFixtures.Directory);
-        LogQuery query = FixtureQuery(SortDirection.Descending) with { NativeQuery = "Has(N)" };
-
-        // Act
-        void Query() => pager.Query(query, MaxPageSize, Token);
-
-        // Assert
-        Assert.Throws<NotSupportedException>(Query);
-    }
-
-    [Fact]
     public void Query_CancelledToken_ThrowsOperationCanceled()
     {
         // Arrange

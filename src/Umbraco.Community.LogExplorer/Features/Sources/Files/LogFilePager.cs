@@ -1,7 +1,9 @@
+using Serilog.Events;
 using Umbraco.Community.LogExplorer.Core.Filtering;
 using Umbraco.Community.LogExplorer.Core.Query;
 using Umbraco.Community.LogExplorer.Core.Records;
 using Umbraco.Community.LogExplorer.Core.Results;
+using Umbraco.Community.LogExplorer.Core.Sources;
 
 namespace Umbraco.Community.LogExplorer.Features.Sources.Files;
 
@@ -39,7 +41,9 @@ internal sealed class LogFilePager
     /// </summary>
     /// <param name="query">
     /// The query. <see cref="LogQuery.Filter"/> and <see cref="LogQuery.Levels"/> are applied with
-    /// <see cref="LogRecordFilter"/>; the range includes <c>From</c> and excludes <c>To</c>.
+    /// <see cref="LogRecordFilter"/>, and AND with <see cref="LogQuery.NativeQuery"/>, which runs as
+    /// the core Log Viewer runs it (<see cref="NativeFilter"/>); the range includes <c>From</c> and
+    /// excludes <c>To</c>.
     /// </param>
     /// <param name="maxPageSize">The source's page size limit; <see cref="LogQuery.Take"/> is clamped to it.</param>
     /// <param name="cancellationToken">Checked between events.</param>
@@ -53,17 +57,15 @@ internal sealed class LogFilePager
     /// <exception cref="ArgumentException">
     /// The cursor is invalid or was made for the other sort direction, or the range is invalid.
     /// </exception>
-    /// <exception cref="NotSupportedException">The query has a native query, which this pager does not evaluate (#34).</exception>
+    /// <exception cref="InvalidNativeQueryException">The native query does not compile.</exception>
     /// <exception cref="OperationCanceledException">Cancellation was requested.</exception>
     public FilePage Query(LogQuery query, int maxPageSize, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
         ArgumentOutOfRangeException.ThrowIfLessThan(query.Take, 1, nameof(query));
         ArgumentOutOfRangeException.ThrowIfLessThan(maxPageSize, 1);
-        if (query.NativeQuery is not null)
-        {
-            throw new NotSupportedException("The log file pager does not evaluate native queries.");
-        }
+        // Compiled before any file is opened, so an invalid query fails fast.
+        Func<LogEvent, bool> native = NativeFilter.Compile(query.NativeQuery);
 
         ResolvedRange range = RelativeRange.Resolve(query.Range, _clock);
         FileCursor? cursor = query.Cursor is null
@@ -83,6 +85,12 @@ internal sealed class LogFilePager
             );
         while (records.Count < take && stream.TryRead(out (LogFile File, LogFileEvent Event) next))
         {
+            // The native expression reads the event itself, so it runs before the mapping cost.
+            if (!native(next.Event.Event))
+            {
+                continue;
+            }
+
             LogRecord record = CompactLogEventMapper.Map(
                 next.Event.Event,
                 next.File,

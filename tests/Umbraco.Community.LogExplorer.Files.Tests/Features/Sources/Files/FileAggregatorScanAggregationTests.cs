@@ -169,21 +169,6 @@ public class FileAggregatorScanAggregationTests
         Assert.Throws<OperationCanceledException>(Fields);
     }
 
-    [Fact]
-    public void GetHistogram_NativeQuery_ThrowsNotSupported()
-    {
-        // Arrange
-        using TempDirectory directory = WriteSmallFile();
-        FileAggregator aggregator = Aggregators.Create(directory.Path);
-        LogQuery query = Aggregators.NoonHour() with { NativeQuery = "Has(Duration)" };
-
-        // Act
-        void Histogram() => aggregator.GetHistogram(query, 60, Token);
-
-        // Assert
-        Assert.Throws<NotSupportedException>(Histogram);
-    }
-
     /// <summary>
     /// BRIEF §17: histogram, facets or patterns over the sample site's logs in under 3 s, or
     /// Approximate within budget. Explicit because it needs the sample site's generated logs, which

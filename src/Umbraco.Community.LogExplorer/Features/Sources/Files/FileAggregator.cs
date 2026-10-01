@@ -11,6 +11,7 @@ using Umbraco.Community.LogExplorer.Core.Query;
 using Umbraco.Community.LogExplorer.Core.Records;
 using Umbraco.Community.LogExplorer.Core.Results;
 using Umbraco.Community.LogExplorer.Core.Severity;
+using Umbraco.Community.LogExplorer.Core.Sources;
 
 namespace Umbraco.Community.LogExplorer.Features.Sources.Files;
 
@@ -34,7 +35,8 @@ internal sealed record FileAggregate<T>(T Result, ResolvedRange ScannedRange, lo
 /// <remarks>
 /// <para>
 /// Every aggregation applies <see cref="LogQuery.Filter"/> and <see cref="LogQuery.Levels"/> with
-/// <see cref="LogRecordFilter"/>, except that the histogram ignores the level set so the level
+/// <see cref="LogRecordFilter"/>, and <see cref="LogQuery.NativeQuery"/> with
+/// <see cref="NativeFilter"/> as the pager does, except that the histogram ignores the level set so the level
 /// toggles can show what they hide (ADR 0004). Malformed-line warnings are not reported: the
 /// result contracts have nowhere to put them, and the search page already shows them.
 /// </para>
@@ -140,7 +142,7 @@ internal sealed class FileAggregator
     /// <exception cref="ArgumentNullException"><paramref name="query"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="targetBuckets"/> is less than 1.</exception>
     /// <exception cref="ArgumentException">The range is invalid, or a regex filter does not parse.</exception>
-    /// <exception cref="NotSupportedException">The query has a native query.</exception>
+    /// <exception cref="InvalidNativeQueryException">The native query does not compile.</exception>
     /// <exception cref="OperationCanceledException">Cancellation was requested.</exception>
     public FileAggregate<HistogramResult> GetHistogram(
         LogQuery query,
@@ -203,7 +205,7 @@ internal sealed class FileAggregator
     /// <exception cref="ArgumentNullException"><paramref name="query"/> or <paramref name="fields"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="top"/> is less than 1.</exception>
     /// <exception cref="ArgumentException">The range is invalid, or a regex filter does not parse.</exception>
-    /// <exception cref="NotSupportedException">The query has a native query.</exception>
+    /// <exception cref="InvalidNativeQueryException">The native query does not compile.</exception>
     /// <exception cref="OperationCanceledException">Cancellation was requested.</exception>
     public FileAggregate<FacetResult> GetFacets(
         LogQuery query,
@@ -307,7 +309,7 @@ internal sealed class FileAggregator
     /// <exception cref="ArgumentNullException"><paramref name="query"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="top"/> is less than 1.</exception>
     /// <exception cref="ArgumentException">The range is invalid, or a regex filter does not parse.</exception>
-    /// <exception cref="NotSupportedException">The query has a native query.</exception>
+    /// <exception cref="InvalidNativeQueryException">The native query does not compile.</exception>
     /// <exception cref="OperationCanceledException">Cancellation was requested.</exception>
     public FileAggregate<PatternResult> GetPatterns(
         LogQuery query,
@@ -386,7 +388,7 @@ internal sealed class FileAggregator
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="query"/> is null.</exception>
     /// <exception cref="ArgumentException">The range is invalid, or a regex filter does not parse.</exception>
-    /// <exception cref="NotSupportedException">The query has a native query.</exception>
+    /// <exception cref="InvalidNativeQueryException">The native query does not compile.</exception>
     /// <exception cref="OperationCanceledException">Cancellation was requested.</exception>
     public FileAggregate<IReadOnlyList<FieldInfo>> GetFields(
         LogQuery query,
@@ -485,14 +487,8 @@ internal sealed class FileAggregator
     {
         ArgumentNullException.ThrowIfNull(query);
         cancellationToken.ThrowIfCancellationRequested();
-        if (query.NativeQuery is not null)
-        {
-            // Native-query evaluation for the files source arrives with #34, which wires it here
-            // and in the pager together.
-            throw new NotSupportedException(
-                "The log file aggregations do not evaluate native queries."
-            );
-        }
+        // Compiled before the cache lookup, so an invalid query fails whether or not it is cached.
+        Func<LogEvent, bool> native = NativeFilter.Compile(query.NativeQuery);
 
         ResolvedRange range = RelativeRange.Resolve(query.Range, _clock);
         string key = CacheKey(operation, query, range, parameters);
@@ -517,7 +513,7 @@ internal sealed class FileAggregator
         {
             oldestRead = next.Event.Event.Timestamp;
             var candidate = new Candidate(next.File, next.Event);
-            if (Matches(candidate, query.Filter, levels))
+            if (native(next.Event.Event) && Matches(candidate, query.Filter, levels))
             {
                 accumulator.Add(candidate);
             }
@@ -585,6 +581,7 @@ internal sealed class FileAggregator
                     .Order(StringComparer.Ordinal)
                     .ToArray(),
                 filter = query.Filter,
+                native = query.NativeQuery,
                 parameters,
             },
             LogJson.Options

@@ -26,6 +26,7 @@
     <PackageReference Include="Umbraco.Cms.Web.Website" />
     <PackageReference Include="Umbraco.Cms.Api.Management" />
     <PackageReference Include="Serilog.Formatting.Compact.Reader" />
+    <PackageReference Include="Serilog.Expressions" />
   </ItemGroup>
 
   <ItemGroup>
