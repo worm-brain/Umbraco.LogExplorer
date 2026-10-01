@@ -72,6 +72,9 @@ internal sealed class LogFilePager
             ? null
             : FileCursor.Decode(query.Cursor, query.Sort);
         int take = Math.Min(query.Take, maxPageSize);
+        // Most scanned events fail the filter, so they are tested on a record holding only the
+        // parts the filter reads, and only matches are mapped in full (ADR 0017).
+        RecordParts filterParts = FilterRecordParts.For(query.Filter);
 
         var records = new List<LogRecord>(Math.Min(take, 1024));
         using MergedLogStream stream = cursor is null
@@ -91,15 +94,22 @@ internal sealed class LogFilePager
                 continue;
             }
 
-            LogRecord record = CompactLogEventMapper.Map(
+            LogRecord probe = CompactLogEventMapper.Map(
                 next.Event.Event,
                 next.File,
-                next.Event.Offset
+                next.Event.Offset,
+                filterParts
             );
-            if (LogRecordFilter.Matches(record, query.Filter, query.Levels))
+            if (!LogRecordFilter.Matches(probe, query.Filter, query.Levels))
             {
-                records.Add(record);
+                continue;
             }
+
+            records.Add(
+                filterParts == RecordParts.All
+                    ? probe
+                    : CompactLogEventMapper.Map(next.Event.Event, next.File, next.Event.Offset)
+            );
         }
 
         IReadOnlyList<FilePosition> positions = stream.NextPositions;

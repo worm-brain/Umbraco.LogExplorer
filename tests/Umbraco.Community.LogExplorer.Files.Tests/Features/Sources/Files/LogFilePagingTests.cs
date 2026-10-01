@@ -177,6 +177,50 @@ public class LogFilePagingTests
     }
 
     [Fact]
+    public void Query_TextFilter_ReturnsMatchesMappedInFull()
+    {
+        // Arrange: the text filter is tested on a partial record (ADR 0017); the page must not be.
+        using var directory = new TempDirectory();
+        DateTimeOffset noon = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
+        directory.Write(
+            "UmbracoTraceLog.WORM.20261001.json",
+            LogLines.File(
+                LogLines.Event(noon, "Request timeout", extraProperties: "\"StatusCode\":504"),
+                LogLines.Event(
+                    noon.AddSeconds(1),
+                    "Request done",
+                    extraProperties: "\"StatusCode\":200"
+                )
+            )
+        );
+        LogFilePager pager = CreatePager(directory.Path);
+        LogQuery query = DayQuery(SortDirection.Ascending) with
+        {
+            Filter = new TextNode("timeout"),
+        };
+        LogRecord expected = CompactLogEventMapper.Map(
+            Serilog.Formatting.Compact.Reader.LogEventReader.ReadFromString(
+                LogLines.Event(noon, "Request timeout", extraProperties: "\"StatusCode\":504")
+            ),
+            new LogFile(
+                Path.Combine(directory.Path, "UmbracoTraceLog.WORM.20261001.json"),
+                "UmbracoTraceLog.WORM.20261001.json",
+                "WORM",
+                new DateOnly(2026, 10, 1),
+                0
+            ),
+            0
+        );
+
+        // Act
+        FilePage page = pager.Query(query, MaxPageSize, Token);
+
+        // Assert
+        LogRecord record = Assert.Single(page.Page.Records);
+        Assert.Equal(JsonSerializer.Serialize(expected), JsonSerializer.Serialize(record));
+    }
+
+    [Fact]
     public void Query_FilterAndLevels_KeepsOnlyRecordsPassingBoth()
     {
         // Arrange: A fails the level set, B fails the filter, C passes both.
