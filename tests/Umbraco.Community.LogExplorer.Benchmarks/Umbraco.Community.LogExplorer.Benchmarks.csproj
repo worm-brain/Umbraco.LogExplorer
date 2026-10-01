@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The files provider's first-page benchmark (BRIEF §14 Phase 1 acceptance 4, §17; #36). A plain
+    console app, not a test project, so CI builds it but `dotnet test` never runs it. How to run it:
+    see the remarks in Program.cs and samples/README.md.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Umbraco.Community.LogExplorer.Benchmarks</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Pin the Umbraco version we develop against for this major (the package itself floats from the floor). -->
+    <PackageReference Include="Umbraco.Cms.Web.Website" VersionOverride="$(UmbracoDevVersion)" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" VersionOverride="$(UmbracoDevVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Umbraco.Community.LogExplorer\Umbraco.Community.LogExplorer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The sample generator's bulk mode writes the data set; it has no Umbraco dependency. -->
+    <Compile
+      Include="..\..\samples\Shared\LogGenerator\BulkLogWriter.cs"
+      Link="LogGenerator\BulkLogWriter.cs"
+    />
+  </ItemGroup>
+</Project>
