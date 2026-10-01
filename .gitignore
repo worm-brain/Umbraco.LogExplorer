@@ -494,3 +494,6 @@ src/Umbraco.Community.LogExplorer/wwwroot/App_Plugins/
 
 ## Files provider test fixtures live in folders named "Logs"; keep them despite the [Ll]ogs/ rule above
 !tests/**/Fixtures/**
+
+## Claude Code agent worktrees
+.claude/worktrees/
