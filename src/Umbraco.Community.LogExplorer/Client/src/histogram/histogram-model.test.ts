@@ -11,7 +11,7 @@ import {
   toggleLevel,
   zoomFromBucket,
   zoomLabelParts,
-  unreadPercent,
+  unreadBucketCount,
 } from "./histogram-model.js";
 
 const MINUTE = 60_000;
@@ -185,16 +185,18 @@ describe("toggleLevel", () => {
   });
 });
 
-describe("unreadPercent", () => {
-  it("shades the share of the chart before the scanned range", () => {
-    expect(unreadPercent(7_500, 0, 10_000)).toBe(75);
+describe("unreadBucketCount", () => {
+  const starts = [0, 10, 20, 30];
+
+  it("counts the buckets that end before the scanned range starts", () => {
+    expect(unreadBucketCount(starts, 10, 20)).toBe(2);
+  });
+
+  it("leaves the bucket the scan stopped in unshaded, since it holds data", () => {
+    expect(unreadBucketCount(starts, 10, 25)).toBe(2);
   });
 
   it("shades nothing when the whole range was read", () => {
-    expect(unreadPercent(undefined, 0, 10_000)).toBe(0);
-  });
-
-  it("keeps a scanned start outside the chart within 0 to 100", () => {
-    expect([unreadPercent(-500, 0, 10_000), unreadPercent(12_000, 0, 10_000)]).toEqual([0, 100]);
+    expect(unreadBucketCount(starts, 10, undefined)).toBe(0);
   });
 });

@@ -265,17 +265,23 @@ export function isLevelOn(levels: ReadonlyArray<Level> | null, level: Level): bo
 }
 
 /**
- * How much of the chart, from its left edge, the counts do not cover: the buckets older than the
- * scanned range when the source stopped at its scan budget (ADR 0027). Those buckets were not
- * read, which is different from having no entries.
+ * How many buckets, from the left, the scan never reached: those that end at or before the start
+ * of the scanned range when the source stopped at its scan budget (ADR 0027). They were not read,
+ * which is different from having no entries. The bucket the scan stopped in was partly read and
+ * is not counted, so shading by whole buckets never covers a bar with data.
  *
+ * @param bucketStartsMs - Each bucket's start, ascending.
+ * @param sizeMs - The bucket width.
  * @param scannedFromMs - Start of the scanned range, or `undefined` when the whole range was read.
- * @param firstMs - Start of the first bucket.
- * @param lastEndMs - End of the last bucket.
- * @returns A percentage of the chart width, from 0 (all read) to 100.
+ * @returns The number of unread buckets at the start of the chart.
  */
-export function unreadPercent(scannedFromMs: number | undefined, firstMs: number, lastEndMs: number): number {
-  if (scannedFromMs === undefined || lastEndMs <= firstMs) return 0;
-  const share = (scannedFromMs - firstMs) / (lastEndMs - firstMs);
-  return Math.min(100, Math.max(0, share * 100));
+export function unreadBucketCount(
+  bucketStartsMs: ReadonlyArray<number>,
+  sizeMs: number,
+  scannedFromMs: number | undefined,
+): number {
+  if (scannedFromMs === undefined || sizeMs <= 0) return 0;
+  let count = 0;
+  while (count < bucketStartsMs.length && bucketStartsMs[count]! + sizeMs <= scannedFromMs) count++;
+  return count;
 }

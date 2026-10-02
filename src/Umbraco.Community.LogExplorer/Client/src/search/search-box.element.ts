@@ -446,6 +446,10 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
          */
         max-width: 70cqi;
         padding-left: var(--uui-size-space-3);
+        /* At least one control tall, so the search icon centres on the text input's line rather
+           than on the chip list, which is only as tall as its chips (ADR 0024). */
+        min-height: var(--uui-size-11);
+        box-sizing: border-box;
       }
 
       umb-icon {

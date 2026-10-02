@@ -64,7 +64,7 @@ export default {
     histogramApproximate: "Approximate",
     histogramScannedFrom: (from: string) => `counts from ${from}`,
     histogramUnread: (from: string) =>
-      `Not read: the scan limit was reached, so counts start at ${from}. Narrow the time range or add a filter to see earlier entries.`,
+      `Not read: the scan limit was reached, so counts start at ${from}. Pick a shorter time range, or drag across the earlier bars to zoom in, to read further back.`,
     histogramApproximateHint:
       "Counts cover only part of the range: the source sampled its data or stopped at its scan budget.",
     histogramBarLabel: (time: string, count: number, formatted: string) =>

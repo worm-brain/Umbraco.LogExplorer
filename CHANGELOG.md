@@ -8,6 +8,7 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Fixed
 
+- The histogram's hatched "not read" area stops at the last unread bar instead of overlapping the first bar with data, and its hint now suggests a shorter range or zooming in (a filter does not make the scan reach further). The search icon lines up with the search text again, and the results footer has more room around "Load 60 more".
 - When the log files source stops at its scan budget, the histogram no longer shows the unread part of the range as empty: those days are hatched, the summary says where the counts start ("counts from ..."), and the unread bars explain why. `POST /histogram` returns the read part as `scannedRange`.
 - Dates and times follow UK formatting (day first, 24-hour) for backoffice users on English (United Kingdom); it was shown US-style because the backoffice names that language plain `en`.
 - With many filters, or in a narrow window, the search box no longer hides chips behind its edge: chips wrap onto up to three rows (then scroll inside the box) and the query bar grows to fit. In a narrow box long chip values are shortened sooner, with the full filter in the chip's tooltip.

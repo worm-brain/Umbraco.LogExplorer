@@ -32,7 +32,7 @@ import {
   ticks,
   toggleLevel,
   zoomFromBucket,
-  unreadPercent,
+  unreadBucketCount,
 } from "./histogram-model.js";
 import { formatLocale } from "../shared/format-locale.js";
 
@@ -352,7 +352,11 @@ export class LogExplorerHistogramElement extends UmbLitElement {
     const drag = this._drag;
     const activeBar = this.#clampedActiveBar(buckets.length);
     const scannedFromMs = result.scannedRange ? new Date(result.scannedRange.from).getTime() : undefined;
-    const unread = unreadPercent(scannedFromMs, firstMs, lastEndMs);
+    const unread = unreadBucketCount(
+      buckets.map((bucket) => new Date(bucket.start).getTime()),
+      sizeMs,
+      scannedFromMs,
+    );
     const unreadFrom =
       scannedFromMs === undefined
         ? ""
@@ -392,7 +396,10 @@ export class LogExplorerHistogramElement extends UmbLitElement {
                   class="unread"
                   role="img"
                   aria-label=${this.localize.term("logExplorer_histogramUnread", unreadFrom)}
-                  style=${styleMap({ width: `${unread}%` })}
+                  style=${styleMap({
+                    // Ends half a gap after the last unread bar, so it never covers a read one.
+                    width: `calc((100% + var(--bar-gap)) * ${unread} / ${buckets.length} - var(--bar-gap) / 2)`,
+                  })}
                 ></div>`
               : nothing
           }
@@ -620,7 +627,8 @@ export class LogExplorerHistogramElement extends UmbLitElement {
         position: relative;
         display: flex;
         align-items: stretch;
-        gap: calc(var(--uui-size-1) / 3);
+        --bar-gap: calc(var(--uui-size-1) / 3);
+        gap: var(--bar-gap);
         height: var(--log-explorer-histogram-height, var(--uui-size-20));
         border-bottom: 1px solid var(--uui-color-border);
         /* Horizontal drags select a range; vertical swipes still scroll the page on touch. */

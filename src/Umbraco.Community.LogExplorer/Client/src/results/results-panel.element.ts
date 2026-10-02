@@ -762,7 +762,8 @@ export class LogExplorerResultsElement extends UmbLitElement {
         gap: var(--uui-size-space-4);
         /* One control height, like the header, whether or not "Load 60 more" is showing. */
         min-height: var(--uui-size-11);
-        padding: 0 var(--uui-size-space-4);
+        /* Room around the count and "Load 60 more" so the footer does not feel cramped. */
+        padding: var(--uui-size-space-3) var(--uui-size-space-5);
         border-top: 1px solid var(--uui-color-border);
         font-size: var(--uui-type-small-size);
       }
