@@ -4,7 +4,7 @@ One file per decision, numbered in order, never renumbered. A superseded ADR sta
 `Status: Superseded by NNNN`.
 
 Write a new ADR when a decision changes a contract, a dependency, a supported version, a §2 choice
-in `docs/BRIEF.md`, or when a **Verify** item in the briefs turns out differently from what the
+in `private/BRIEF.md`, or when a **Verify** item in the briefs turns out differently from what the
 brief assumed. Update the brief in the same change.
 
 | ADR | Decision | Status |

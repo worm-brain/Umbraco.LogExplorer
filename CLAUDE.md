@@ -2,8 +2,8 @@
 
 An Umbraco 17/18 backoffice log explorer: click-to-filter search over Umbraco's own log files, then Application Insights and Seq, through a provider model built on the OpenTelemetry log record.
 
-@docs/BRIEF.md
-@docs/UI-BRIEF.md
+@private/BRIEF.md
+@private/UI-BRIEF.md
 
 ## Working rules
 
@@ -18,4 +18,4 @@ An Umbraco 17/18 backoffice log explorer: click-to-filter search over Umbraco's 
 - One package per Umbraco major (ADR 0010): `dotnet build` targets 17, `-p:UmbracoMajor=18` targets 18. Major-specific code goes in paired `*.V17.cs` / `*.V18.cs` files. Build and test both majors before committing anything that touches Umbraco APIs.
 - Run `dotnet test` and `bun run test` (client) before every commit, and read the build summary: stop any running sample site first, because a locked DLL shows up as build errors. Conventional commits, ASCII only. Update `CHANGELOG.md` per user-visible change.
 - Branching: Phase 0 commits go to `main`; from Phase 1, one branch and PR per phase. Parallel lanes (BRIEF §15) use their own worktree branches merged into the phase branch.
-- At the start of a session, read `docs/HANDOFF.md` if it exists: it holds the current state, the lane plan and the gotchas from the last session.
+- At the start of a session, read `private/HANDOFF.md` if it exists: it holds the current state, the lane plan and the gotchas from the last session.
