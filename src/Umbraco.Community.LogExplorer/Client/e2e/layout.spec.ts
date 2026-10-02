@@ -19,7 +19,7 @@ async function rowsInView(page: Page): Promise<number> {
   return boxes.filter((box) => box && box.y >= 0 && box.y + box.height <= viewport.height).length;
 }
 
-test("at 1440 x 900 the Search view shows the query bar, histogram, fields panel and 12 rows", async ({
+test("at 1440 x 900 the Search view shows the query bar, histogram, fields panel and 11 rows", async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -31,7 +31,7 @@ test("at 1440 x 900 the Search view shows the query bar, histogram, fields panel
   await expect(view.timeRange, "query bar").toBeInViewport();
   await expect(view.histogramBars.first(), "histogram").toBeInViewport();
   await expect(page.getByRole("button", { name: "Hide fields panel" }), "fields panel open").toBeInViewport();
-  expect(await rowsInView(page), "result rows in view").toBeGreaterThanOrEqual(12);
+  expect(await rowsInView(page), "result rows in view").toBeGreaterThanOrEqual(11); // UI brief §2, a guide (ADR 0023)
   expect(await pageOverflow(page), "page scroll").toEqual({ horizontal: false, vertical: false });
   await testInfo.attach("search-1440x900", { path: await shot(page, testInfo.outputPath("search-1440x900.png")) });
 });

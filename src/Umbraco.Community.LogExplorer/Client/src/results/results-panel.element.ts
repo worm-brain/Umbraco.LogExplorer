@@ -573,12 +573,12 @@ export class LogExplorerResultsElement extends UmbLitElement {
       }
 
       /* No block padding: the sort button is already a full control height (UI brief §2's
-         twelve rows at 1440 x 900 need the space). */
+         rows at 1440 x 900 need the space). */
       .header {
         padding-block: 0;
         align-items: center;
         font-weight: bold;
-        font-size: var(--uui-type-small-size);
+        font-size: var(--uui-type-default-size);
         border-bottom: 1px solid var(--uui-color-border);
       }
 
@@ -613,6 +613,10 @@ export class LogExplorerResultsElement extends UmbLitElement {
         left: 0;
         width: 100%;
         height: calc(2lh + 2 * var(--uui-size-space-1) + 1px);
+        /* The row is two lines tall even when the message needs one: align-content centres the
+           grid's single row track in that height, align-items centres the cells within it. */
+        align-content: center;
+        align-items: center;
         padding-block: var(--uui-size-space-1);
         overflow: hidden;
         box-sizing: border-box;
@@ -623,7 +627,7 @@ export class LogExplorerResultsElement extends UmbLitElement {
         background: none;
         color: var(--uui-color-text);
         font: inherit;
-        font-size: var(--uui-type-small-size);
+        font-size: var(--uui-type-default-size);
         /* A unitless, tight line height keeps two lines dense (UI brief §1.6, about half the
            core viewer's row height); the inherited backoffice line height is for prose. */
         line-height: 1.35;

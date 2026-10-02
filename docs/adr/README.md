@@ -30,6 +30,7 @@ brief assumed. Update the brief in the same change.
 | [0020](0020-e2e-suite-with-plain-playwright.md) | The e2e suite runs plain Playwright from the client, against both sample sites | Accepted |
 | [0021](0021-menus-patch-uui-aria.md) | Menus and toggles patch the ARIA UUI does not expose | Accepted |
 | [0022](0022-smoke-test-packed-nupkgs.md) | The release smoke-tests the packed nupkgs on spawned sites of the floor and latest Umbraco versions | Accepted |
+| [0023](0023-results-text-at-default-size.md) | Results text uses the default type size; the 1440 x 900 row count is a guide | Accepted |
 
 ## Template
 

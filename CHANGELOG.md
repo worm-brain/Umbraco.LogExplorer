@@ -12,6 +12,7 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Changed
 
+- The results list uses the backoffice's default text size (14 px rather than 12 px) for its headings and rows, and each row's content is centred vertically. Eleven rows fit at 1440 x 900.
 - The NuGet packages carry the Log Explorer icon (a teal tile with a magnifier over log lines).
 
 - Filtered searches over the log files are about a third faster: each entry is checked against the filter before it is fully prepared for display, so text and level searches over a week of busy logs scan more quickly.
