@@ -40,6 +40,12 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        // The aggregation benchmark has its own arguments and data (AggregationBenchmark).
+        if (args.Length > 0 && args[0] == "aggregations")
+        {
+            return AggregationBenchmark.Run(args[1..]);
+        }
+
         string directory = Argument(args, "--data") ?? DefaultDirectory();
         if (args.Contains("--delete"))
         {

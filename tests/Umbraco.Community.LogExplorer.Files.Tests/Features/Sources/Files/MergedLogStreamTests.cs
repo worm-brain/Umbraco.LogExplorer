@@ -58,6 +58,25 @@ public sealed class MergedLogStreamTests : IDisposable
     }
 
     [Fact]
+    public void TryRead_ParallelParseNewestFirst_MergesInTheSameOrder()
+    {
+        // Arrange
+        using MergedLogStream stream = MergedLogStream.Open(
+            _locator,
+            Range,
+            SortDirection.Descending,
+            Token,
+            parallelParse: true
+        );
+
+        // Act
+        List<string> templates = ReadTemplates(stream, int.MaxValue);
+
+        // Assert
+        Assert.Equal(["N3", "W2", "N1", "W0"], templates);
+    }
+
+    [Fact]
     public void TryRead_EachEvent_ComesWithTheFileItWasReadFrom()
     {
         // Arrange
