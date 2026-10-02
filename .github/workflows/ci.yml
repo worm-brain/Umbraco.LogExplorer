@@ -1,11 +1,10 @@
 # Builds, tests and packs everything (.NET and the Lit client) for each Umbraco major (ADR 0010)
-# on every pull request and push to main.
+# on every pull request that changes code (not on pushes, to save Actions minutes).
 name: CI
 
+# Pull requests only: pushes to branches do not run this, to save Actions minutes.
 on:
   pull_request:
-  push:
-    branches: [main]
     paths-ignore: ["**.md", "docs/**", "LICENSE"]
   workflow_dispatch:
 
