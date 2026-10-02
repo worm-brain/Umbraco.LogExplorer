@@ -78,7 +78,9 @@ export class LogExplorerShowQueryButtonElement extends UmbLitElement {
         /* Square: as wide as the query bar is tall (both var(--uui-size-11)). Not aspect-ratio:
            a flex item's automatic minimum width is its content width, and uui-button's
            horizontal padding made that 54 px against the bar's 33 px (#51). */
-        height: 100%;
+        /* A fixed height, not 100%: the host is display: contents and the query bar grows when
+           the search box's chips wrap (ADR 0024). */
+        height: var(--uui-size-11);
         width: var(--uui-size-11);
         flex: none;
         --uui-button-padding-left-factor: 0;

@@ -52,3 +52,30 @@ async function shot(page: Page, path: string): Promise<string> {
   await page.screenshot({ path });
   return path;
 }
+
+// ADR 0024: in a narrow window many chips wrap onto more rows instead of being cut off at the
+// edge of a one-line scroller.
+test("at 1280 x 800 many chips wrap so every chip is fully visible", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openExplorer(page, "search", { src: "sample" });
+  const view = searchView(page);
+  await view.searchBox.fill(
+    "SourceContext:Umbraco.Cms.Web.Common.Middleware* RequestPath:/umbraco/surface/contact/submit MachineName:wn1xsdwk000EJK StatusCode:500 timeout",
+  );
+  await view.searchBox.press("Enter");
+  await expect(view.chips).toHaveCount(5);
+
+  const box = await page.locator("log-explorer-search-box").boundingBox();
+  const chips = await Promise.all((await view.chips.all()).map((chip) => chip.boundingBox()));
+  const outside = chips.filter(
+    (chip) =>
+      !chip ||
+      !box ||
+      chip.x < box.x ||
+      chip.x + chip.width > box.x + box.width ||
+      chip.y < box.y ||
+      chip.y + chip.height > box.y + box.height,
+  );
+  expect(outside.length, "chips cut off by the search box").toBe(0);
+  expect((await pageOverflow(page)).horizontal, "horizontal page scroll").toBe(false);
+});

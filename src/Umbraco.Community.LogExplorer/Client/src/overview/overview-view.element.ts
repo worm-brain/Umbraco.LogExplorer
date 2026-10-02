@@ -65,16 +65,23 @@ export class LogExplorerOverviewViewElement extends UmbLitElement {
         container-type: inline-size;
       }
 
-      /* The same definite height as the Search view's bar, which the square icon buttons need. */
       .query-bar {
         display: flex;
-        align-items: stretch;
+        align-items: flex-start;
         gap: var(--uui-size-space-3);
+        min-height: var(--uui-size-11);
+      }
+
+      /* Every control is one control tall and keeps it when the search box grows with wrapped
+         chips (ADR 0024); the square icon buttons fill that height. */
+      .query-bar > * {
         height: var(--uui-size-11);
       }
 
-      log-explorer-search-box {
+      /* The one control that grows (wrapped chips); this selector outranks .query-bar > *. */
+      .query-bar > log-explorer-search-box {
         flex: 1;
+        height: auto;
       }
 
       .panels {

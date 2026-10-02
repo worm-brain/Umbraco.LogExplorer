@@ -8,6 +8,7 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Fixed
 
+- With many filters, or in a narrow window, the search box no longer hides chips behind its edge: chips wrap onto up to three rows (then scroll inside the box) and the query bar grows to fit. In a narrow box long chip values are shortened sooner, with the full filter in the chip's tooltip.
 - In the entry drawer's Properties table, the expand toggle of an object or array now sits next to the include and exclude buttons instead of before the name, so every name lines up; the include and exclude buttons sit closer together.
 - Filter chips in the search box are a little shorter, so they have space above and below them inside the box.
 - The histogram's time-zoom chip in the search box centres its text like the other filter chips, and is the same height as them.
