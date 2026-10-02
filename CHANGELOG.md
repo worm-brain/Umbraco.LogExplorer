@@ -17,6 +17,7 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Changed
 
+- The fields panel can be resized: drag the gap between it and the results (the pointer changes to a resize cursor), or focus that divider and use the arrow keys (Shift for bigger steps, Home and End for the narrowest and widest). The width is remembered in this browser; double-click the divider to reset it. The results always keep at least 40% of the width.
 - The results list uses the backoffice's default text size (14 px rather than 12 px) for its headings and rows, and each row's content is centred vertically. Eleven rows fit at 1440 x 900.
 - The NuGet packages carry the Log Explorer icon (a teal tile with a magnifier over log lines).
 
