@@ -54,8 +54,18 @@
   </PropertyGroup>
 
   <ItemGroup Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)src$([System.IO.Path]::DirectorySeparatorChar)'))">
-    <None Include="$(MSBuildThisFileDirectory)assets\icon\umbraco-logexplorer-128.png" Pack="true" PackagePath="icon.png" Visible="false" />
-    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="README.md" Visible="false" />
+    <None
+      Include="$(MSBuildThisFileDirectory)assets\icon\umbraco-logexplorer-128.png"
+      Pack="true"
+      PackagePath="icon.png"
+      Visible="false"
+    />
+    <None
+      Include="$(MSBuildThisFileDirectory)README.md"
+      Pack="true"
+      PackagePath="README.md"
+      Visible="false"
+    />
   </ItemGroup>
 
   <!-- Tests and samples are never packed. -->

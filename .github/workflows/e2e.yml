@@ -3,10 +3,9 @@
 # `bun run e2e` for that major only.
 name: E2E
 
+# Pull requests only: pushes to branches do not run this, to save Actions minutes.
 on:
   pull_request:
-  push:
-    branches: [main, phase-1]
     paths-ignore: ["**.md", "docs/**", "LICENSE"]
   workflow_dispatch:
 
