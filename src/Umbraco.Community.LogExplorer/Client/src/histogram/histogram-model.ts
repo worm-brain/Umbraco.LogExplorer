@@ -263,3 +263,25 @@ export function toggleLevel(levels: ReadonlyArray<Level> | null, level: Level): 
 export function isLevelOn(levels: ReadonlyArray<Level> | null, level: Level): boolean {
   return levels === null || levels.includes(level);
 }
+
+/**
+ * How many buckets, from the left, the scan never reached: those that end at or before the start
+ * of the scanned range when the source stopped at its scan budget (ADR 0027). They were not read,
+ * which is different from having no entries. The bucket the scan stopped in was partly read and
+ * is not counted, so shading by whole buckets never covers a bar with data.
+ *
+ * @param bucketStartsMs - Each bucket's start, ascending.
+ * @param sizeMs - The bucket width.
+ * @param scannedFromMs - Start of the scanned range, or `undefined` when the whole range was read.
+ * @returns The number of unread buckets at the start of the chart.
+ */
+export function unreadBucketCount(
+  bucketStartsMs: ReadonlyArray<number>,
+  sizeMs: number,
+  scannedFromMs: number | undefined,
+): number {
+  if (scannedFromMs === undefined || sizeMs <= 0) return 0;
+  let count = 0;
+  while (count < bucketStartsMs.length && bucketStartsMs[count]! + sizeMs <= scannedFromMs) count++;
+  return count;
+}

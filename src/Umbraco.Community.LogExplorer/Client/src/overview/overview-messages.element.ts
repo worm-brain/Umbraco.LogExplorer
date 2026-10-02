@@ -6,6 +6,7 @@ import type { LogExplorerViewState } from "../query/view-state.js";
 import type { RequestFn } from "../shared/request-loader.js";
 import { focusInSearch, OVERVIEW_TEMPLATES_TOP, truncateTemplate } from "./overview-model.js";
 import { LogExplorerOverviewPanelBase } from "./overview-panel-base.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /**
  * "Most frequent messages", the second Overview panel (UI brief §4.13, BRIEF §6.10): the top six
@@ -33,7 +34,7 @@ export class LogExplorerOverviewMessagesElement extends LogExplorerOverviewPanel
   }
 
   #renderRow(pattern: Pattern) {
-    const count = pattern.count.toLocaleString(this.localize.lang());
+    const count = pattern.count.toLocaleString(formatLocale(this.localize.lang()));
     return html`
       <li class="focus-row">
         <uui-button

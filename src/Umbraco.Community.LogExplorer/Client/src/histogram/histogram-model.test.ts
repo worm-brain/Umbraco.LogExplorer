@@ -11,6 +11,7 @@ import {
   toggleLevel,
   zoomFromBucket,
   zoomLabelParts,
+  unreadBucketCount,
 } from "./histogram-model.js";
 
 const MINUTE = 60_000;
@@ -181,5 +182,21 @@ describe("toggleLevel", () => {
 
   it("allows hiding every level", () => {
     expect(toggleLevel(["warn"], "warn")).toEqual([]);
+  });
+});
+
+describe("unreadBucketCount", () => {
+  const starts = [0, 10, 20, 30];
+
+  it("counts the buckets that end before the scanned range starts", () => {
+    expect(unreadBucketCount(starts, 10, 20)).toBe(2);
+  });
+
+  it("leaves the bucket the scan stopped in unshaded, since it holds data", () => {
+    expect(unreadBucketCount(starts, 10, 25)).toBe(2);
+  });
+
+  it("shades nothing when the whole range was read", () => {
+    expect(unreadBucketCount(starts, 10, undefined)).toBe(0);
   });
 });

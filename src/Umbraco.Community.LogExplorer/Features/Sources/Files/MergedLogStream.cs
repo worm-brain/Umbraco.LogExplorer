@@ -93,6 +93,12 @@ internal sealed class MergedLogStream : IDisposable
     /// <param name="range">The range to read; see the remarks on the class for the edges.</param>
     /// <param name="direction">Descending reads newest first.</param>
     /// <param name="cancellationToken">Checked between events and file reads.</param>
+    /// <param name="parallelParse">
+    /// True for a scan that will read far (an aggregation up to its budget): newest-first files are
+    /// then read in <see cref="ReverseLogFileReader.ParallelBlockSize"/> blocks whose lines are
+    /// parsed across cores (ADR 0026). The events and their order are the same either way; only
+    /// <see cref="BytesRead"/> grows in larger steps. Oldest-first reads ignore it.
+    /// </param>
     /// <returns>The stream, already holding each machine's first event in the range.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="locator"/> is null.</exception>
     /// <exception cref="OperationCanceledException">Cancellation was requested.</exception>
@@ -100,9 +106,18 @@ internal sealed class MergedLogStream : IDisposable
         UmbracoLogFileLocator locator,
         ResolvedRange range,
         SortDirection direction,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        bool parallelParse = false
     ) =>
-        Create(locator, range, direction, starts: null, unlistedFinished: false, cancellationToken);
+        Create(
+            locator,
+            range,
+            direction,
+            starts: null,
+            unlistedFinished: false,
+            cancellationToken,
+            parallelParse
+        );
 
     /// <summary>
     /// Continues from a cursor's positions (<see cref="FileCursor.Positions"/>, or an earlier
@@ -241,7 +256,8 @@ internal sealed class MergedLogStream : IDisposable
         SortDirection direction,
         IReadOnlyList<FilePosition>? starts,
         bool unlistedFinished,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        bool parallelParse = false
     )
     {
         ArgumentNullException.ThrowIfNull(locator);
@@ -300,7 +316,16 @@ internal sealed class MergedLogStream : IDisposable
             }
 
             streams.Add(
-                new MachineStream(files, start, offset, descending, range, tally, cancellationToken)
+                new MachineStream(
+                    files,
+                    start,
+                    offset,
+                    descending,
+                    range,
+                    tally,
+                    parallelParse,
+                    cancellationToken
+                )
             );
         }
 
@@ -407,6 +432,7 @@ internal sealed class MergedLogStream : IDisposable
         bool descending,
         ResolvedRange range,
         ReadTally tally,
+        bool parallelParse,
         CancellationToken cancellationToken
     )
     {
@@ -505,7 +531,13 @@ internal sealed class MergedLogStream : IDisposable
             _offset = null;
             if (descending)
             {
-                var reader = new ReverseLogFileReader(file.Path);
+                var reader = parallelParse
+                    ? new ReverseLogFileReader(
+                        file.Path,
+                        ReverseLogFileReader.ParallelBlockSize,
+                        parallelParse: true
+                    )
+                    : new ReverseLogFileReader(file.Path);
                 _counts = () => (reader.MalformedLineCount, reader.BytesRead);
                 return reader.ReadEvents(offset, cancellationToken).GetEnumerator();
             }

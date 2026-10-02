@@ -8,15 +8,29 @@ All notable user-visible changes to this project are documented here. The format
 
 ### Fixed
 
+- The histogram's hatched "not read" area stops at the last unread bar instead of overlapping the first bar with data, and its hint now suggests a shorter range or zooming in (a filter does not make the scan reach further). The search icon lines up with the search text again, and the results footer has more room around "Load 60 more".
+- When the log files source stops at its scan budget, the histogram no longer shows the unread part of the range as empty: those days are hatched, the summary says where the counts start ("counts from ..."), and the unread bars explain why. `POST /histogram` returns the read part as `scannedRange`.
+- Dates and times follow UK formatting (day first, 24-hour) for backoffice users on English (United Kingdom); it was shown US-style because the backoffice names that language plain `en`.
+- With many filters, or in a narrow window, the search box no longer hides chips behind its edge: chips wrap onto up to three rows (then scroll inside the box) and the query bar grows to fit. In a narrow box long chip values are shortened sooner, with the full filter in the chip's tooltip.
+- In the entry drawer's Properties table, the expand toggle of an object or array now sits next to the include and exclude buttons instead of before the name, so every name lines up; the include and exclude buttons sit closer together.
+- Filter chips in the search box are a little shorter, so they have space above and below them inside the box.
+- The histogram's time-zoom chip in the search box centres its text like the other filter chips, and is the same height as them.
+
 - Accessibility of the query bar, histogram and drawer. The time range and source pickers are announced as menu buttons with their open state, their menus as one menu of choices with the current one checked; the arrow keys, Home and End move between choices, Tab leaves the menu (without stopping on an empty scroll area first), and choosing or pressing Escape returns focus to the button. The histogram bars are one Tab stop: Left, Right, Home and End move between bars and Enter or Space zooms. The drawer's expand and "Show framework frames" toggles announce whether they are open. Hidden and zero-count level toggles keep readable text contrast, the Overview headings follow the page's heading order, and the show-query and share buttons are square.
 
 ### Changed
 
+- The fields panel can be resized: drag the gap between it and the results (the pointer changes to a resize cursor), or focus that divider and use the arrow keys (Shift for bigger steps, Home and End for the narrowest and widest). The width is remembered in this browser; double-click the divider to reset it. The results always keep at least 40% of the width.
+- The results list uses the backoffice's default text size (14 px rather than 12 px) for its headings and rows, and each row's content is centred vertically. Eleven rows fit at 1440 x 900.
 - The NuGet packages carry the Log Explorer icon (a teal tile with a magnifier over log lines).
+- The NuGet packages carry a short, text-only readme that links to the full documentation on GitHub, because nuget.org cannot show the README's screenshots.
 
+- The histogram, fields panel, Patterns and Overview are about three times faster on the log files source: each aggregation now reads and prepares log entries on several processor cores at once (on sites using the server garbage collector, the ASP.NET Core default), with the same counts and the same "Approximate" cut-off as before. On a week of busy production logs the fields panel of a Search view fills in about 2 s instead of 6 s, and about 5.5 s instead of 9.5 s on the first load after a restart.
 - Filtered searches over the log files are about a third faster: each entry is checked against the filter before it is fully prepared for display, so text and level searches over a week of busy logs scan more quickly.
 
 ### Added
+
+- Documentation: a README with a feature list and screenshots, and user docs in `docs/` with a first-error tutorial, a how-to guide with screenshots for each feature, references for configuration, search syntax, fields, keyboard shortcuts and the Management API, and explanations of the provider model, how log files are read and the security model. `CONTRIBUTING.md` and `SECURITY.md` explain how to contribute and how to report a vulnerability.
 
 - Same request and Around this in the entry detail drawer. Same request replaces every filter, the level filter and the time zoom with one filter on the entry's first correlation field that has a value (`CorrelationFields`, by default the trace id, then `RequestId`, then `HttpRequestId`), so selecting an error row and then Same request shows every entry of that request; it is disabled, saying why, when the entry has none. Around this shows the entry and the 7 entries either side of it, ignoring filters, with the entry highlighted and a banner whose "Back to filtered results" returns to the filtered list. Around this is kept in the URL (`around`), so a reload or a shared link shows it again; an entry that no longer exists shows an error with the way back.
 - `GET /umbraco/log-explorer/api/v1/sources/{alias}/records/{id}/context?before=&after=` returns the entries either side of a record (default 7, at most 100 each side); an unknown record id is ProblemDetails code `record_not_found` (404). `GET /settings` now also returns `correlationFields`.

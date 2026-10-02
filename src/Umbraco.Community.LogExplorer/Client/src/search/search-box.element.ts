@@ -219,16 +219,8 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
       // The new chips render their own shadow content after this update, so their width is not
       // known yet; wait for the last one before measuring.
       const last = list.lastElementChild as (Element & { updateComplete?: Promise<unknown> }) | null;
-      void Promise.resolve(last?.updateComplete).then(() => (list.scrollLeft = list.scrollWidth));
+      void Promise.resolve(last?.updateComplete).then(() => (list.scrollTop = list.scrollHeight));
     }
-  }
-
-  /** Turns a vertical wheel over the chips into horizontal scrolling, since there is no scrollbar. */
-  #onChipWheel(event: WheelEvent): void {
-    const list = event.currentTarget as HTMLElement;
-    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX) || list.scrollWidth <= list.clientWidth) return;
-    event.preventDefault();
-    list.scrollLeft += event.deltaY;
   }
 
   #onInput(event: Event): void {
@@ -387,7 +379,7 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
         <div slot="prepend" class="prepend">
           <umb-icon name="icon-search" aria-hidden="true"></umb-icon>
           ${native ? this.#renderLanguageTag(language) : ""}
-          <div class="chips" @wheel=${this.#onChipWheel}>
+          <div class="chips">
             <slot name="before-chips"></slot>
             ${this._chips.map(
               (chip, index) => html`
@@ -434,9 +426,12 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
         position: relative;
       }
 
+      /* At least one control tall; taller when the chips wrap (ADR 0024). */
       uui-input {
         width: 100%;
-        height: 100%;
+        /* uui-input sets its own height from this property (one control tall by default). */
+        --uui-input-height: auto;
+        min-height: var(--uui-size-11);
       }
 
       .prepend {
@@ -451,6 +446,10 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
          */
         max-width: 70cqi;
         padding-left: var(--uui-size-space-3);
+        /* At least one control tall, so the search icon centres on the text input's line rather
+           than on the chip list, which is only as tall as its chips (ADR 0024). */
+        min-height: var(--uui-size-11);
+        box-sizing: border-box;
       }
 
       umb-icon {
@@ -458,19 +457,29 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
         color: var(--uui-color-text-alt);
       }
 
+      /*
+       * Chips wrap onto up to three rows and the box grows with them (ADR 0024, replacing the
+       * one-line scroller of UI brief §4.3); beyond three rows the list scrolls vertically. The
+       * block padding keeps every row clear of the input's border.
+       */
       .chips {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: var(--uui-size-space-1);
         min-width: 0;
-        overflow-x: auto;
-        /* One line: chips scroll rather than wrap, so the bar never grows (UI brief §4.3). */
-        flex-wrap: nowrap;
-        /*
-         * No scrollbar: it would add height to the bar. The list scrolls with the wheel (see
-         * #onChipWheel), with a trackpad, and by focus as Tab moves through the chips.
-         */
-        scrollbar-width: none;
+        padding-block: var(--uui-size-space-2);
+        max-height: calc(3 * var(--uui-size-8) + 2 * var(--uui-size-space-1));
+        overflow-y: auto;
+        scrollbar-width: thin;
+      }
+
+      /* Narrow boxes truncate long values sooner (the full text stays in each chip's tooltip),
+         so more chips share a row. */
+      @container (max-width: 900px) {
+        log-explorer-filter-chip {
+          max-width: calc(var(--uui-size-100) * 0.6);
+        }
       }
 
       uui-input.native {
@@ -490,7 +499,7 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
       }
 
       uui-tag.language uui-button {
-        --uui-button-height: var(--uui-size-8);
+        --uui-button-height: var(--uui-size-6);
         --uui-button-padding-left-factor: 0.5;
         --uui-button-padding-right-factor: 0.5;
       }

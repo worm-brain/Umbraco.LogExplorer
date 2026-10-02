@@ -76,6 +76,7 @@ export type HistogramResult = {
     bucketSize: string;
     buckets: Array<HistogramBucket>;
     approximate: boolean;
+    scannedRange?: ResolvedRange | null;
 };
 
 export type LogException = {

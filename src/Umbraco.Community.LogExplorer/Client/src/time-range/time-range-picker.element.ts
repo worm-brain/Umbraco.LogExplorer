@@ -12,6 +12,7 @@ import {
   localTimeZone,
   toLocalInputValue,
 } from "./time-range.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /**
  * The time range picker at the start of the query bar (UI brief §4.2).
@@ -119,7 +120,7 @@ export class LogExplorerTimeRangePickerElement extends UmbLitElement {
     const range = this._range;
     if (!range) return "";
     if ("relative" in range) return this.localize.term(PRESET_LABEL_KEYS[range.relative]);
-    return formatAbsoluteRange(range, this.localize.lang());
+    return formatAbsoluteRange(range, formatLocale(this.localize.lang()));
   }
 
   /**

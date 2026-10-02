@@ -54,8 +54,23 @@
   </PropertyGroup>
 
   <ItemGroup Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)src$([System.IO.Path]::DirectorySeparatorChar)'))">
-    <None Include="$(MSBuildThisFileDirectory)assets\icon\umbraco-logexplorer-128.png" Pack="true" PackagePath="icon.png" Visible="false" />
-    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="README.md" Visible="false" />
+    <None
+      Include="$(MSBuildThisFileDirectory)assets\icon\umbraco-logexplorer-128.png"
+      Pack="true"
+      PackagePath="icon.png"
+      Visible="false"
+    />
+    <!--
+      NuGet gets its own short readme (ADR 0028): nuget.org renders no relative links, images or
+      raw HTML, and a published readme cannot be changed, so the screenshot-heavy root README stays
+      on GitHub and this one links to it.
+    -->
+    <None
+      Include="$(MSBuildThisFileDirectory)assets\nuget\README.md"
+      Pack="true"
+      PackagePath="README.md"
+      Visible="false"
+    />
   </ItemGroup>
 
   <!-- Tests and samples are never packed. -->

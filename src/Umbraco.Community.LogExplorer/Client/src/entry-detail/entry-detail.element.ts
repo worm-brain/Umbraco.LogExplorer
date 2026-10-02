@@ -356,19 +356,6 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
       <uui-table-row>
         <uui-table-cell>
           <div class="name" style=${styleMap({ "--depth": String(depth) })}>
-            ${
-              container && node.children.length > 0
-                ? html`<uui-button
-                    compact
-                    class="expand"
-                    label=${this.localize.term(open ? "logExplorer_detailCollapse" : "logExplorer_detailExpand", name)}
-                    data-expanded=${open ? "true" : "false"}
-                    @click=${() => this.#toggle(node.key)}
-                  >
-                    <uui-symbol-expand ?open=${open}></uui-symbol-expand>
-                  </uui-button>`
-                : html`<span class="expand-spacer"></span>`
-            }
             <span title=${name}>${node.name}</span>
           </div>
         </uui-table-cell>
@@ -382,7 +369,25 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
           }
         </uui-table-cell>
         <uui-table-cell class="filter">
-          ${node.path && isFilterable(node.value) ? this.#renderFilterButtons(node.path, node.value, text) : nothing}
+          <!-- Name, value, then the row's actions: the expand toggle (objects and arrays) and the
+               include/exclude buttons. Keeping the toggle here, not before the name, leaves every
+               name aligned to its depth's indent. -->
+          <div class="row-actions">
+            ${
+              container && node.children.length > 0
+                ? html`<uui-button
+                    compact
+                    class="expand"
+                    label=${this.localize.term(open ? "logExplorer_detailCollapse" : "logExplorer_detailExpand", name)}
+                    data-expanded=${open ? "true" : "false"}
+                    @click=${() => this.#toggle(node.key)}
+                  >
+                    <uui-symbol-expand ?open=${open}></uui-symbol-expand>
+                  </uui-button>`
+                : nothing
+            }
+            ${node.path && isFilterable(node.value) ? this.#renderFilterButtons(node.path, node.value, text) : nothing}
+          </div>
         </uui-table-cell>
       </uui-table-row>
     `;
@@ -620,14 +625,8 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
         overflow-wrap: anywhere;
       }
 
-      .expand,
-      .expand-spacer {
-        flex: none;
-        width: var(--uui-size-6);
-      }
-
       .expand {
-        --uui-button-height: var(--uui-size-6);
+        width: var(--uui-size-6);
         --uui-button-padding-left-factor: 0;
         --uui-button-padding-right-factor: 0;
       }
@@ -655,8 +654,19 @@ export class LogExplorerEntryDetailElement extends UmbLitElement {
         width: 1%;
       }
 
+      /* Right-aligned, so include and exclude line up on every row whether or not it has an
+         expand toggle; no gap and little padding keep the buttons close together. */
+      .row-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+      }
+
       .filter uui-button {
+        flex: none;
         --uui-button-height: var(--uui-size-6);
+        --uui-button-padding-left-factor: 0.25;
+        --uui-button-padding-right-factor: 0.25;
       }
 
       /* Danger tint (UI brief §4.11 section 6), mixed like the accent tint above. */

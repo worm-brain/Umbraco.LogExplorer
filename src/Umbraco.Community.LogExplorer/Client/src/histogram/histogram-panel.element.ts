@@ -32,7 +32,9 @@ import {
   ticks,
   toggleLevel,
   zoomFromBucket,
+  unreadBucketCount,
 } from "./histogram-model.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /** Smallest height of a non-zero segment, as a percentage of the bar strip (about 2 px). */
 const MIN_SEGMENT_PERCENT = 4;
@@ -271,7 +273,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
   };
 
   #renderToggles(totals: Record<Level, number> | undefined) {
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     return html`
       <div class="levels" role="group" aria-label=${this.localize.term("logExplorer_histogramLevelsLabel")}>
         ${LEVELS.map((level) => {
@@ -305,7 +307,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
   #renderSummary() {
     const result = this._histogram.result;
     if (!result) return nothing;
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const total = result.buckets.reduce((sum, bucket) => sum + bucketTotal(bucket), 0);
     const format = new Intl.DateTimeFormat(lang, { dateStyle: "short", timeStyle: "short" });
     return html`
@@ -317,7 +319,12 @@ export class LogExplorerHistogramElement extends UmbLitElement {
             total.toLocaleString(lang),
             format.format(new Date(result.range.from)),
             format.format(new Date(result.range.to)),
-          )}
+          )}${
+            // When the budget cut the scan short, say where the counts start (ADR 0027).
+            result.scannedRange
+              ? ` · ${this.localize.term("logExplorer_histogramScannedFrom", format.format(new Date(result.scannedRange.from)))}`
+              : ""
+          }
         </span>
         ${
           result.approximate
@@ -334,7 +341,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
     const result = this._histogram.result;
     if (!result || result.buckets.length === 0) return nothing;
 
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const buckets = result.buckets;
     const sizeMs = this.#bucketSizeMs();
     const withSeconds = sizeMs > 0 && sizeMs < 60_000;
@@ -344,6 +351,16 @@ export class LogExplorerHistogramElement extends UmbLitElement {
     const dimmed = this._histogram.status === "loading";
     const drag = this._drag;
     const activeBar = this.#clampedActiveBar(buckets.length);
+    const scannedFromMs = result.scannedRange ? new Date(result.scannedRange.from).getTime() : undefined;
+    const unread = unreadBucketCount(
+      buckets.map((bucket) => new Date(bucket.start).getTime()),
+      sizeMs,
+      scannedFromMs,
+    );
+    const unreadFrom =
+      scannedFromMs === undefined
+        ? ""
+        : new Intl.DateTimeFormat(lang, { dateStyle: "short", timeStyle: "short" }).format(new Date(scannedFromMs));
 
     return html`
       <div class=${classMap({ chart: true, dimmed })}>
@@ -358,8 +375,34 @@ export class LogExplorerHistogramElement extends UmbLitElement {
           @pointercancel=${this.#onPointerCancel}
         >
           ${buckets.map((bucket, index) =>
-            this.#renderBar(bucket, index, index === activeBar, maxTotal, withSeconds, lang),
+            this.#renderBar(
+              bucket,
+              index,
+              index === activeBar,
+              maxTotal,
+              withSeconds,
+              lang,
+              // A bucket that ends before the scanned range was not read (the overlay ignores the
+              // pointer, so its bars carry the explanation).
+              scannedFromMs !== undefined && new Date(bucket.start).getTime() + sizeMs <= scannedFromMs
+                ? this.localize.term("logExplorer_histogramUnread", unreadFrom)
+                : undefined,
+            ),
           )}
+          ${
+            // Shades the buckets the scan never reached, so they do not read as "no entries".
+            unread > 0
+              ? html`<div
+                  class="unread"
+                  role="img"
+                  aria-label=${this.localize.term("logExplorer_histogramUnread", unreadFrom)}
+                  style=${styleMap({
+                    // Ends half a gap after the last unread bar, so it never covers a read one.
+                    width: `calc((100% + var(--bar-gap)) * ${unread} / ${buckets.length} - var(--bar-gap) / 2)`,
+                  })}
+                ></div>`
+              : nothing
+          }
           ${
             drag && drag.start !== drag.end
               ? html`<div
@@ -388,6 +431,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
     maxTotal: number,
     withSeconds: boolean,
     lang: string,
+    unreadHint?: string,
   ) {
     const time = formatClock(new Date(bucket.start).getTime(), withSeconds, lang);
     const total = bucketTotal(bucket);
@@ -403,7 +447,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
         type="button"
         class="bar"
         aria-label=${label}
-        title=${breakdown ? `${label}\n${breakdown}` : label}
+        title=${unreadHint ?? (breakdown ? `${label}\n${breakdown}` : label)}
         tabindex=${tabStop ? 0 : -1}
         @focus=${() => (this._activeBar = index)}
         @click=${(event: MouseEvent) => this.#onBarClick(event, bucket)}
@@ -583,7 +627,8 @@ export class LogExplorerHistogramElement extends UmbLitElement {
         position: relative;
         display: flex;
         align-items: stretch;
-        gap: calc(var(--uui-size-1) / 3);
+        --bar-gap: calc(var(--uui-size-1) / 3);
+        gap: var(--bar-gap);
         height: var(--log-explorer-histogram-height, var(--uui-size-20));
         border-bottom: 1px solid var(--uui-color-border);
         /* Horizontal drags select a range; vertical swipes still scroll the page on touch. */
@@ -617,6 +662,21 @@ export class LogExplorerHistogramElement extends UmbLitElement {
         flex: none;
         width: 100%;
         background-color: var(--swatch);
+      }
+
+      /* Buckets the scan never reached (ADR 0027): hatched, so they read as "not read" rather
+         than as a quiet period. The bars stay clickable and draggable underneath. */
+      .unread {
+        position: absolute;
+        inset-block: 0;
+        left: 0;
+        pointer-events: none;
+        border-right: 1px dashed var(--uui-color-border-emphasis);
+        background-image: repeating-linear-gradient(
+          135deg,
+          transparent 0 6px,
+          color-mix(in srgb, var(--uui-color-border) 60%, transparent) 6px 8px
+        );
       }
 
       .selection {

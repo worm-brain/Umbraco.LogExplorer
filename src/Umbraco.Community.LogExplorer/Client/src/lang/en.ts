@@ -62,6 +62,9 @@ export default {
     histogramSummary: (count: number, formatted: string, from: string, to: string) =>
       `${formatted} ${count === 1 ? "entry" : "entries"} · ${from} to ${to}`,
     histogramApproximate: "Approximate",
+    histogramScannedFrom: (from: string) => `counts from ${from}`,
+    histogramUnread: (from: string) =>
+      `Not read: the scan limit was reached, so counts start at ${from}. Pick a shorter time range, or drag across the earlier bars to zoom in, to read further back.`,
     histogramApproximateHint:
       "Counts cover only part of the range: the source sampled its data or stopped at its scan budget.",
     histogramBarLabel: (time: string, count: number, formatted: string) =>
@@ -119,6 +122,8 @@ export default {
     fieldsSubheader: "top values in results",
     fieldsHide: "Hide fields panel",
     fieldsShow: "Show fields panel",
+    fieldsResize: "Resize fields panel",
+    fieldsResizeHint: "Drag, or use the arrow keys, to resize the fields panel. Double-click to reset.",
     fieldsFilterLabel: "Filter fields",
     fieldsPresence: (percent: string) => `${percent}% of entries`,
     fieldsInclude: (field: string, value: string, count: string) => `Include ${field} ${value}, ${count} entries`,

@@ -26,12 +26,17 @@ internal static class Aggregators
     /// <param name="scanBudgetMegabytes">The <c>Files:ScanBudgetMegabytes</c> option.</param>
     /// <param name="cache">The cache to use; a fresh one when null.</param>
     /// <param name="clock">The clock relative ranges resolve against; fixed at <see cref="Now"/> when null.</param>
+    /// <param name="parallelScan">
+    /// Whether scans run across cores (ADR 0026). True by default, whatever the test host's
+    /// garbage collector, so every aggregation test covers the parallel path.
+    /// </param>
     /// <returns>The aggregator.</returns>
     public static FileAggregator Create(
         string directory,
         int scanBudgetMegabytes = 256,
         IMemoryCache? cache = null,
-        TimeProvider? clock = null
+        TimeProvider? clock = null,
+        bool parallelScan = true
     )
     {
         var configuration = Substitute.For<ILoggingConfiguration>();
@@ -45,7 +50,10 @@ internal static class Aggregators
             clock ?? new FakeTimeProvider(Now),
             cache ?? new MemoryCache(new MemoryCacheOptions()),
             Options.Create(options)
-        );
+        )
+        {
+            ParallelScan = parallelScan,
+        };
     }
 
     /// <summary>The hour from <see cref="Noon"/>.</summary>

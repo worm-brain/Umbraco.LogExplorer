@@ -4,7 +4,7 @@ One file per decision, numbered in order, never renumbered. A superseded ADR sta
 `Status: Superseded by NNNN`.
 
 Write a new ADR when a decision changes a contract, a dependency, a supported version, a §2 choice
-in `docs/BRIEF.md`, or when a **Verify** item in the briefs turns out differently from what the
+in `private/BRIEF.md`, or when a **Verify** item in the briefs turns out differently from what the
 brief assumed. Update the brief in the same change.
 
 | ADR | Decision | Status |
@@ -30,6 +30,12 @@ brief assumed. Update the brief in the same change.
 | [0020](0020-e2e-suite-with-plain-playwright.md) | The e2e suite runs plain Playwright from the client, against both sample sites | Accepted |
 | [0021](0021-menus-patch-uui-aria.md) | Menus and toggles patch the ARIA UUI does not expose | Accepted |
 | [0022](0022-smoke-test-packed-nupkgs.md) | The release smoke-tests the packed nupkgs on spawned sites of the floor and latest Umbraco versions | Accepted |
+| [0023](0023-results-text-at-default-size.md) | Results text uses the default type size; the 1440 x 900 row count is a guide | Accepted |
+| [0024](0024-search-box-chips-wrap.md) | Search box chips wrap onto up to three rows instead of scrolling on one line | Accepted |
+| [0025](0025-resizable-fields-panel.md) | The fields panel is resized by a custom separator in the gap, not `umb-split-panel` | Accepted |
+| [0026](0026-files-aggregations-parse-across-cores.md) | Files aggregations parse and evaluate entries across cores, aggregating in stream order | Accepted |
+| [0027](0027-histogram-scanned-range.md) | The histogram reports its scanned range and shades the part it did not read | Accepted |
+| [0028](0028-public-docs-layout-and-nuget-readme.md) | `docs/` holds the public documentation, and NuGet gets its own readme | Accepted |
 
 ## Template
 

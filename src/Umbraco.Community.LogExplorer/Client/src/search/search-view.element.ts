@@ -1,6 +1,9 @@
 import { css, customElement, html, nothing, query, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import "../facets/fields-panel.element.js";
+import "../facets/fields-resizer.element.js";
+import type { LogExplorerFieldsResizeDetail } from "../facets/fields-resizer.element.js";
+import { readPanelWidth, writePanelWidth } from "../facets/panel-width.js";
 import type { LogRecord } from "../api/index.js";
 import "../entry-detail/entry-detail.element.js";
 import type { LogExplorerEntryDetailElement } from "../entry-detail/entry-detail.element.js";
@@ -39,6 +42,10 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
   /** The entry open in the drawer; `undefined` when the drawer is closed. */
   @state()
   private _openRecord: LogRecord | undefined;
+
+  /** The fields panel's dragged width in CSS pixels; `undefined` keeps its default (ADR 0025). */
+  @state()
+  private _fieldsWidth: number | undefined = readPanelWidth();
 
   @query("log-explorer-results")
   private _results?: LogExplorerResultsElement;
@@ -81,6 +88,16 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
   };
 
   /**
+   * Applies a width from the resize divider, and stores it once the drag or key press is done.
+   *
+   * @param event - The divider's resize event; an `undefined` width resets to the default.
+   */
+  #onFieldsResize = (event: CustomEvent<LogExplorerFieldsResizeDetail>): void => {
+    this._fieldsWidth = event.detail.width;
+    if (event.detail.done) writePanelWidth(event.detail.width);
+  };
+
+  /**
    * Renders the query bar, the show-query panel, the histogram, the fields panel beside the
    * results list and, when an entry is open, the drawer.
    *
@@ -99,7 +116,10 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
       <log-explorer-show-query-panel></log-explorer-show-query-panel>
       <log-explorer-histogram></log-explorer-histogram>
       <div class="body">
-        <log-explorer-fields-panel></log-explorer-fields-panel>
+        <log-explorer-fields-panel
+          style=${this._fieldsWidth === undefined ? "" : `--log-explorer-fields-panel-width: ${this._fieldsWidth}px`}
+        ></log-explorer-fields-panel>
+        <log-explorer-fields-resizer @log-explorer-fields-resize=${this.#onFieldsResize}></log-explorer-fields-resizer>
         <log-explorer-results
           .selectedId=${this._openRecord?.id}
           @log-explorer-entry-open=${this.#onOpen}
@@ -165,26 +185,48 @@ export class LogExplorerSearchViewElement extends UmbLitElement {
         }
       }
 
-      /* A definite height (UUI's standard control height), which the square icon buttons fill
-         (height: 100%) and match in width. */
       .query-bar {
         display: flex;
-        align-items: stretch;
+        align-items: flex-start;
         gap: var(--uui-size-space-3);
+        min-height: var(--uui-size-11);
+      }
+
+      /* Every control is one control tall and keeps it when the search box grows with wrapped
+         chips (ADR 0024); the square icon buttons fill that height. */
+      .query-bar > * {
         height: var(--uui-size-11);
       }
 
-      log-explorer-search-box {
+      /* The one control that grows (wrapped chips); this selector outranks .query-bar > *. */
+      .query-bar > log-explorer-search-box {
         flex: 1;
+        height: auto;
       }
 
       /* The fields panel and results share the remaining height; the panel keeps its own width
          (or collapses to a strip) and the results take the rest. */
+      /* The resize divider fills the gap between the fields panel and the results, so the
+         body has no gap of its own while it shows (ADR 0025). */
       .body {
         flex: 1;
         min-height: 0;
         display: flex;
+      }
+
+      /* Never wider than leaves the results their share (panel-width.ts MIN_RESULTS_SHARE). */
+      .body > log-explorer-fields-panel {
+        max-width: 60%;
+      }
+
+      /* No divider while the panel is a collapsed strip or hidden (no facets for the source);
+         the plain gap comes back instead. */
+      .body:has(> log-explorer-fields-panel:is([collapsed], [hidden])) {
         gap: var(--uui-size-space-4);
+      }
+
+      .body:has(> log-explorer-fields-panel:is([collapsed], [hidden])) > log-explorer-fields-resizer {
+        display: none;
       }
 
       log-explorer-results {

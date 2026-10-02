@@ -64,7 +64,9 @@ export class LogExplorerShareButtonElement extends UmbLitElement {
       uui-button {
         /* Square, like the show-query button beside it: see that button for why a fixed width
            rather than aspect-ratio. */
-        height: 100%;
+        /* A fixed height, not 100%: the host is display: contents and the query bar grows when
+           the search box's chips wrap (ADR 0024). */
+        height: var(--uui-size-11);
         width: var(--uui-size-11);
         flex: none;
         --uui-button-padding-left-factor: 0;

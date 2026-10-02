@@ -28,6 +28,7 @@ import {
 } from "./results-loader.js";
 import { formatRowTime, formatShowing, levelOf, shortenSource } from "./row-format.js";
 import { nextRowIndex, rowWindow, scrollTopToReveal, type RowWindow } from "./virtual-window.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /** How close (in rows) to the end of the loaded rows scrolling must get to fetch the next page. */
 const LOAD_MORE_THRESHOLD = 15;
@@ -465,7 +466,7 @@ export class LogExplorerResultsElement extends UmbLitElement {
       totalCount,
       totalIsLowerBound,
       nextCursor !== null,
-      this.localize.lang(),
+      formatLocale(this.localize.lang()),
     );
     return html`
       <div class="footer">
@@ -573,12 +574,12 @@ export class LogExplorerResultsElement extends UmbLitElement {
       }
 
       /* No block padding: the sort button is already a full control height (UI brief §2's
-         twelve rows at 1440 x 900 need the space). */
+         rows at 1440 x 900 need the space). */
       .header {
         padding-block: 0;
         align-items: center;
         font-weight: bold;
-        font-size: var(--uui-type-small-size);
+        font-size: var(--uui-type-default-size);
         border-bottom: 1px solid var(--uui-color-border);
       }
 
@@ -613,6 +614,10 @@ export class LogExplorerResultsElement extends UmbLitElement {
         left: 0;
         width: 100%;
         height: calc(2lh + 2 * var(--uui-size-space-1) + 1px);
+        /* The row is two lines tall even when the message needs one: align-content centres the
+           grid's single row track in that height, align-items centres the cells within it. */
+        align-content: center;
+        align-items: center;
         padding-block: var(--uui-size-space-1);
         overflow: hidden;
         box-sizing: border-box;
@@ -623,7 +628,7 @@ export class LogExplorerResultsElement extends UmbLitElement {
         background: none;
         color: var(--uui-color-text);
         font: inherit;
-        font-size: var(--uui-type-small-size);
+        font-size: var(--uui-type-default-size);
         /* A unitless, tight line height keeps two lines dense (UI brief §1.6, about half the
            core viewer's row height); the inherited backoffice line height is for prose. */
         line-height: 1.35;
@@ -757,7 +762,8 @@ export class LogExplorerResultsElement extends UmbLitElement {
         gap: var(--uui-size-space-4);
         /* One control height, like the header, whether or not "Load 60 more" is showing. */
         min-height: var(--uui-size-11);
-        padding: 0 var(--uui-size-space-4);
+        /* Room around the count and "Load 60 more" so the footer does not feel cramped. */
+        padding: var(--uui-size-space-2) var(--uui-size-space-5);
         border-top: 1px solid var(--uui-color-border);
         font-size: var(--uui-type-small-size);
       }

@@ -27,6 +27,7 @@ import {
   writePanelPreference,
   type PanelPreference,
 } from "./panel-preference.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /** The default requests: the generated client, which carries the backoffice token. */
 const facetsWithClient: FacetsFn = (alias, body, signal) => FacetsService.getFacets({ path: { alias }, body, signal });
@@ -151,9 +152,14 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
     this.#requestKey = undefined;
   }
 
-  /** Copies the buttons' `data-pressed`/`data-expanded` onto their focusable inner buttons. */
+  /**
+   * Copies the buttons' `data-pressed`/`data-expanded` onto their focusable inner buttons, and
+   * reflects the collapsed state as a `collapsed` attribute so the Search view can hide the
+   * resize divider while the panel is a strip (ADR 0025).
+   */
   protected override updated(): void {
     void syncButtonAria(this.renderRoot);
+    this.toggleAttribute("collapsed", this.#collapsed);
   }
 
   get #collapsed(): boolean {
@@ -216,7 +222,10 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
     const result = this._facets.result;
     let approximate: unknown = nothing;
     if (result?.approximate) {
-      const format = new Intl.DateTimeFormat(this.localize.lang(), { dateStyle: "short", timeStyle: "short" });
+      const format = new Intl.DateTimeFormat(formatLocale(this.localize.lang()), {
+        dateStyle: "short",
+        timeStyle: "short",
+      });
       const hint = this.localize.term(
         "logExplorer_fieldsApproximateHint",
         format.format(new Date(result.scannedRange.from)),
@@ -250,7 +259,7 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
     const label = shortFieldName(facet.field, (key, ...args) => this.localize.term(key, ...args));
     if (!matchesFieldFilter(facet.field, label, this._filter)) return nothing;
 
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const values = facet.topValues;
     const top = Math.max(0, ...values.map((value) => value.count));
     const presence = Math.round(facet.presenceRatio * 100).toLocaleString(lang);
@@ -386,8 +395,13 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
         --uui-box-default-padding: var(--uui-size-space-3);
       }
 
+      /* The width the divider sets (ADR 0025), capped at the host, which the Search view keeps
+         from squeezing the results. */
       uui-box:not(.strip) {
         width: var(--log-explorer-fields-panel-width, 28ch);
+        max-width: 100%;
+        /* The divider measures the panel's outer width, so the width includes the border. */
+        box-sizing: border-box;
       }
 
       .panel {
