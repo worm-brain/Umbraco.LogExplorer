@@ -33,6 +33,7 @@ import {
   toggleLevel,
   zoomFromBucket,
 } from "./histogram-model.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /** Smallest height of a non-zero segment, as a percentage of the bar strip (about 2 px). */
 const MIN_SEGMENT_PERCENT = 4;
@@ -271,7 +272,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
   };
 
   #renderToggles(totals: Record<Level, number> | undefined) {
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     return html`
       <div class="levels" role="group" aria-label=${this.localize.term("logExplorer_histogramLevelsLabel")}>
         ${LEVELS.map((level) => {
@@ -305,7 +306,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
   #renderSummary() {
     const result = this._histogram.result;
     if (!result) return nothing;
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const total = result.buckets.reduce((sum, bucket) => sum + bucketTotal(bucket), 0);
     const format = new Intl.DateTimeFormat(lang, { dateStyle: "short", timeStyle: "short" });
     return html`
@@ -334,7 +335,7 @@ export class LogExplorerHistogramElement extends UmbLitElement {
     const result = this._histogram.result;
     if (!result || result.buckets.length === 0) return nothing;
 
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const buckets = result.buckets;
     const sizeMs = this.#bucketSizeMs();
     const withSeconds = sizeMs > 0 && sizeMs < 60_000;

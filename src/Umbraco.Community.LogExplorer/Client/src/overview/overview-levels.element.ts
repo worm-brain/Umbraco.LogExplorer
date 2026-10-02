@@ -15,6 +15,7 @@ import { RequestLoader, type RequestFn, type RequestState } from "../shared/requ
 import { formatAbsoluteRange } from "../time-range/time-range.js";
 import { FILES_SOURCE_TYPE, levelRows, OVERVIEW_BUCKETS, sinkRows } from "./overview-model.js";
 import { LogExplorerOverviewPanelBase } from "./overview-panel-base.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /** `GET /sources/{alias}/minimum-levels` through the generated client; it takes no body. */
 const minimumLevelsWithClient: RequestFn<undefined, MinimumLevelsResult> = (alias, _request, signal) =>
@@ -76,7 +77,7 @@ export class LogExplorerOverviewLevelsElement extends LogExplorerOverviewPanelBa
   }
 
   #rangeLabel(): string {
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const resolved = this._data.result?.range;
     if (resolved) return formatAbsoluteRange(resolved, lang);
     if (!this._viewState) return "";
@@ -86,7 +87,7 @@ export class LogExplorerOverviewLevelsElement extends LogExplorerOverviewPanelBa
   }
 
   #renderLevels(result: HistogramResult | undefined) {
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const rows = levelRows(result?.buckets ?? [], this._viewState?.levels ?? null);
     return html`
       <ul class="levels">

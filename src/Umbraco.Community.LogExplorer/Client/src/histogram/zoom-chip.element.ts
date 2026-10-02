@@ -3,6 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { LOG_EXPLORER_QUERY_CONTEXT, type LogExplorerQueryContext } from "../query/query.context.js";
 import type { AbsoluteRange } from "../query/view-state.js";
 import { zoomLabelParts } from "./histogram-model.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /**
  * The time-zoom chip (UI brief §4.4): `Time: 00:40 to 00:45` in the warning tint, with a remove
@@ -46,7 +47,7 @@ export class LogExplorerZoomChipElement extends UmbLitElement {
   override render() {
     if (!this._zoom) return nothing;
 
-    const { from, to } = zoomLabelParts(this._zoom, this.localize.lang());
+    const { from, to } = zoomLabelParts(this._zoom, formatLocale(this.localize.lang()));
     const label = this.localize.term("logExplorer_zoomChip", from, to);
     return html`
       <uui-tag color="warning" look="primary" title=${label}>

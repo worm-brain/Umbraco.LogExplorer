@@ -20,6 +20,7 @@ import {
   sparkBars,
   windowLabels,
 } from "./patterns-model.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /** The default request: the generated client, which carries the backoffice token. */
 const patternsWithClient: PatternsFn = (alias, body, signal) =>
@@ -182,7 +183,7 @@ export class LogExplorerPatternsElement extends UmbLitElement {
   }
 
   #renderLevelMix(pattern: Pattern) {
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const shares = levelMix(pattern.countsBySeverityShortName);
     const text = shares.map((share) => `${share.level.toUpperCase()} ${share.count.toLocaleString(lang)}`).join(", ");
     const label = this.localize.term("logExplorer_patternsLevelMix", text);
@@ -200,7 +201,7 @@ export class LogExplorerPatternsElement extends UmbLitElement {
   }
 
   #renderSparkline(pattern: Pattern) {
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const peak = Math.max(0, ...pattern.sparkline);
     const summary =
       pattern.count === 1
@@ -228,7 +229,9 @@ export class LogExplorerPatternsElement extends UmbLitElement {
         <uui-table-cell class="col-template">${this.#renderTemplate(pattern)}</uui-table-cell>
         <uui-table-cell class="col-mix">${this.#renderLevelMix(pattern)}</uui-table-cell>
         <uui-table-cell class="col-volume">${this.#renderSparkline(pattern)}</uui-table-cell>
-        <uui-table-cell class="col-count">${pattern.count.toLocaleString(this.localize.lang())}</uui-table-cell>
+        <uui-table-cell class="col-count"
+          >${pattern.count.toLocaleString(formatLocale(this.localize.lang()))}</uui-table-cell
+        >
         <uui-table-cell class="col-actions">
           <div class="actions">
             <uui-button
@@ -252,7 +255,7 @@ export class LogExplorerPatternsElement extends UmbLitElement {
   }
 
   #renderTable(patterns: ReadonlyArray<Pattern>) {
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const edges = this._window ? windowLabels(this._window.fromMs, this._window.toMs, lang) : undefined;
     return html`
       <uui-table

@@ -28,6 +28,7 @@ import {
 } from "./results-loader.js";
 import { formatRowTime, formatShowing, levelOf, shortenSource } from "./row-format.js";
 import { nextRowIndex, rowWindow, scrollTopToReveal, type RowWindow } from "./virtual-window.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /** How close (in rows) to the end of the loaded rows scrolling must get to fetch the next page. */
 const LOAD_MORE_THRESHOLD = 15;
@@ -465,7 +466,7 @@ export class LogExplorerResultsElement extends UmbLitElement {
       totalCount,
       totalIsLowerBound,
       nextCursor !== null,
-      this.localize.lang(),
+      formatLocale(this.localize.lang()),
     );
     return html`
       <div class="footer">

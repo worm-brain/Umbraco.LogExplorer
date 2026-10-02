@@ -6,6 +6,7 @@ import type { LogExplorerViewState } from "../query/view-state.js";
 import type { RequestFn } from "../shared/request-loader.js";
 import { EXCEPTION_TYPE_FIELD, exceptionFocusChip, focusInSearch, OVERVIEW_EXCEPTIONS_TOP } from "./overview-model.js";
 import { LogExplorerOverviewPanelBase } from "./overview-panel-base.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /**
  * "Exception types", the third Overview panel (UI brief §4.13, BRIEF §6.10): the exception types
@@ -39,7 +40,7 @@ export class LogExplorerOverviewExceptionsElement extends LogExplorerOverviewPan
 
   #renderRow(value: FacetValue) {
     const type = valueText(value.value);
-    const count = value.count.toLocaleString(this.localize.lang());
+    const count = value.count.toLocaleString(formatLocale(this.localize.lang()));
     return html`
       <li class="focus-row">
         <uui-button

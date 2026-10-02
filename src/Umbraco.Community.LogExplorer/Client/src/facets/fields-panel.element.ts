@@ -27,6 +27,7 @@ import {
   writePanelPreference,
   type PanelPreference,
 } from "./panel-preference.js";
+import { formatLocale } from "../shared/format-locale.js";
 
 /** The default requests: the generated client, which carries the backoffice token. */
 const facetsWithClient: FacetsFn = (alias, body, signal) => FacetsService.getFacets({ path: { alias }, body, signal });
@@ -221,7 +222,10 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
     const result = this._facets.result;
     let approximate: unknown = nothing;
     if (result?.approximate) {
-      const format = new Intl.DateTimeFormat(this.localize.lang(), { dateStyle: "short", timeStyle: "short" });
+      const format = new Intl.DateTimeFormat(formatLocale(this.localize.lang()), {
+        dateStyle: "short",
+        timeStyle: "short",
+      });
       const hint = this.localize.term(
         "logExplorer_fieldsApproximateHint",
         format.format(new Date(result.scannedRange.from)),
@@ -255,7 +259,7 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
     const label = shortFieldName(facet.field, (key, ...args) => this.localize.term(key, ...args));
     if (!matchesFieldFilter(facet.field, label, this._filter)) return nothing;
 
-    const lang = this.localize.lang();
+    const lang = formatLocale(this.localize.lang());
     const values = facet.topValues;
     const top = Math.max(0, ...values.map((value) => value.count));
     const presence = Math.round(facet.presenceRatio * 100).toLocaleString(lang);
