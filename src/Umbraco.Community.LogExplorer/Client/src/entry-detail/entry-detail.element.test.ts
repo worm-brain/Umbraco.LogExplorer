@@ -159,6 +159,10 @@ describe("log-explorer-entry-detail", () => {
     expect(drawer.shadowRoot!.querySelector("[label^='Include Cart']")).toBeNull();
   });
 
+  it("puts an object's expand toggle in the row's actions cell, not before its name", () => {
+    expect(byLabel("Expand Cart").closest("uui-table-cell")?.classList.contains("filter")).toBe(true);
+  });
+
   it("shows an object's members with dotted filter paths once expanded", async () => {
     byLabel("Expand Cart").click();
     await settle();
