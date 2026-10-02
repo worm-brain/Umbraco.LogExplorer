@@ -79,3 +79,33 @@ test("at 1280 x 800 many chips wrap so every chip is fully visible", async ({ pa
   expect(outside.length, "chips cut off by the search box").toBe(0);
   expect((await pageOverflow(page)).horizontal, "horizontal page scroll").toBe(false);
 });
+
+// ADR 0025: the gap between the fields panel and the results is a divider that resizes the panel
+// by dragging or with the arrow keys, and the width is remembered.
+test("dragging the divider resizes the fields panel and the width survives a reload", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExplorer(page, "search", { src: "sample" });
+  const divider = page.getByRole("separator", { name: "Resize fields panel" });
+  const panel = page.locator("log-explorer-fields-panel");
+  await expect(divider).toBeVisible();
+  const before = (await panel.boundingBox())!.width;
+
+  // Act: drag the divider 120 px to the right.
+  const handle = (await divider.boundingBox())!;
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handle.x + handle.width / 2 + 120, handle.y + handle.height / 2, { steps: 5 });
+  await page.mouse.up();
+
+  // Assert
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.width - before)).toBe(120);
+  await page.reload();
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.width - before)).toBe(120);
+
+  // The keyboard moves it too, and double-click resets it.
+  await divider.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.width - before)).toBe(104);
+  await divider.dblclick();
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.width)).toBe(Math.round(before));
+});

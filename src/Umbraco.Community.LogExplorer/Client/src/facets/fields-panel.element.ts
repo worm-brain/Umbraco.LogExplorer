@@ -151,9 +151,14 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
     this.#requestKey = undefined;
   }
 
-  /** Copies the buttons' `data-pressed`/`data-expanded` onto their focusable inner buttons. */
+  /**
+   * Copies the buttons' `data-pressed`/`data-expanded` onto their focusable inner buttons, and
+   * reflects the collapsed state as a `collapsed` attribute so the Search view can hide the
+   * resize divider while the panel is a strip (ADR 0025).
+   */
   protected override updated(): void {
     void syncButtonAria(this.renderRoot);
+    this.toggleAttribute("collapsed", this.#collapsed);
   }
 
   get #collapsed(): boolean {
@@ -386,8 +391,13 @@ export class LogExplorerFieldsPanelElement extends UmbLitElement {
         --uui-box-default-padding: var(--uui-size-space-3);
       }
 
+      /* The width the divider sets (ADR 0025), capped at the host, which the Search view keeps
+         from squeezing the results. */
       uui-box:not(.strip) {
         width: var(--log-explorer-fields-panel-width, 28ch);
+        max-width: 100%;
+        /* The divider measures the panel's outer width, so the width includes the border. */
+        box-sizing: border-box;
       }
 
       .panel {

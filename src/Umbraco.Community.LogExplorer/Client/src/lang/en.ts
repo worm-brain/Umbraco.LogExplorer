@@ -119,6 +119,8 @@ export default {
     fieldsSubheader: "top values in results",
     fieldsHide: "Hide fields panel",
     fieldsShow: "Show fields panel",
+    fieldsResize: "Resize fields panel",
+    fieldsResizeHint: "Drag, or use the arrow keys, to resize the fields panel. Double-click to reset.",
     fieldsFilterLabel: "Filter fields",
     fieldsPresence: (percent: string) => `${percent}% of entries`,
     fieldsInclude: (field: string, value: string, count: string) => `Include ${field} ${value}, ${count} entries`,
