@@ -50,14 +50,16 @@ export class LogExplorerZoomChipElement extends UmbLitElement {
     const label = this.localize.term("logExplorer_zoomChip", from, to);
     return html`
       <uui-tag color="warning" look="primary" title=${label}>
-        <span class="label">${label}</span>
-        <uui-button
-          compact
-          label=${this.localize.term("logExplorer_zoomChipRemove", label)}
-          @click=${() => this.#context?.setZoom(undefined)}
-        >
-          <umb-icon name="icon-wrong"></umb-icon>
-        </uui-button>
+        <span class="content">
+          <span class="label">${label}</span>
+          <uui-button
+            compact
+            label=${this.localize.term("logExplorer_zoomChipRemove", label)}
+            @click=${() => this.#context?.setZoom(undefined)}
+          >
+            <umb-icon name="icon-wrong"></umb-icon>
+          </uui-button>
+        </span>
       </uui-tag>
     `;
   }
@@ -74,21 +76,35 @@ export class LogExplorerZoomChipElement extends UmbLitElement {
       }
 
       uui-tag {
-        gap: var(--uui-size-space-1);
         max-width: 100%;
-        /* A pill, like every chip (UI brief §5.3). */
+        min-width: 0;
+        /* The same padding and pill shape as the filter chips (filter-chip.element.ts, UI brief §5.3). */
+        --uui-tag-padding: 0 0 0 var(--uui-size-space-3);
         --uui-tag-border-radius: var(--uui-size-layout-1);
-        padding-inline-end: 0;
         white-space: nowrap;
       }
 
+      /* uui-tag is an inline-block with a block slot, so its children align on their text
+         baselines and the taller remove button pushes the label down. A flex row centres them. */
+      .content {
+        display: inline-flex;
+        align-items: center;
+        min-width: 0;
+        max-width: 100%;
+      }
+
       .label {
+        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
+      /* The filter chips' remove button, so every chip in the search box is the same height. */
       uui-button {
-        --uui-button-height: var(--uui-size-6);
+        flex: none;
+        --uui-button-height: var(--uui-size-8);
+        --uui-button-padding-left-factor: 0.5;
+        --uui-button-padding-right-factor: 0.5;
         --uui-button-border-radius: var(--uui-size-layout-1);
       }
     `,
