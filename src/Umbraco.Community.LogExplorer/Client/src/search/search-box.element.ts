@@ -490,7 +490,7 @@ export class LogExplorerSearchBoxElement extends UmbLitElement {
       }
 
       uui-tag.language uui-button {
-        --uui-button-height: var(--uui-size-8);
+        --uui-button-height: var(--uui-size-6);
         --uui-button-padding-left-factor: 0.5;
         --uui-button-padding-right-factor: 0.5;
       }

@@ -102,7 +102,7 @@ export class LogExplorerZoomChipElement extends UmbLitElement {
       /* The filter chips' remove button, so every chip in the search box is the same height. */
       uui-button {
         flex: none;
-        --uui-button-height: var(--uui-size-8);
+        --uui-button-height: var(--uui-size-6);
         --uui-button-padding-left-factor: 0.5;
         --uui-button-padding-right-factor: 0.5;
         --uui-button-border-radius: var(--uui-size-layout-1);

@@ -237,9 +237,11 @@ export class LogExplorerFilterChipElement extends UmbLitElement {
         border-radius: var(--uui-border-radius);
       }
 
+      /* A compact remove button keeps the chip shorter than the search box, so every chip has
+         space above and below it inside the input (the zoom chip and language tag match). */
       uui-button {
         flex: none;
-        --uui-button-height: var(--uui-size-8);
+        --uui-button-height: var(--uui-size-6);
         --uui-button-padding-left-factor: 0.5;
         --uui-button-padding-right-factor: 0.5;
       }
