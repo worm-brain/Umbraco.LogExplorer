@@ -34,6 +34,7 @@ brief assumed. Update the brief in the same change.
 | [0024](0024-search-box-chips-wrap.md) | Search box chips wrap onto up to three rows instead of scrolling on one line | Accepted |
 | [0025](0025-resizable-fields-panel.md) | The fields panel is resized by a custom separator in the gap, not `umb-split-panel` | Accepted |
 | [0026](0026-files-aggregations-parse-across-cores.md) | Files aggregations parse and evaluate entries across cores, aggregating in stream order | Accepted |
+| [0027](0027-histogram-scanned-range.md) | The histogram reports its scanned range and shades the part it did not read | Accepted |
 
 ## Template
 

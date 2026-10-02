@@ -97,6 +97,36 @@ public class FileAggregatorScanAggregationTests
     }
 
     [Fact]
+    public void GetHistogram_BudgetHit_PutsTheScannedRangeOnTheResult()
+    {
+        // Arrange
+        using TempDirectory directory = WriteLargeFile();
+        FileAggregator aggregator = Aggregators.Create(directory.Path, scanBudgetMegabytes: 1);
+
+        // Act
+        FileAggregate<HistogramResult> histogram = aggregator.GetHistogram(LargeQuery(), 60, Token);
+
+        // Assert
+        Assert.Equal(histogram.ScannedRange, histogram.Result.ScannedRange);
+    }
+
+    [Fact]
+    public void GetHistogram_WholeRangeRead_LeavesTheScannedRangeOff()
+    {
+        // Arrange
+        using TempDirectory directory = WriteSmallFile();
+        FileAggregator aggregator = Aggregators.Create(directory.Path);
+
+        // Act
+        HistogramResult histogram = aggregator
+            .GetHistogram(Aggregators.NoonHour(), 60, Token)
+            .Result;
+
+        // Assert
+        Assert.Null(histogram.ScannedRange);
+    }
+
+    [Fact]
     public void GetPatterns_SameQueryTwice_ServesTheSecondFromTheCacheWithoutReading()
     {
         // Arrange

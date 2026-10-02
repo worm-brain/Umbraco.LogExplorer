@@ -8,11 +8,17 @@ namespace Umbraco.Community.LogExplorer.Core.Results;
 /// <param name="BucketSize">Width of every bucket.</param>
 /// <param name="Buckets">Buckets in ascending time order, covering the range without gaps.</param>
 /// <param name="Approximate">Whether the source sampled or stopped at a scan budget.</param>
+/// <param name="ScannedRange">
+/// The part of <paramref name="Range"/> the counts cover when the source stopped at a scan budget
+/// (newest first, so it ends at <c>Range.To</c>); buckets older than its <c>From</c> were not
+/// read, not empty. <see langword="null"/> when the whole range was read (BRIEF 10.1, ADR 0027).
+/// </param>
 public sealed record HistogramResult(
     ResolvedRange Range,
     TimeSpan BucketSize,
     IReadOnlyList<HistogramBucket> Buckets,
-    bool Approximate
+    bool Approximate,
+    ResolvedRange? ScannedRange = null
 );
 
 /// <summary>One histogram bucket.</summary>

@@ -194,7 +194,8 @@ internal sealed class FileAggregator
                         int bucket = (int)((candidate.Event.Timestamp - first) / size);
                         counts[bucket, BandOf(candidate.SeverityNumber)]++;
                     },
-                    (approximate, _) =>
+                    // The scanned range goes on the result only when the budget cut the scan short.
+                    (approximate, scanned) =>
                         new HistogramResult(
                             range,
                             size,
@@ -206,7 +207,8 @@ internal sealed class FileAggregator
                                         LevelCounts(band => counts[bucket, band])
                                     )),
                             ],
-                            approximate
+                            approximate,
+                            approximate ? scanned : null
                         )
                 );
             },

@@ -263,3 +263,19 @@ export function toggleLevel(levels: ReadonlyArray<Level> | null, level: Level): 
 export function isLevelOn(levels: ReadonlyArray<Level> | null, level: Level): boolean {
   return levels === null || levels.includes(level);
 }
+
+/**
+ * How much of the chart, from its left edge, the counts do not cover: the buckets older than the
+ * scanned range when the source stopped at its scan budget (ADR 0027). Those buckets were not
+ * read, which is different from having no entries.
+ *
+ * @param scannedFromMs - Start of the scanned range, or `undefined` when the whole range was read.
+ * @param firstMs - Start of the first bucket.
+ * @param lastEndMs - End of the last bucket.
+ * @returns A percentage of the chart width, from 0 (all read) to 100.
+ */
+export function unreadPercent(scannedFromMs: number | undefined, firstMs: number, lastEndMs: number): number {
+  if (scannedFromMs === undefined || lastEndMs <= firstMs) return 0;
+  const share = (scannedFromMs - firstMs) / (lastEndMs - firstMs);
+  return Math.min(100, Math.max(0, share * 100));
+}

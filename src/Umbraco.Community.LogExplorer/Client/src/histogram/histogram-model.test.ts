@@ -11,6 +11,7 @@ import {
   toggleLevel,
   zoomFromBucket,
   zoomLabelParts,
+  unreadPercent,
 } from "./histogram-model.js";
 
 const MINUTE = 60_000;
@@ -181,5 +182,19 @@ describe("toggleLevel", () => {
 
   it("allows hiding every level", () => {
     expect(toggleLevel(["warn"], "warn")).toEqual([]);
+  });
+});
+
+describe("unreadPercent", () => {
+  it("shades the share of the chart before the scanned range", () => {
+    expect(unreadPercent(7_500, 0, 10_000)).toBe(75);
+  });
+
+  it("shades nothing when the whole range was read", () => {
+    expect(unreadPercent(undefined, 0, 10_000)).toBe(0);
+  });
+
+  it("keeps a scanned start outside the chart within 0 to 100", () => {
+    expect([unreadPercent(-500, 0, 10_000), unreadPercent(12_000, 0, 10_000)]).toEqual([0, 100]);
   });
 });
