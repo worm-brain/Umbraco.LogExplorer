@@ -60,8 +60,13 @@
       PackagePath="icon.png"
       Visible="false"
     />
+    <!--
+      NuGet gets its own short readme (ADR 0028): nuget.org renders no relative links, images or
+      raw HTML, and a published readme cannot be changed, so the screenshot-heavy root README stays
+      on GitHub and this one links to it.
+    -->
     <None
-      Include="$(MSBuildThisFileDirectory)README.md"
+      Include="$(MSBuildThisFileDirectory)assets\nuget\README.md"
       Pack="true"
       PackagePath="README.md"
       Visible="false"
