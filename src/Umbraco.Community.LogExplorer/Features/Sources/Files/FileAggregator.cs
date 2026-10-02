@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -41,6 +42,12 @@ internal sealed record FileAggregate<T>(T Result, ResolvedRange ScannedRange, lo
 /// result contracts have nowhere to put them, and the search page already shows them.
 /// </para>
 /// <para>
+/// With <see cref="ParallelScan"/>, a scan parses lines, and matches, maps and prepares events, across cores in batches
+/// (ADR 0026), then adds the matches to the aggregation one by one in stream order and checks the
+/// budget after each event, so results, the approximate cut-off and the scanned range are those
+/// of a one-by-one scan.
+/// </para>
+/// <para>
 /// Results are cached in <see cref="IMemoryCache"/> for 60 seconds, keyed by a SHA-256 hash of
 /// the operation, its parameters and the query with its range resolved, plus each candidate
 /// file's name, length and last-write time, so appending to a file misses the cache. A relative
@@ -68,6 +75,10 @@ internal sealed class FileAggregator
     public const int MaxTargetBuckets = 1000;
 
     private const long BytesPerMegabyte = 1024 * 1024;
+
+    // Events per batch when a scan evaluates events across cores: enough work per batch to
+    // spread, small enough that a scan stopping at its budget evaluates little it does not use.
+    private const int ScanBatchSize = 256;
 
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(60);
 
@@ -123,6 +134,15 @@ internal sealed class FileAggregator
     }
 
     /// <summary>
+    /// Whether scans parse and evaluate entries across cores (ADR 0026). By default only under the
+    /// server garbage collector (the ASP.NET Core default) on more than one core: parsing
+    /// allocates heavily, and with the workstation collector, parallel allocation made scans
+    /// about twice as slow instead of faster. Tests set it to cover both paths.
+    /// </summary>
+    internal bool ParallelScan { get; init; } =
+        GCSettings.IsServerGC && Environment.ProcessorCount > 1;
+
+    /// <summary>
     /// Entry counts over time, stacked by level, ignoring the query's level set (ADR 0004).
     /// </summary>
     /// <param name="query">The query; its paging and sort are ignored.</param>
@@ -167,7 +187,9 @@ internal sealed class FileAggregator
                 var counts = new long[count, SeverityMap.ShortNames.Count];
 
                 return new Accumulator<HistogramResult>(
-                    candidate =>
+                    NeedsRecord: false,
+                    Prepare: null,
+                    Add: candidate =>
                     {
                         int bucket = (int)((candidate.Event.Timestamp - first) / size);
                         counts[bucket, BandOf(candidate.SeverityNumber)]++;
@@ -235,33 +257,58 @@ internal sealed class FileAggregator
                         StringComparer.Ordinal
                     ))
                     .ToArray();
-                var seen = new HashSet<string>(StringComparer.Ordinal);
-
                 return new Accumulator<FacetResult>(
-                    candidate =>
+                    NeedsRecord: true,
+                    // Per field, the entry's distinct values keyed by their JSON text, or null
+                    // when it has none; worked out across cores.
+                    Prepare: candidate =>
                     {
-                        matched++;
+                        var found = new List<(string Key, JsonElement Value)>?[requested.Length];
                         for (int i = 0; i < requested.Length; i++)
                         {
-                            IReadOnlyList<JsonElement> found = LogFields.Resolve(
+                            IReadOnlyList<JsonElement> resolved = LogFields.Resolve(
                                 candidate.Record,
                                 requested[i]
                             );
-                            if (found.Count > 0)
+                            if (resolved.Count == 0)
                             {
-                                present[i]++;
+                                continue;
                             }
 
-                            seen.Clear();
-                            foreach (JsonElement value in found)
+                            var distinct = new List<(string Key, JsonElement Value)>(
+                                resolved.Count
+                            );
+                            foreach (JsonElement value in resolved)
                             {
                                 string key = value.GetRawText();
-                                if (seen.Add(key))
+                                if (!distinct.Exists(pair => pair.Key == key))
                                 {
-                                    values[i][key] = values[i].TryGetValue(key, out var entry)
-                                        ? (entry.Value, entry.Count + 1)
-                                        : (value.Clone(), 1);
+                                    distinct.Add((key, value));
                                 }
+                            }
+
+                            found[i] = distinct;
+                        }
+
+                        return found;
+                    },
+                    Add: candidate =>
+                    {
+                        matched++;
+                        var found = (List<(string Key, JsonElement Value)>?[])candidate.Prepared!;
+                        for (int i = 0; i < requested.Length; i++)
+                        {
+                            if (found[i] is not { } distinct)
+                            {
+                                continue;
+                            }
+
+                            present[i]++;
+                            foreach ((string key, JsonElement value) in distinct)
+                            {
+                                values[i][key] = values[i].TryGetValue(key, out var entry)
+                                    ? (entry.Value, entry.Count + 1)
+                                    : (value.Clone(), 1);
                             }
                         }
                     },
@@ -338,8 +385,11 @@ internal sealed class FileAggregator
                 // pattern instead of once per entry; the text determines the hash.
                 var groups = new Dictionary<string, PatternTally>(StringComparer.Ordinal);
 
+                // Only the first entry of each pattern is mapped, for its sample.
                 return new Accumulator<PatternResult>(
-                    candidate =>
+                    NeedsRecord: false,
+                    Prepare: null,
+                    Add: candidate =>
                     {
                         string template = candidate.Event.MessageTemplate.Text;
                         if (!groups.TryGetValue(template, out PatternTally? tally))
@@ -412,29 +462,47 @@ internal sealed class FileAggregator
                 var attributes = new Dictionary<string, (string Kind, long Count)>(
                     StringComparer.Ordinal
                 );
-                var seen = new HashSet<string>(StringComparer.Ordinal);
-
                 return new Accumulator<IReadOnlyList<FieldInfo>>(
-                    candidate =>
+                    NeedsRecord: true,
+                    // The entry's portable fields and attribute paths with their kinds, in the
+                    // order they are tallied; worked out across cores.
+                    Prepare: candidate =>
                     {
-                        matched++;
                         LogRecord record = candidate.Record;
+                        var found = new EntryFields();
                         foreach (string field in LogFields.Portable)
                         {
                             if (LogFields.Resolve(record, field) is [var value, ..])
                             {
-                                Tally(
-                                    portable,
-                                    field,
-                                    field == LogFields.Timestamp ? "datetime" : KindOf(value)
+                                found.Portable.Add(
+                                    (
+                                        field,
+                                        field == LogFields.Timestamp ? "datetime" : KindOf(value)
+                                    )
                                 );
                             }
                         }
 
-                        seen.Clear();
+                        var seen = new HashSet<string>(StringComparer.Ordinal);
                         foreach ((string name, JsonElement value) in record.Attributes)
                         {
-                            CollectPaths(name, value, seen, attributes);
+                            CollectPaths(name, value, seen, found.Attributes);
+                        }
+
+                        return found;
+                    },
+                    Add: candidate =>
+                    {
+                        matched++;
+                        var found = (EntryFields)candidate.Prepared!;
+                        foreach ((string path, string kind) in found.Portable)
+                        {
+                            Tally(portable, path, kind);
+                        }
+
+                        foreach ((string path, string kind) in found.Attributes)
+                        {
+                            Tally(attributes, path, kind);
                         }
                     },
                     (_, _) =>
@@ -550,23 +618,74 @@ internal sealed class FileAggregator
             _locator,
             range,
             SortDirection.Descending,
-            cancellationToken
+            cancellationToken,
+            // Parsing is most of a scan's cost, and a scan reads to its budget (ADR 0026).
+            parallelParse: ParallelScan
         );
-        while (stream.TryRead(out (LogFile File, LogFileEvent Event) next))
+        // Events are taken in batches so that, when the filter or the aggregation reads records,
+        // each batch is matched, mapped and prepared across cores first: after parsing, that is
+        // the costly part (ADR 0026). Matches are still added in stream order, and the budget is
+        // checked after each event, so the result and the cut-off are a one-by-one scan's.
+        bool parallel =
+            ParallelScan
+            && (
+                query.Filter is not null || query.NativeQuery is not null || accumulator.NeedsRecord
+            );
+        void Evaluate(Candidate candidate)
         {
-            oldestRead = next.Event.Event.Timestamp;
-            var candidate = new Candidate(next.File, next.Event);
-            if (native(next.Event.Event) && Matches(candidate, query.Filter, levels))
+            candidate.IsMatch = native(candidate.Event) && Matches(candidate, query.Filter, levels);
+            if (candidate.IsMatch && accumulator.Prepare is { } prepare)
             {
-                accumulator.Add(candidate);
+                candidate.Prepared = prepare(candidate);
+            }
+        }
+
+        // Without parallel work, one event at a time: holding a batch of parsed events only keeps
+        // them alive past the youngest garbage collection, which costs more than it saves.
+        int batchSize = parallel ? ScanBatchSize : 1;
+        var batch = new List<Candidate>(batchSize);
+        bool more = true;
+        while (more)
+        {
+            batch.Clear();
+            while (batch.Count < batchSize)
+            {
+                if (!stream.TryRead(out (LogFile File, LogFileEvent Event) next))
+                {
+                    more = false;
+                    break;
+                }
+
+                batch.Add(new Candidate(next.File, next.Event));
+
+                // Each stream holds its next event already, so a non-empty NextPositions means
+                // events in the range remain unread.
+                if (stream.BytesRead >= budget && stream.NextPositions.Count > 0)
+                {
+                    approximate = true;
+                    more = false;
+                    break;
+                }
             }
 
-            // Each stream holds its next event already, so a non-empty NextPositions means events
-            // in the range remain unread.
-            if (stream.BytesRead >= budget && stream.NextPositions.Count > 0)
+            // Native filters and LogRecordFilter are pure, and each candidate is touched by one
+            // thread, so the batch can be evaluated in any order.
+            if (parallel)
             {
-                approximate = true;
-                break;
+                ParallelWork.For(batch.Count, index => Evaluate(batch[index]));
+            }
+            else
+            {
+                batch.ForEach(Evaluate);
+            }
+
+            foreach (Candidate candidate in batch)
+            {
+                oldestRead = candidate.Event.Timestamp;
+                if (candidate.IsMatch)
+                {
+                    accumulator.Add(candidate);
+                }
             }
         }
 
@@ -666,11 +785,12 @@ internal sealed class FileAggregator
 
     private static double Ratio(long part, long whole) => whole == 0 ? 0 : (double)part / whole;
 
+    // Lists an attribute's path and its nested object paths with their kinds, in tally order.
     private static void CollectPaths(
         string path,
         JsonElement value,
         HashSet<string> seen,
-        Dictionary<string, (string Kind, long Count)> paths
+        List<(string Path, string Kind)> paths
     )
     {
         // Seen per record, so a record counts once per path; nulls count as absent, as in LogFields.
@@ -679,7 +799,7 @@ internal sealed class FileAggregator
             return;
         }
 
-        Tally(paths, path, KindOf(value));
+        paths.Add((path, KindOf(value)));
         if (value.ValueKind == JsonValueKind.Object)
         {
             foreach (JsonProperty property in value.EnumerateObject())
@@ -727,15 +847,35 @@ internal sealed class FileAggregator
         // The same conversion CompactLogEventMapper makes, without mapping the rest.
         public int SeverityNumber => SeverityMap.FromSerilog(fileEvent.Event.Level.ToString());
 
+        // Not thread-safe: a candidate is evaluated by one thread, then read after the batch.
         public LogRecord Record =>
             _record ??= CompactLogEventMapper.Map(fileEvent.Event, file, fileEvent.Offset);
+
+        /// <summary>Whether the event passed the native query, the filter and the level set.</summary>
+        public bool IsMatch { get; set; }
+
+        /// <summary>What <see cref="Accumulator{T}.Prepare"/> worked out for a match, if anything.</summary>
+        public object? Prepared { get; set; }
+    }
+
+    /// <summary>One entry's fields for <see cref="GetFields"/>, in the order they are tallied.</summary>
+    private sealed class EntryFields
+    {
+        public List<(string Path, string Kind)> Portable { get; } = [];
+
+        public List<(string Path, string Kind)> Attributes { get; } = [];
     }
 
     /// <summary>
-    /// One aggregation's running state: what to do per matching event, and how to build the result
-    /// from whether the scan stopped early and the range it covered.
+    /// One aggregation's running state: whether it reads every match's record (so batches are
+    /// evaluated across cores), the per-match work that can run on any thread
+    /// (<c>Prepare</c>, its result kept in <see cref="Candidate.Prepared"/>), what to add per
+    /// match, in stream order, and how to build the result from whether the scan stopped early and
+    /// the range it covered.
     /// </summary>
     private sealed record Accumulator<T>(
+        bool NeedsRecord,
+        Func<Candidate, object>? Prepare,
         Action<Candidate> Add,
         Func<bool, ResolvedRange, T> Finish
     );

@@ -21,6 +21,7 @@ All notable user-visible changes to this project are documented here. The format
 - The results list uses the backoffice's default text size (14 px rather than 12 px) for its headings and rows, and each row's content is centred vertically. Eleven rows fit at 1440 x 900.
 - The NuGet packages carry the Log Explorer icon (a teal tile with a magnifier over log lines).
 
+- The histogram, fields panel, Patterns and Overview are about three times faster on the log files source: each aggregation now reads and prepares log entries on several processor cores at once (on sites using the server garbage collector, the ASP.NET Core default), with the same counts and the same "Approximate" cut-off as before. On a week of busy production logs the fields panel of a Search view fills in about 2 s instead of 6 s, and about 5.5 s instead of 9.5 s on the first load after a restart.
 - Filtered searches over the log files are about a third faster: each entry is checked against the filter before it is fully prepared for display, so text and level searches over a week of busy logs scan more quickly.
 
 ### Added

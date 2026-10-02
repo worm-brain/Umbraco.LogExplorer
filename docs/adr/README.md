@@ -33,6 +33,7 @@ brief assumed. Update the brief in the same change.
 | [0023](0023-results-text-at-default-size.md) | Results text uses the default type size; the 1440 x 900 row count is a guide | Accepted |
 | [0024](0024-search-box-chips-wrap.md) | Search box chips wrap onto up to three rows instead of scrolling on one line | Accepted |
 | [0025](0025-resizable-fields-panel.md) | The fields panel is resized by a custom separator in the gap, not `umb-split-panel` | Accepted |
+| [0026](0026-files-aggregations-parse-across-cores.md) | Files aggregations parse and evaluate entries across cores, aggregating in stream order | Accepted |
 
 ## Template
 

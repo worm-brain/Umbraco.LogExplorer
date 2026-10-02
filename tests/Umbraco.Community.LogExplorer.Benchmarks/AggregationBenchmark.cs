@@ -118,7 +118,9 @@ internal static class AggregationBenchmark
             return 0;
         }
 
-        Console.WriteLine($"Logs: {directory}; now = {anchor:u}; budget {budget} MB");
+        Console.WriteLine(
+            $"Logs: {directory}; now = {anchor:u}; budget {budget} MB; {(System.Runtime.GCSettings.IsServerGC ? "server" : "workstation")} GC; parallel scan {context.NewAggregator(out _).ParallelScan}"
+        );
         Console.WriteLine(
             args.Contains("--cold")
                 ? "| Operation | Range | Cold ms (new process, first call) | MB read | Approximate |"
