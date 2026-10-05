@@ -14,10 +14,6 @@ and see the query it runs whenever you want it.
 
 ![The Search view: a histogram stacked by level shows an error spike, a fields panel lists top values, and the results list shows the latest entries](docs/images/search.png)
 
-> **Alpha.** The `17.0.0-alpha` and `18.0.0-alpha` packages read the site's own Umbraco log files.
-> Application Insights and Seq sources, saved views and export are planned for 1.0 (see
-> [Coming in 1.0](#coming-in-10)).
-
 ## Contents
 
 - [Features](#features)
@@ -103,7 +99,7 @@ and see the query it runs whenever you want it.
 - Sits under **Settings > Advanced** and hides the core Log Viewer by default; one setting brings
   it back.
 
-### Coming in 1.0
+### Coming next
 
 - Application Insights and Seq sources, switchable from the source picker, with features each
   source cannot run disabled and explained.
@@ -147,14 +143,15 @@ for Umbraco 18. Pick the line that matches your site:
 
 ```sh
 # Umbraco 17
-dotnet add package Umbraco.Community.LogExplorer --version 17.0.0-alpha.1
+dotnet add package Umbraco.Community.LogExplorer --version 17.0.0
 
 # Umbraco 18
-dotnet add package Umbraco.Community.LogExplorer --version 18.0.0-alpha.1
+dotnet add package Umbraco.Community.LogExplorer --version 18.0.0
 ```
 
-Use the newest prerelease of your line listed on [NuGet](https://www.nuget.org/packages/Umbraco.Community.LogExplorer).
-`--prerelease` on its own picks the newest version overall, which is the `18.x` line.
+Use the newest version of your line listed on [NuGet](https://www.nuget.org/packages/Umbraco.Community.LogExplorer).
+Without `--version`, `dotnet add package` picks the newest version overall, which is the `18.x`
+line.
 
 ## Quick start
 

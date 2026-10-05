@@ -6,22 +6,19 @@ log files with no configuration. You get far more on top: click values, fields, 
 and patterns to build filters without knowing a query language, follow a request in one click,
 and see the query it runs whenever you want it.
 
-> **Alpha.** This release reads the site's own Umbraco log files. Application Insights and Seq
-> sources, saved views and export are planned for 1.0.
-
 ## Install
 
 One package line per Umbraco major: `17.x` for Umbraco 17, `18.x` for Umbraco 18.
 
 ```sh
 # Umbraco 17
-dotnet add package Umbraco.Community.LogExplorer --version 17.0.0-alpha.1
+dotnet add package Umbraco.Community.LogExplorer --version 17.0.0
 
 # Umbraco 18
-dotnet add package Umbraco.Community.LogExplorer --version 18.0.0-alpha.1
+dotnet add package Umbraco.Community.LogExplorer --version 18.0.0
 ```
 
-Use the newest prerelease of your line. `--prerelease` on its own picks the `18.x` line.
+Use the newest version of your line. Without `--version`, the newest overall is the `18.x` line.
 
 ## Quick start
 

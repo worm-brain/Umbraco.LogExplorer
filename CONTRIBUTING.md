@@ -99,7 +99,7 @@ reference and explanation, with one kind per page. Write them in this voice:
   or change, such as threading or parsing strategy; those belong in an ADR.
 - **Numbers, not adjectives.** "7 entries either side", "256 MB by default". No "easy", "simply",
   "powerful" or "blazing".
-- **Shipped features only.** Planned work goes under a **Coming in 1.0** heading.
+- **Shipped features only.** Planned work goes under a **Coming next** heading.
 - **en-GB spelling:** organise, summarise, licence (noun).
 - **Descriptive links** that name the page they open, and a **Related** list at the end of each
   page.

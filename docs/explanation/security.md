@@ -24,7 +24,7 @@ narrow about who can use it and what leaves the server.
 The explorer only reads. It never writes to, deletes from or rotates your log files, and a native
 query can only filter entries, never change them.
 
-## Coming in 1.0
+## Coming next
 
 - **Masking:** every response replaces the values of properties whose names look secret
   (`*Password*`, `*Secret*`, `Authorization`, `Cookie`, `*Token*`) and redacts e-mail addresses.

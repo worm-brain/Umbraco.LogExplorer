@@ -36,6 +36,7 @@ brief assumed. Update the brief in the same change.
 | [0026](0026-files-aggregations-parse-across-cores.md) | Files aggregations parse and evaluate entries across cores, aggregating in stream order | Accepted |
 | [0027](0027-histogram-scanned-range.md) | The histogram reports its scanned range and shades the part it did not read | Accepted |
 | [0028](0028-public-docs-layout-and-nuget-readme.md) | `docs/` holds the public documentation, and NuGet gets its own readme | Accepted |
+| [0029](0029-release-the-files-explorer-as-1-0.md) | Release the log files explorer as 1.0 (`17.0.0` and `18.0.0`) | Accepted |
 
 ## Template
 

@@ -4,8 +4,8 @@
 
 | Package line | Umbraco | Supported |
 | --- | --- | --- |
-| `17.x` (prerelease) | 17 | Yes |
-| `18.x` (prerelease) | 18 | Yes |
+| `17.x` | 17 | Yes |
+| `18.x` | 18 | Yes |
 
 Security fixes go into the newest release of each line.
 

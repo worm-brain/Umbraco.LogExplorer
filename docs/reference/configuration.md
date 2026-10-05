@@ -73,11 +73,11 @@ memory. Use it to try the explorer or to demo it without real logs. Its `Setting
 { "Alias": "sample", "Type": "Fake", "DisplayName": "Sample data", "Settings": { "SampleHours": "48" } }
 ```
 
-## Reserved for 1.0
+## Reserved for later releases
 
 The configuration also binds `DeepLinks`, `Export:MaxRows`, `Masking` and `Files:TailPollSeconds`.
-They belong to features planned for 1.0 (CMS links, export, masking and live tail) and have no
-effect yet.
+They belong to features planned for later releases (CMS links, export, masking and live tail)
+and have no effect yet.
 
 ## Related
 

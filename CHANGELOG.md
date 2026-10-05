@@ -6,6 +6,12 @@ All notable user-visible changes to this project are documented here. The format
 
 ## [Unreleased]
 
+## [17.0.0] and [18.0.0] - 2026-10-05
+
+The first stable release of each package line: `17.0.0` for Umbraco 17 and `18.0.0` for Umbraco
+18 (ADR 0029). It reads the site's own Umbraco log files; Application Insights and Seq sources,
+saved views, export and masking follow in later minor versions.
+
 ### Fixed
 
 - The histogram's hatched "not read" area stops at the last unread bar instead of overlapping the first bar with data, and its hint now suggests a shorter range or zooming in (a filter does not make the scan reach further). The search icon lines up with the search text again, and the results footer has more room around "Load 60 more".
