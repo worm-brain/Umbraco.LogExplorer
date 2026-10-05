@@ -10,7 +10,7 @@ namespace Umbraco.Community.LogExplorer.Core.Fake;
 
 /// <summary>
 /// The UI brief §12 sample hour: a port of the prototype's <c>data()</c> generator
-/// (<c>private/design/log-explorer-prototype.dc.html</c>) producing the same 238 entries, so the UI
+/// (<c>log-explorer-prototype.dc.html</c>, kept with the briefs) producing the same 238 entries, so the UI
 /// built against it matches the prototype's screenshots. Keep it in step with the prototype rather
 /// than "improving" the data.
 /// </summary>

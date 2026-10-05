@@ -1,6 +1,6 @@
 # ADR 0028: `docs/` holds the public documentation, and NuGet gets its own readme
 
-- Status: Accepted
+- Status: Accepted; where the internal material lives is amended by ADR 0030
 - Date: 2026-10-02
 - Issue: #76
 
@@ -42,5 +42,5 @@ images on nuget.org.
   matters.
 - Screenshots go stale as the UI changes. They were taken at 1440 x 900, device scale 2, from the
   Umbraco 17 sample site reading the UI brief's sample hour written out as real log files.
-- References to the briefs in issues and older commits say `docs/BRIEF.md`; read them as
-  `private/BRIEF.md`.
+- References to the briefs in issues and older commits say `docs/BRIEF.md` or
+  `private/BRIEF.md`; since ADR 0030 they live in the private planning repository.

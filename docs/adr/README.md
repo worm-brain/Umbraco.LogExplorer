@@ -4,7 +4,7 @@ One file per decision, numbered in order, never renumbered. A superseded ADR sta
 `Status: Superseded by NNNN`.
 
 Write a new ADR when a decision changes a contract, a dependency, a supported version, a §2 choice
-in `private/BRIEF.md`, or when a **Verify** item in the briefs turns out differently from what the
+in the build brief, or when a **Verify** item in the briefs turns out differently from what the
 brief assumed. Update the brief in the same change.
 
 | ADR | Decision | Status |
@@ -37,6 +37,7 @@ brief assumed. Update the brief in the same change.
 | [0027](0027-histogram-scanned-range.md) | The histogram reports its scanned range and shades the part it did not read | Accepted |
 | [0028](0028-public-docs-layout-and-nuget-readme.md) | `docs/` holds the public documentation, and NuGet gets its own readme | Accepted |
 | [0029](0029-release-the-files-explorer-as-1-0.md) | Release the log files explorer as 1.0 (`17.0.0` and `18.0.0`) | Accepted |
+| [0030](0030-briefs-live-in-a-private-planning-repo.md) | The maintainer briefs live in a private planning repository | Accepted |
 
 ## Template
 

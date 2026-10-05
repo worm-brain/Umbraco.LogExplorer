@@ -502,3 +502,6 @@ src/Umbraco.Community.LogExplorer/Client/e2e/playwright-report/
 
 ## Claude Code agent worktrees
 .claude/worktrees/
+
+# Maintainer-only imports of the private planning repo (ADR 0030)
+CLAUDE.local.md
