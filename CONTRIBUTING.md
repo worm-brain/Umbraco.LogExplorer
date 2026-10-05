@@ -73,7 +73,36 @@ Stop any running sample site first: a locked DLL shows up as build errors.
 - **Tests:** new or changed code comes with tests.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/), ASCII only.
 - **Changelog:** add a line to [CHANGELOG.md](CHANGELOG.md) for every user-visible change.
-- **Docs pages:** a user-visible change updates the page in `docs/` that describes it.
+- **Docs pages:** a user-visible change updates the page in `docs/` that describes it, following
+  [Writing docs](#writing-docs).
+
+## Writing docs
+
+The pages in `docs/` follow [Diataxis](https://diataxis.fr/): a tutorial, how-to guides,
+reference and explanation, with one kind per page. Write them in this voice:
+
+- **Speak to the reader.** Second person, imperative, present tense: "Click a value to filter on
+  it." Never "we".
+- **Active voice when a person acts.** Passive is fine when the system is the actor and naming it
+  adds nothing: "a warning is logged at startup".
+- **No contractions.** Write "do not", "cannot", "it is".
+- **One idea per sentence.** Aim for under 25 words. When a sentence strings three or more clauses
+  together, make it a list or split it.
+- **No parentheses with clauses inside.** Keyboard alternatives and other asides get their own
+  sentence or bullet.
+- **Action verbs:** *choose* a labelled control (a button, tab or menu item); *click* or *drag*
+  something on the canvas (a histogram bar, a row, a value, a chip, a level toggle) or a box you
+  type in; *press* a key. Do not use *select* for an action.
+- **UI names in bold, spelled as on screen:** **Settings > Advanced > Log Explorer**, **Same
+  request**.
+- **What the reader can act on, not how it is built.** Leave out internals the reader cannot see
+  or change, such as threading or parsing strategy; those belong in an ADR.
+- **Numbers, not adjectives.** "7 entries either side", "256 MB by default". No "easy", "simply",
+  "powerful" or "blazing".
+- **Shipped features only.** Planned work goes under a **Coming in 1.0** heading.
+- **en-GB spelling:** organise, summarise, licence (noun).
+- **Descriptive links** that name the page they open, and a **Related** list at the end of each
+  page.
 
 ## Pull requests
 

@@ -11,7 +11,7 @@
     <PackageId>Umbraco.Community.LogExplorer</PackageId>
     <Product>Umbraco.Community.LogExplorer</Product>
     <Title>Umbraco Log Explorer</Title>
-    <Description>A click-to-filter log explorer for the Umbraco backoffice: search, facets, histogram, patterns and request correlation over Umbraco's log files, with Application Insights and Seq providers.</Description>
+    <Description>A rich log explorer for the Umbraco backoffice and a drop-in replacement for the built-in Log Viewer.</Description>
     <PackageTags>umbraco;umbraco-marketplace;logs;log-viewer;serilog</PackageTags>
     <!--
       One package version line per Umbraco major (ADR 0010): 17.x.y for Umbraco 17, 18.x.y for 18. Releases set

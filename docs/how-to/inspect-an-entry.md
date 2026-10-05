@@ -1,8 +1,8 @@
 # Inspect an entry
 
-Click a row in the results (or move to it with `j` and `k` and press Enter) to open the entry
-drawer. It slides over the right of the workspace while the results stay usable on the left, so
-you can click another row to switch entries.
+Click a row in the results to open the entry drawer, or move to it with `j` and `k` and press
+Enter. The drawer slides over the right of the workspace while the results stay usable on the
+left, so you can click another row to switch entries.
 
 ![The entry drawer open on a SQL timeout error](../images/entry-detail.png)
 

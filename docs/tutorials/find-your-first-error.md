@@ -33,15 +33,14 @@ histogram zooms to the five minutes around it, and a yellow **Time** chip appear
 
 ![The histogram zoomed to five minutes, with a Time chip in the search box](../images/histogram-zoom.png)
 
-To hide everything but the errors, you could click the other level toggles off. You don't need to
-here: the errors are already easy to see.
+To hide everything but the errors, you could click the other level toggles off. You do not need to
+here: the errors already stand out.
 
 ## 3. Open an error
 
 To focus on the failing page, click `/umbraco/surface/contact/submit` under **Path** in the fields
 panel; it becomes a **Path** chip next to the **Time** chip. Then click an `ERROR` row in the
-results. The entry drawer opens on the right, while the results stay
-usable on the left.
+results. The entry drawer opens on the right, while the results stay usable on the left.
 
 ![The entry drawer open on a SqlException](../images/entry-detail.png)
 

@@ -5,7 +5,7 @@ Pick a preset, set a custom range, or zoom in with the histogram.
 
 ## Pick a preset
 
-Click the time range button and choose a range.
+Choose the time range button, then a range.
 
 ![The time range menu with Last 15 minutes to Last 30 days and Custom range](../images/time-range.png)
 
@@ -24,7 +24,7 @@ The histogram shows how many entries fall in each slice of the range, stacked by
 bar to see its counts.
 
 - **Click a bar** to zoom to a five-minute window around it.
-- **Drag across bars** to zoom to exactly the range you select.
+- **Drag across bars** to zoom to exactly the time those bars cover.
 
 Either way a yellow **Time** chip appears in the search box, and the histogram redraws for the
 zoomed range with finer bars:
@@ -39,11 +39,14 @@ press Enter or Space to zoom.
 
 ## When the histogram is approximate
 
-On a very large range the files source stops counting at its scan budget and works from the newest
-entries back. The histogram then shows an **Approximate** tag, its summary says which time the
-counts start from, and the part of the range it did not read is hatched, so a stretch it never
-read is not mistaken for a quiet one. See
-[how log files are read](../explanation/reading-log-files.md).
+On a very large range the files source counts from the newest entries back and stops at its scan
+budget. When that happens, the histogram:
+
+- shows an **Approximate** tag;
+- says in its summary which time the counts start from;
+- hatches the part of the range it did not read, so you do not mistake it for a quiet stretch.
+
+See [how log files are read](../explanation/reading-log-files.md).
 
 ## Related
 

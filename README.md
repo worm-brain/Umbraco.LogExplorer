@@ -2,9 +2,11 @@
 
 # Umbraco Log Explorer
 
-A click-to-filter log explorer for the Umbraco backoffice. Find the log entries you need without
-knowing a query language: pick a time range, then click values, fields, histogram bars and
-patterns, and the filters build themselves. The query it runs is always one click away.
+A rich log explorer for the Umbraco backoffice and a drop-in replacement for the built-in Log
+Viewer. Install the package and it takes the Log Viewer's place under Settings, reading the same
+log files with no configuration. You get far more on top: click values, fields, histogram bars
+and patterns to build filters without knowing a query language, follow a request in one click,
+and see the query it runs whenever you want it.
 
 [![NuGet](https://img.shields.io/nuget/vpre/Umbraco.Community.LogExplorer?label=NuGet)](https://www.nuget.org/packages/Umbraco.Community.LogExplorer)
 [![CI](https://github.com/worm-brain/Umbraco.LogExplorer/actions/workflows/ci.yml/badge.svg)](https://github.com/worm-brain/Umbraco.LogExplorer/actions/workflows/ci.yml)
@@ -31,15 +33,16 @@ patterns, and the filters build themselves. The query it runs is always one clic
 
 **Find entries without a query language**
 
-- **A forgiving search box.** Bare words search the message; `field:value`, `-field:value`,
-  `field:val*`, `field>1000`, `has:field` and `level:warn` become filter chips. Input it cannot
-  read (an unbalanced quote) is searched as plain text, and it tells you why.
+- **A forgiving search box.** Type any words to find entries whose message or exception contains
+  them. To filter on a field, type it with a value: `path:/umbraco*` keeps one path, `-status:200`
+  hides a status code, and each becomes a chip you can edit or remove. If the explorer cannot read
+  what you typed, for example a quote left open, it searches for it as plain text and tells you why.
   [Search and filter](docs/how-to/search-and-filter.md)
 - **Filter chips.** Include or exclude a value; two chips on the same field match either value,
   chips on different fields must all match. Click a chip to change its operator or value.
 - **A fields panel.** The top values of the fields you care about (source, request path, status
   code, machine, exception type), then every other field the entries carry, each with how often it
-  appears. Click a value to filter on it, or its minus to exclude it. The panel resizes and
+  appears. Click a value to filter on it, or choose its minus to exclude it. The panel resizes and
   collapses, and remembers its state.
 - **Level toggles.** TRACE to FATAL, each with its count, are the level filter. They keep showing
   how many entries a hidden level holds.
@@ -49,13 +52,14 @@ patterns, and the filters build themselves. The query it runs is always one clic
 - **Time ranges** from the last 15 minutes to the last 30 days, or a custom range with the time
   zone shown. [Narrow the time range](docs/how-to/narrow-the-time-range.md)
 - **A histogram** stacked by level. Click a bar to zoom to five minutes around it, or drag across
-  bars to select any range.
+  bars to zoom to any range.
 
 **Dig into one entry**
 
-- **An entry drawer** beside the results, which stay usable. It shows the rendered message (click
-  a value to filter on it), the message template, every property as a typed tree with include and
-  exclude buttons, and the exception with framework frames folded away.
+- **An entry drawer** beside the results, which stay usable. It shows the rendered message, the
+  message template, every property as a typed tree, and the exception with framework frames
+  folded away. Click a value in the message, or choose a property's include or exclude button, to
+  filter on it.
   [Inspect an entry](docs/how-to/inspect-an-entry.md)
 - **Same request** shows every entry from the request that logged this one, in one click.
 - **Around this** shows the 7 entries either side of this one, ignoring your filters.

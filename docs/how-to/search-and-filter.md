@@ -56,15 +56,17 @@ relative to the top value.
 
 - Click a value to filter on it. Click it again to remove that filter. Selected values are
   highlighted.
-- Click the minus beside a value to exclude it.
+- Choose the minus beside a value to exclude it.
 - Type in **Filter fields** to find a field by name.
-- Drag the gap between the panel and the results to resize it (or focus the divider and use the
-  arrow keys; double-click it to reset the width). Use the arrow button to collapse the panel to a
-  thin strip. The explorer remembers both in your browser.
+- Drag the gap between the panel and the results to resize it. From the keyboard, focus the
+  divider and use the arrow keys. Double-click the divider to reset the width.
+- Choose the arrow button to collapse the panel to a thin strip.
 
-An **Approximate** tag on the panel means the counts come from the most recent entries only: the
-source stopped at its scan budget on a very large range (see
-[how log files are read](../explanation/reading-log-files.md)).
+The explorer remembers the panel's width and whether it is collapsed, in your browser.
+
+An **Approximate** tag on the panel means the counts cover only the most recent entries, because
+the range was too large to read in full. See
+[how log files are read](../explanation/reading-log-files.md).
 
 To change which fields are pinned, set `PinnedFacets` (see the
 [configuration reference](../reference/configuration.md)).

@@ -26,9 +26,9 @@ query can only filter entries, never change them.
 
 ## Coming in 1.0
 
-- **Masking:** values of properties whose names look secret (`*Password*`, `*Secret*`,
-  `Authorization`, `Cookie`, `*Token*`) replaced, and e-mail addresses redacted, in every
-  response; masked properties cannot be used in filters, so their values cannot be probed.
+- **Masking:** every response replaces the values of properties whose names look secret
+  (`*Password*`, `*Secret*`, `Authorization`, `Cookie`, `*Token*`) and redacts e-mail addresses.
+  You cannot filter on a masked property, so nobody can probe for its value.
 - **Audit:** an Umbraco audit entry when someone queries a sensitive source.
 - **Load limits:** at most four queries in flight per user.
 

@@ -1,8 +1,10 @@
 # Umbraco Log Explorer
 
-A click-to-filter log explorer for the Umbraco backoffice. Find the log entries you need without
-knowing a query language: pick a time range, then click values, fields, histogram bars and
-patterns, and the filters build themselves. The query it runs is always one click away.
+A rich log explorer for the Umbraco backoffice and a drop-in replacement for the built-in Log
+Viewer. Install the package and it takes the Log Viewer's place under Settings, reading the same
+log files with no configuration. You get far more on top: click values, fields, histogram bars
+and patterns to build filters without knowing a query language, follow a request in one click,
+and see the query it runs whenever you want it.
 
 > **Alpha.** This release reads the site's own Umbraco log files. Application Insights and Seq
 > sources, saved views and export are planned for 1.0.

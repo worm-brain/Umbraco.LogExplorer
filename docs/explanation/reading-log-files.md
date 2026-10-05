@@ -22,11 +22,10 @@ A search reads backwards from the end of the newest file in the range, in 64 KB 
 as soon as it has a page of matching entries. A search for the latest entries over a week of busy
 logs therefore reads only the last few kilobytes of each machine's newest file, however large the
 files are. In the project's benchmark, the first page over 7 days and about 2 GB of logs loads in
-5 to 221 ms once warm.
+under a quarter of a second once warm.
 
 Each next page continues from a cursor that remembers a position in every machine's stream, so
-paging never skips or repeats an entry. Filters are checked on a lightly read entry first, and the
-entry is fully prepared only when it matches.
+paging never skips or repeats an entry.
 
 The file Serilog is writing to is opened for shared reading, so the site keeps logging while you
 search. A last line still being written is skipped; any other unreadable line is counted and
@@ -46,9 +45,8 @@ When the budget stops a count early:
 - the histogram marks the part of the range it did not read, so a gap in the bars is never
   mistaken for a quiet period.
 
-Counts are cached for 60 seconds, keyed by the query and by each file's size and last write, so
-switching between views does not read the files again, and a file that grows is read afresh. The
-scans parse lines on several cores.
+Counts are cached for 60 seconds, so switching between views does not read the files again. A file
+that has grown since is read afresh.
 
 ## Native queries
 

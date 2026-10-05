@@ -1,7 +1,8 @@
 # Umbraco Log Explorer documentation
 
-Umbraco Log Explorer is a click-to-filter log explorer for the Umbraco 17 and 18 backoffice. These
-pages are organised by what you are trying to do, following [Diataxis](https://diataxis.fr/):
+Umbraco Log Explorer is a rich, click-to-filter log explorer for the Umbraco 17 and 18 backoffice
+and a drop-in replacement for the built-in Log Viewer. The pages below follow
+[Diataxis](https://diataxis.fr/): pick the kind that matches what you are trying to do.
 
 | If you want to... | Read |
 | --- | --- |

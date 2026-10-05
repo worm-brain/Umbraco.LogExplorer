@@ -16,12 +16,12 @@ each Serilog sink is configured to write, such as `Global` and `UmbracoFile`. A 
 
 ## Most frequent messages
 
-The six message templates with the most entries. Select one to see its entries in the Search view.
+The six message templates with the most entries. Click one to see its entries in the Search view.
 For the full list, with level mix and volume, use [Patterns](find-frequent-messages.md).
 
 ## Exception types
 
-Every exception type in the range with its count. Select one to see those entries in Search. The
+Every exception type in the range with its count. Click one to see those entries in Search. The
 panel says so when the range has no exceptions.
 
 ## Related
