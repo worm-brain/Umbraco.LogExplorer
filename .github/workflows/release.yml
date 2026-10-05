@@ -91,9 +91,7 @@ jobs:
       - run: uv run tests/package-smoke/smoke_nupkg.py --packages artifacts --major ${{ needs.pack.outputs.major }} --root "${{ runner.temp }}/sites"
 
   publish:
-    # Off until Jack has set up nuget.org trusted publishing (the one-off setup at the top of this
-    # file; #52). Remove this condition to enable publishing. It runs only after the smoke test passes.
-    if: false
+    # Runs only after the smoke test passes, from the `nuget` environment (v* tags only).
     needs: [pack, smoke]
     runs-on: ubuntu-latest
     environment: nuget
