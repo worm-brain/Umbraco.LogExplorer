@@ -1,0 +1,42 @@
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "Title": "Umbraco Log Explorer",
+  "Description": "A rich log explorer for the Umbraco backoffice and a drop-in replacement for the built-in Log Viewer. Install the package and it takes the Log Viewer's place under Settings, reading the same log files with no configuration. Click values, fields, histogram bars and patterns to build filters without knowing a query language, follow a request in one click, and see the query it runs whenever you want it.",
+  "Category": "Developer Tools",
+  "AlternateCategory": "Analytics & Insights",
+  "PackageType": "Package",
+  "LicenseTypes": ["Free"],
+  "Tags": ["logs", "log viewer", "serilog", "debugging", "backoffice"],
+  "DocumentationUrl": "https://github.com/worm-brain/Umbraco.LogExplorer/blob/main/docs/index.md",
+  "IssueTrackerUrl": "https://github.com/worm-brain/Umbraco.LogExplorer/issues",
+  "AuthorDetails": {
+    "Name": "Jack Stunell",
+    "SyncContributorsFromRepository": true
+  },
+  "Screenshots": [
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/worm-brain/Umbraco.LogExplorer/main/docs/images/search.png",
+      "Caption": "The Search view: a histogram stacked by level, the fields panel with top values, and the latest entries."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/worm-brain/Umbraco.LogExplorer/main/docs/images/entry-detail.png",
+      "Caption": "The entry drawer: the message, its typed properties and the exception, with Same request and Around this."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/worm-brain/Umbraco.LogExplorer/main/docs/images/same-request.png",
+      "Caption": "Same request: every entry from the request that logged an error, in one click."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/worm-brain/Umbraco.LogExplorer/main/docs/images/patterns.png",
+      "Caption": "Patterns: entries grouped by message template, with a level mix, a volume sparkline and a count."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/worm-brain/Umbraco.LogExplorer/main/docs/images/overview.png",
+      "Caption": "Overview: entries by level, the configured minimum levels, the most frequent messages and the exception types."
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/worm-brain/Umbraco.LogExplorer/main/docs/images/show-query.png",
+      "Caption": "Show generated query: the Serilog expression your filters build, ready to paste into the core Log Viewer."
+    }
+  ]
+}
