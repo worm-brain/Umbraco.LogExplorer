@@ -6,7 +6,7 @@ The build brief (`BRIEF.md`), the UI brief (`UI-BRIEF.md`) and the session hando
 
 ## Working rules
 
-- Work is tracked in GitHub issues on `worm-brain/Umbraco.LogExplorer` (milestone per phase, epic per feature area). Pick up an issue, plan it in plan mode, wait for approval, then build. Close it with a short resolution comment.
+- Work is tracked in the maintainer's private issue tracker (milestone per phase, epic per feature area; `CLAUDE.local.md` says where). Pick up an issue, plan it in plan mode, wait for approval, then build. Close it with a short resolution comment.
 - Verify Umbraco and SDK APIs against the installed version before use; never invent aliases, routes, element names or members. When docs and the installed package disagree, the package wins.
 - Decisions and Verify outcomes that change the briefs go in `docs/adr/` (see its README), and the brief is updated in the same change.
 - The Core project must not reference Umbraco packages.
