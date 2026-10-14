@@ -41,6 +41,17 @@
     <PackageVersion Include="Serilog.Expressions" Version="5.0.0" />
   </ItemGroup>
 
+  <ItemGroup Label="Security patches">
+    <!--
+      Patched versions of packages that Umbraco brings in transitively, referenced by the tests and sample
+      sites only: 10.0.13 fixes the advisories published on 2026-10-13 (CVE-2026-84008 and others), which
+      Umbraco 17.7 and 18.2 still resolve. The package does not reference them, because a consuming site
+      resolves its own. Remove these and their references once UmbracoDevVersion depends on 10.0.13 or later.
+    -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.13" />
+  </ItemGroup>
+
   <ItemGroup Label="Testing">
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
