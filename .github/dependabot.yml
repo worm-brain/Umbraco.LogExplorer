@@ -48,6 +48,10 @@ updates:
     schedule:
       interval: monthly
     groups:
+      # Vitest and its plugins share one version, so they move together in their own pull request,
+      # majors included. Declared before the bun group, so these packages land here, not there.
+      vitest:
+        patterns: ["vitest", "@vitest/*"]
       bun:
         patterns: ["*"]
         update-types: ["minor", "patch"]
