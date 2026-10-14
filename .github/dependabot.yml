@@ -1,9 +1,10 @@
-# Dependabot keeps the dependencies current: one grouped pull request per ecosystem, once a month, so the
-# updates arrive together and cost one CI run each. The workflows pin actions to full commit SHAs with
-# the tag in a trailing comment; Dependabot moves the SHA and the comment together.
+# Dependabot keeps the dependencies current, once a month. Minor and patch updates arrive as one grouped
+# pull request per ecosystem, so they cost one CI run each. Major updates are left out of the groups and
+# arrive one pull request each, so a breaking one fails on its own instead of holding back the group.
+# The workflows pin actions to full commit SHAs with the tag in a trailing comment; Dependabot moves the
+# SHA and the comment together.
 #
-# The ignore rules hold back only versions this repository chooses on purpose, so one of them can never
-# make a grouped pull request unmergeable.
+# The ignore rules hold back only versions this repository chooses on purpose.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -13,6 +14,7 @@ updates:
     groups:
       github-actions:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: ci
 
@@ -24,9 +26,14 @@ updates:
     groups:
       nuget:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: build
     ignore:
+      # The package's version of these is UmbracoPackageRange, the Umbraco range it supports (ADR 0010).
+      # Its floor moves only by decision; Dependabot would raise it to the newest release.
+      - dependency-name: "Umbraco.Cms.Web.Website"
+      - dependency-name: "Umbraco.Cms.Api.Management"
       # Each package line builds against one Umbraco major (ADR 0010): the dev versions move within it.
       - dependency-name: "Umbraco.*"
         update-types: ["version-update:semver-major"]
@@ -43,6 +50,7 @@ updates:
     groups:
       bun:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
     commit-message:
       prefix: build
     ignore:
