@@ -21,7 +21,6 @@ saved views, export and masking follow in later minor versions.
 - In the entry drawer's Properties table, the expand toggle of an object or array now sits next to the include and exclude buttons instead of before the name, so every name lines up; the include and exclude buttons sit closer together.
 - Filter chips in the search box are a little shorter, so they have space above and below them inside the box.
 - The histogram's time-zoom chip in the search box centres its text like the other filter chips, and is the same height as them.
-
 - Accessibility of the query bar, histogram and drawer. The time range and source pickers are announced as menu buttons with their open state, their menus as one menu of choices with the current one checked; the arrow keys, Home and End move between choices, Tab leaves the menu (without stopping on an empty scroll area first), and choosing or pressing Escape returns focus to the button. The histogram bars are one Tab stop: Left, Right, Home and End move between bars and Enter or Space zooms. The drawer's expand and "Show framework frames" toggles announce whether they are open. Hidden and zero-count level toggles keep readable text contrast, the Overview headings follow the page's heading order, and the show-query and share buttons are square.
 
 ### Changed
@@ -31,14 +30,12 @@ saved views, export and masking follow in later minor versions.
 - The NuGet packages carry the Log Explorer icon (a teal tile with a magnifier over log lines).
 - The NuGet packages carry a short, text-only readme that links to the full documentation on GitHub, because nuget.org cannot show the README's screenshots.
 - The README, the NuGet readme, the package description and the docs describe the Log Explorer as a drop-in replacement for the built-in Log Viewer, and the docs read more consistently: one action verb per kind of control, shorter sentences, and less internal detail.
-
 - The histogram, fields panel, Patterns and Overview are about three times faster on the log files source: each aggregation now reads and prepares log entries on several processor cores at once (on sites using the server garbage collector, the ASP.NET Core default), with the same counts and the same "Approximate" cut-off as before. On a week of busy production logs the fields panel of a Search view fills in about 2 s instead of 6 s, and about 5.5 s instead of 9.5 s on the first load after a restart.
 - Filtered searches over the log files are about a third faster: each entry is checked against the filter before it is fully prepared for display, so text and level searches over a week of busy logs scan more quickly.
 
 ### Added
 
 - Documentation: a README with a feature list and screenshots, and user docs in `docs/` with a first-error tutorial, a how-to guide with screenshots for each feature, references for configuration, search syntax, fields, keyboard shortcuts and the Management API, and explanations of the provider model, how log files are read and the security model. `CONTRIBUTING.md` and `SECURITY.md` explain how to contribute and how to report a vulnerability.
-
 - Same request and Around this in the entry detail drawer. Same request replaces every filter, the level filter and the time zoom with one filter on the entry's first correlation field that has a value (`CorrelationFields`, by default the trace id, then `RequestId`, then `HttpRequestId`), so selecting an error row and then Same request shows every entry of that request; it is disabled, saying why, when the entry has none. Around this shows the entry and the 7 entries either side of it, ignoring filters, with the entry highlighted and a banner whose "Back to filtered results" returns to the filtered list. Around this is kept in the URL (`around`), so a reload or a shared link shows it again; an entry that no longer exists shows an error with the way back.
 - `GET /umbraco/log-explorer/api/v1/sources/{alias}/records/{id}/context?before=&after=` returns the entries either side of a record (default 7, at most 100 each side); an unknown record id is ProblemDetails code `record_not_found` (404). `GET /settings` now also returns `correlationFields`.
 - Keyboard shortcuts on the Search view: `/` focuses the search box; `j` and `k` move down and up the results (through every loaded row, scrolling as needed) and Enter opens the focused one. Escape closes an open menu first, then the entry drawer, then clears the search box; in an empty search box it moves focus to the results. The letters still type normally in any text field, and keys pressed elsewhere in the backoffice are left alone.
@@ -64,7 +61,6 @@ saved views, export and masking follow in later minor versions.
 - Results list on the Search view: the latest entries newest first (toggle with the Time header), each row showing time with milliseconds, a level badge, the message with its values highlighted and the short source. More entries load as you scroll, or with "Load 60 more"; scrolling stays smooth with thousands of rows loaded. Loading, empty and error states (with Retry) are shown in the panel.
 - `POST /umbraco/log-explorer/api/v1/sources/{alias}/search` returns a page of entries for a query. Errors are ProblemDetails with a `code`: `source_not_found`, `forbidden_source`, `unsupported_feature`, `range_too_large`, or `invalid_query` for a malformed range, cursor, page size or regex.
 - `Fake` sources accept a `SampleHours` setting to generate more than one hour of sample data.
-
 - Log Explorer item under Settings > Advanced with an empty Search, Patterns and Overview workspace.
 - Simple search syntax parser in Core: `field:value`, `-field:value`, wildcards, comparisons, `has:field`, field aliases and `level:`/`level=` turn search box input into filter chips and a level set, with a plain-text fallback for an unbalanced quote.
 - English localization dictionary for every Log Explorer string; other backoffice languages fall back to it.
