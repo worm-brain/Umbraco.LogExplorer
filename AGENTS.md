@@ -50,8 +50,9 @@ dotnet test --solution Umbraco.Community.LogExplorer.slnx
 # Client, in src/Umbraco.Community.LogExplorer/Client
 bun install
 bun run format:check && bun run typecheck && bun run test && bun run build
-bun run e2e        # Playwright against both sample sites
-bun run generate   # regenerate src/api/ from the running Umbraco 17 sample site
+bun run e2e                # Playwright against both sample sites
+bun run docs:screenshots   # retake docs/images/*.png from a fresh Umbraco 17 sample site on port 44376
+bun run generate           # regenerate src/api/ from the running Umbraco 17 sample site
 
 # Sample sites; build the client first, because its output is gitignored
 dotnet run --project samples/LogExplorer.Site17                      # https://localhost:44370/umbraco
