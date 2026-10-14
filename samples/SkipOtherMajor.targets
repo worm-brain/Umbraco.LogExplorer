@@ -1,0 +1,20 @@
+<Project>
+  <!--
+    Replaces Build for a sample site whose major is not the one being built (see Directory.Build.targets).
+    In a solution build it says so and moves on, so `dotnet build` builds everything that can run on this major.
+    Built or run on its own, as `dotnet run` does, it fails with the switch to use instead of
+    producing a site that throws at startup.
+  -->
+  <!-- Only a solution build sets CurrentSolutionConfigurationContents; SolutionFileName is *Undefined* otherwise. -->
+  <Target Name="Build">
+    <Message
+      Condition="'$(CurrentSolutionConfigurationContents)' != ''"
+      Importance="high"
+      Text="Skipping $(MSBuildProjectName): it runs on Umbraco $(SampleUmbracoMajor). Build it with -p:UmbracoMajor=$(SampleUmbracoMajor)."
+    />
+    <Error
+      Condition="'$(CurrentSolutionConfigurationContents)' == ''"
+      Text="$(MSBuildProjectName) runs on Umbraco $(SampleUmbracoMajor), but this build is for Umbraco $(UmbracoMajor). Build or run it with -p:UmbracoMajor=$(SampleUmbracoMajor)."
+    />
+  </Target>
+</Project>

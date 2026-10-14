@@ -10,7 +10,10 @@ project, install themselves unattended on first run (SQLite), and are never pack
 
 The package is built once per Umbraco major (ADR 0010), selected by the `UmbracoMajor` MSBuild
 property; versions per major live in `Directory.Packages.props`. Each site refuses to start on the
-wrong major, so its database is never upgraded or downgraded by accident.
+wrong major, so its database is never upgraded or downgraded by accident. So a build never produces a
+site that cannot start, a solution build for the other major skips the site with a message, and
+building or running the site on its own for the other major fails with the switch to use
+(`Directory.Build.targets` here).
 
 Backoffice login on both: `admin@example.com` / `1234567890` (development only, set in
 `appsettings.Development.json`).
