@@ -20,6 +20,18 @@ describe("resolvePackageVersion", () => {
     expect(resolvePackageVersion("", csproj)).toBe("1.0.0-beta.1");
   });
 
+  it("falls back to 0.0.0-dev when the csproj <Version> is built from MSBuild properties", () => {
+    const dynamic = csproj.replace("1.0.0-beta.1", "$(UmbracoMajor).0.0-dev");
+
+    expect(resolvePackageVersion(undefined, dynamic)).toBe("0.0.0-dev");
+  });
+
+  it("still uses the environment version when the csproj <Version> is not a literal", () => {
+    const dynamic = csproj.replace("1.0.0-beta.1", "$(UmbracoMajor).0.0-dev");
+
+    expect(resolvePackageVersion("17.1.0", dynamic)).toBe("17.1.0");
+  });
+
   it("throws when neither source has a version", () => {
     expect(() => resolvePackageVersion(undefined, "<Project />")).toThrow(/No <Version>/);
   });

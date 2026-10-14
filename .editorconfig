@@ -20,7 +20,7 @@ csharp_style_namespace_declarations = file_scoped:warning
 dotnet_sort_system_directives_first = true
 
 [tests/**.cs]
-# Test names follow MethodName_Scenario_ExpectedBehaviour (CLAUDE.md), which needs underscores.
+# Test names follow MethodName_Scenario_ExpectedBehaviour (AGENTS.md), which needs underscores.
 dotnet_diagnostic.CA1707.severity = none
 # xUnit discovers public test classes; sealing or making them static is noise here.
 dotnet_diagnostic.CA1515.severity = none

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
     Core contracts, simple-syntax parser, filter predicate, severity mapping and FakeLogSource.
-    Must never reference an Umbraco package (BRIEF §7.1, CLAUDE.md); a Core.Tests test enforces it.
+    Must never reference an Umbraco package (BRIEF §7.1, AGENTS.md); a Core.Tests test enforces it.
   -->
   <PropertyGroup>
     <RootNamespace>Umbraco.Community.LogExplorer.Core</RootNamespace>

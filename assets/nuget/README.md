@@ -50,8 +50,8 @@ No configuration is needed. The core Log Viewer menu item is hidden by default; 
 - [Configuration reference](https://github.com/worm-brain/Umbraco.LogExplorer/blob/main/docs/reference/configuration.md)
 - [Changelog](https://github.com/worm-brain/Umbraco.LogExplorer/blob/main/CHANGELOG.md)
 
-Writing a provider for another log store? Reference `Umbraco.Community.LogExplorer.Core` and see
-[Writing a provider](https://github.com/worm-brain/Umbraco.LogExplorer/blob/main/docs/extend/writing-a-provider.md).
+Writing a provider for another log store? Reference `Umbraco.Community.LogExplorer.Core`; the
+[documentation](https://github.com/worm-brain/Umbraco.LogExplorer/blob/main/docs/index.md) shows how.
 
 ## Support and licence
 

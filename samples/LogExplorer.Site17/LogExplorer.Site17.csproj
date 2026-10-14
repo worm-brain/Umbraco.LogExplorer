@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <!-- Umbraco 17 sample site for developing and testing the package (BRIEF §7.1). Not packed. -->
   <PropertyGroup>
+    <!-- The Umbraco major this site runs on; a build for another major skips it (Directory.Build.targets). -->
+    <SampleUmbracoMajor>17</SampleUmbracoMajor>
     <!-- Disable compression: the backoffice files are precompressed and dotnet must not handle them. -->
     <CompressionEnabled>false</CompressionEnabled>
     <!-- Sample code is not shipped, so it does not need XML docs. -->

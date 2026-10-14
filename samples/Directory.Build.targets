@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Each sample site runs on one Umbraco major, its SampleUmbracoMajor, and refuses to start on another so its
+    database is never upgraded or downgraded by accident. A build for a different major (UmbracoMajor, ADR 0010)
+    therefore skips the site instead of producing one that cannot start. This file is imported after the SDK's
+    targets, so the import below can replace Build. It also shadows any Directory.Build.targets at the root.
+  -->
+  <Import
+    Project="SkipOtherMajor.targets"
+    Condition="'$(SampleUmbracoMajor)' != '' and '$(SampleUmbracoMajor)' != '$(UmbracoMajor)'"
+  />
+</Project>

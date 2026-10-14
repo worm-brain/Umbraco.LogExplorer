@@ -1,0 +1,10 @@
+# Keep blank issues enabled so anyone can file freely; the structured forms are a convenience,
+# not a gate. The gate is on pull requests, not on ideas - see CONTRIBUTING.md.
+blank_issues_enabled: true
+contact_links:
+  - name: Contribution policy (read before opening a PR)
+    url: https://github.com/worm-brain/Umbraco.LogExplorer/blob/main/CONTRIBUTING.md
+    about: Ideas and issues are welcome from everyone. Pull requests are issue-first and invitation-only.
+  - name: Documentation
+    url: https://github.com/worm-brain/Umbraco.LogExplorer/blob/main/docs/index.md
+    about: Tutorials, how-to guides, reference and explanation for Log Explorer.
