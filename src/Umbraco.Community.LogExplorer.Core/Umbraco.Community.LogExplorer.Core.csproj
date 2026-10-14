@@ -8,6 +8,7 @@
     <PackageId>Umbraco.Community.LogExplorer.Core</PackageId>
     <!-- Versioned with the package for each major (ADR 0010), so providers reference the matching line. -->
     <Version>$(UmbracoMajor).0.0-dev</Version>
+    <Title>Umbraco Log Explorer Core</Title>
     <Description>Provider contracts and shared logic for Umbraco Log Explorer. Reference this to write a log source provider.</Description>
     <PackageTags>umbraco;logs;serilog;opentelemetry</PackageTags>
   </PropertyGroup>
