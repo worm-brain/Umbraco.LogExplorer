@@ -24,7 +24,7 @@
   <ItemGroup>
     <PackageReference Include="Umbraco.Cms" />
     <PackageReference Include="Umbraco.Cms.DevelopmentMode.Backoffice" />
-    <!-- A patched version of an Umbraco transitive dependency; see Directory.Packages.props. -->
+    <!-- A patched version of an Umbraco transitive dependency (Directory.Packages.props). Remove once Umbraco ships it. -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
 
