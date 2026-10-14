@@ -1,21 +1,32 @@
-# Packs every package when a version tag is pushed. One package line per Umbraco major (ADR 0010):
-# the tag's first number selects the major, so v17.0.0-alpha.1 packs the Umbraco 17 build and
-# v18.0.0-alpha.1 packs the Umbraco 18 build, each at the tag's version.
+# Releases a version when its tag is pushed: `git tag v17.1.0 && git push origin v17.1.0`. The tag sets the
+# version of every package, and its first number selects the Umbraco major (ADR 0010), so v17.1.0 releases
+# the Umbraco 17 line and v18.1.0 the Umbraco 18 line. Tags with a suffix (v17.1.0-beta.1) are pre-releases.
 #
-# Before anything is published, the smoke job installs the packed nupkgs on clean sites of the
-# major's lowest declared Umbraco version and its newest release (ADR 0022).
+# The jobs run in order, and each one runs only when the one before it passed:
+#   1. security        the Security workflow (security.yml) as a gate.
+#   2. pack            reads the version's CHANGELOG.md section, tests, then packs every package at the
+#                      tag's version.
+#   3. smoke           installs the packed nupkgs on clean sites of the major's lowest declared Umbraco
+#                      version and its newest release (ADR 0022).
+#   4. publish         pushes the packages to nuget.org.
+#   5. github-release  creates the GitHub Release for the tag, with that version's CHANGELOG.md section.
 #
-# Publishing to nuget.org is a separate job that stays disabled until the first alpha (issue #52).
-# It uses NuGet trusted publishing, so no API key is stored: the job exchanges its GitHub OIDC token for a
-# short-lived key. One-off setup before enabling: add a trusted publishing policy on nuget.org for this
-# repository and release.yml, create the `nuget` environment with a required reviewer, and set the
-# repository variable NUGET_USER.
+# Publishing uses NuGet trusted publishing, so no API key is stored: the publish job exchanges its GitHub
+# OIDC token for a short-lived key. One-off setup per repository: a trusted publishing policy on nuget.org
+# for this repository and release.yml, the `nuget` environment with deployments limited to `v*` tags, and
+# the repository variable NUGET_USER (the nuget.org account name).
 name: Release
 
 on:
   push:
     tags: ["v*"]
 
+# Least privilege: read-only by default, and a job that needs more widens its own: the security gate
+# (CodeQL uploads its results), publish (mints an OIDC token) and github-release (writes the release).
+# Jobs that restore or build run third-party package code, so none of them can publish or write contents.
+#
+# Actions are pinned to full commit SHAs (tag in the trailing comment) so a moved tag cannot change what
+# runs next to the publishing credentials. Dependabot keeps the pins current.
 permissions:
   contents: read
 
@@ -24,18 +35,30 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
+  security:
+    name: Security gate
+    uses: ./.github/workflows/security.yml
+    # What the called workflow's CodeQL job asks for. GitHub checks a called workflow's permissions when
+    # the run starts, before any `if:`, so they are needed even where CodeQL is skipped. None can publish.
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+
   pack:
+    needs: security
     runs-on: ubuntu-latest
     outputs:
+      version: ${{ steps.version.outputs.version }}
       major: ${{ steps.version.outputs.major }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.3
 
@@ -52,15 +75,39 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "major=$major" >> "$GITHUB_OUTPUT"
 
+      # The release notes are the CHANGELOG.md section whose heading names this version in brackets. Both
+      # majors release under one heading (`## [17.1.0] and [18.1.0] - 2026-10-20`), so each tag finds it.
+      # Read here, before anything is published, so a missing section stops the release early.
+      - name: Read the release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Prints the lines after the first `## ` heading that contains `[<version>]`, up to the next
+          # `## ` heading, and exits 1 when no heading names the version.
+          if ! awk -v needle="[$VERSION]" '
+            /^## / { if (found) exit; found = (index($0, needle) > 0); next }
+            found { print }
+            END { exit !found }
+          ' CHANGELOG.md > release-notes.md; then
+            echo "::error::CHANGELOG.md has no '## ' heading containing [$VERSION]. Move the Unreleased entries under a heading for this version in the commit you tag."
+            exit 1
+          fi
+          cat release-notes.md
+
       - run: dotnet test --solution Umbraco.Community.LogExplorer.slnx -p:UmbracoMajor=${{ steps.version.outputs.major }}
 
       # Builds the client too, and produces each .nupkg with its .snupkg symbol package.
       - run: dotnet pack Umbraco.Community.LogExplorer.slnx -o artifacts -p:UmbracoMajor=${{ steps.version.outputs.major }} -p:Version=${{ steps.version.outputs.version }}
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: packages
           path: artifacts/
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-notes
+          path: release-notes.md
 
   # Installs the packed nupkgs from the artifact on clean spawned sites (umbraco-spawn-harness) and
   # checks the zero-configuration install over HTTP: tests/package-smoke/smoke_nupkg.py, ADR 0022.
@@ -70,19 +117,19 @@ jobs:
     timeout-minutes: 45
     steps:
       # The script reads the declared Umbraco floor from Directory.Packages.props.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: packages
           path: artifacts/
 
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
 
       # uv also provides the Python the script asks for in its inline metadata.
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
       # The spawned sites serve HTTPS (the backoffice sign-in refuses HTTP); the harness ignores that
       # the development certificate is untrusted.
@@ -91,24 +138,24 @@ jobs:
       - run: uv run tests/package-smoke/smoke_nupkg.py --packages artifacts --major ${{ needs.pack.outputs.major }} --root "${{ runner.temp }}/sites"
 
   publish:
-    # Runs only after the smoke test passes, from the `nuget` environment (v* tags only).
     needs: [pack, smoke]
     runs-on: ubuntu-latest
+    # The environment accepts deployments from `v*` tags only.
     environment: nuget
     permissions:
       contents: read
-      id-token: write # needed to request the OIDC token for trusted publishing
+      id-token: write # request the OIDC token for trusted publishing
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: packages
           path: artifacts/
 
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: 10.0.x
 
-      - uses: NuGet/login@v1
+      - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         id: nuget-login
         with:
           user: ${{ vars.NUGET_USER }}
@@ -116,3 +163,24 @@ jobs:
       # Pushing a .nupkg also pushes the matching .snupkg from the same folder. No --skip-duplicate:
       # a rejected push must fail the job rather than pass silently.
       - run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json
+
+  github-release:
+    needs: [pack, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: release-notes
+
+      # A version with a `-` suffix (17.1.0-beta.1) is marked as a pre-release.
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.pack.outputs.version }}
+        run: |
+          prerelease=""
+          if [[ "$VERSION" == *-* ]]; then prerelease="--prerelease"; fi
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "$GITHUB_REF_NAME" --notes-file release-notes.md $prerelease
