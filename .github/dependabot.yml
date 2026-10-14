@@ -1,0 +1,51 @@
+# Dependabot keeps the dependencies current: one grouped pull request per ecosystem, once a month, so the
+# updates arrive together and cost one CI run each. The workflows pin actions to full commit SHAs with
+# the tag in a trailing comment; Dependabot moves the SHA and the comment together.
+#
+# The ignore rules hold back only versions this repository chooses on purpose, so one of them can never
+# make a grouped pull request unmergeable.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci
+
+  # Every .NET project, through Directory.Packages.props (central package management).
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      nuget:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+    ignore:
+      # Each package line builds against one Umbraco major (ADR 0010): the dev versions move within it.
+      - dependency-name: "Umbraco.*"
+        update-types: ["version-update:semver-major"]
+      # The Serilog packages match the versions Umbraco itself ships (ADR 0013) and move when it does.
+      - dependency-name: "Serilog.*"
+      # The sample sites name this version again in their AppLocalIcu setting, which must match it.
+      - dependency-name: "Microsoft.ICU.ICU4C.Runtime"
+
+  # The backoffice client.
+  - package-ecosystem: bun
+    directory: /src/Umbraco.Community.LogExplorer/Client
+    schedule:
+      interval: monthly
+    groups:
+      bun:
+        patterns: ["*"]
+    commit-message:
+      prefix: build
+    ignore:
+      # The client builds against the backoffice of the default Umbraco major (ADR 0010).
+      - dependency-name: "@umbraco-cms/*"
+        update-types: ["version-update:semver-major"]
