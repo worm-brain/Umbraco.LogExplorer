@@ -1,19 +1,27 @@
 /**
- * Stamps the package version into the built `umbraco-package.json`, so the version is defined once, as
- * `<Version>` in `Umbraco.Community.LogExplorer.csproj`, and the NuGet package and the back-office manifest agree.
+ * Stamps the package version into the built `umbraco-package.json`, so the NuGet package and the back-office
+ * manifest agree. `dotnet pack` passes the version in; a plain `bun run build` falls back to `<Version>` in
+ * `Umbraco.Community.LogExplorer.csproj` when it is a literal version, and to `0.0.0-dev` otherwise.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite";
+
+/** The version stamped when the csproj `<Version>` is computed by MSBuild rather than written out. */
+const devVersion = "0.0.0-dev";
+
+/** A version written out in full: SemVer, or NuGet's four-part form, with optional pre-release and build parts. */
+const literalVersion = /^\d+(\.\d+){2,3}(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
 
 /**
  * Picks the version to stamp.
  *
  * @param envVersion - `LOG_EXPLORER_VERSION`, which `dotnet pack` sets from `$(PackageVersion)`, so a
  *   `-p:Version=...` override reaches the manifest too. Empty or unset during day-to-day `bun run build`/`watch`.
- * @param csproj - The package `.csproj` source, whose `<Version>` is the fallback.
- * @returns The version.
- * @throws When neither source has a version, so a build never ships a manifest with a made-up one.
+ * @param csproj - The package `.csproj` source, whose `<Version>` is the fallback when it is a literal version.
+ * @returns The environment version; else the csproj `<Version>` when it is literal; else `0.0.0-dev`, because
+ *   a `<Version>` built from MSBuild properties (`$(UmbracoMajor).0.0-dev`) means nothing outside MSBuild.
+ * @throws When the csproj has no `<Version>` and the environment none either, so a broken csproj is noticed.
  */
 export function resolvePackageVersion(envVersion: string | undefined, csproj: string): string {
   if (envVersion?.trim()) {
@@ -24,7 +32,7 @@ export function resolvePackageVersion(envVersion: string | undefined, csproj: st
   if (!version) {
     throw new Error("No <Version> in the package .csproj and LOG_EXPLORER_VERSION is not set.");
   }
-  return version;
+  return literalVersion.test(version) ? version : devVersion;
 }
 
 /**
