@@ -18,11 +18,11 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@hey-api/openapi-ts": "^0.99.0",
-    "@playwright/test": "1.63.0",
-    "@types/node": "^26.6.3",
-    "@umbraco-cms/backoffice": "^17.7.0",
-    "happy-dom": "^20.0.0",
-    "prettier": "^3.6.0",
+    "@playwright/test": "1.64.0",
+    "@types/node": "^26.6.5",
+    "@umbraco-cms/backoffice": "^17.7.1",
+    "happy-dom": "^20.14.6",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
     "vitest": "^4.0.0"
