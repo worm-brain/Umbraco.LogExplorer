@@ -1,0 +1,18 @@
+# NuGet vulnerability allowlist: accepted advisories the dependency audit ignores.
+#
+# The Security workflow's dependency audit (.github/scripts/nuget-audit.ps1) fails when a package a
+# project references directly has a known vulnerability at or above the threshold (High). When an
+# advisory cannot be remediated yet (no fixed version, or a version Umbraco does not support) and the
+# risk is accepted, list it here so it does not fail later runs.
+#
+# One entry per non-comment line, either:
+#   - an advisory URL, e.g.  https://github.com/advisories/GHSA-xxxx-xxxx-xxxx
+#   - a package id,     e.g.  Some.Package
+# '#' starts a comment. Prefer the advisory URL (narrow) over the package id (broad).
+#
+# ALWAYS record who accepted it, why, and when to revisit; an allowlist with no expiry quietly
+# becomes a permanent hole:
+#   # GHSA-.... accepted by @worm-brain 2026-10-14: no fixed version yet, low reachability;
+#   # revisit when the upstream patch ships.
+#
+# (empty = every advisory at or above the threshold fails the audit)

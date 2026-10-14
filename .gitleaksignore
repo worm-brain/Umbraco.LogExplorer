@@ -1,0 +1,20 @@
+# gitleaks suppression file: one accepted finding per line, by fingerprint.
+#
+# The Security workflow's secret scan (.github/scripts/secret-scan.ps1) fails on any secret gitleaks
+# finds in the commit history. When a finding is a false positive or an accepted test fixture, add its
+# fingerprint here, with a comment saying who accepted it, why and when, so it does not fail later runs.
+# Whole files that only ever hold development values belong in the .gitleaks.toml allowlist instead.
+#
+# A fingerprint looks like:  <commit-sha>:<file-path>:<rule-id>:<line-number>
+# gitleaks prints the exact fingerprint for each finding; copy it verbatim.
+#
+# Example:
+#   # Test fixture, not a real key. Accepted by @worm-brain 2026-10-14.
+#   0adc1e2f...:tests/Some.Tests/Fixtures/sample.json:generic-api-key:12
+
+# Not keys: the `DocumentKey` property of sample Serilog events is a content node GUID, which the
+# generic-api-key rule matches on the property name. One test fixture (the same commit exists twice,
+# before and after a rebase) and a since-removed UI prototype. Accepted by @worm-brain 2026-10-14.
+b4d3c7bef960e3f0e4d959696cff2d83007924e8:tests/Umbraco.Community.LogExplorer.Files.Tests/TestSupport/DialectFixtures.cs:generic-api-key:26
+c577c35b21a2e2d3e2fe414507d67bc4c23ce021:tests/Umbraco.Community.LogExplorer.Files.Tests/TestSupport/DialectFixtures.cs:generic-api-key:26
+c750a7d210113545c1c964f6c56e8037edd4f54f:docs/log-explorer-prototype.dc.html:generic-api-key:421
