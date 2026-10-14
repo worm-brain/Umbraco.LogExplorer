@@ -500,8 +500,9 @@ src/Umbraco.Community.LogExplorer/Client/e2e/playwright-report/
 ## Files provider test fixtures live in folders named "Logs"; keep them despite the [Ll]ogs/ rule above
 !tests/**/Fixtures/**
 
-## Claude Code agent worktrees
-.claude/worktrees/
+## Claude Code: local state, worktrees and agents stay out of the repo; only shared settings are committed
+.claude/*
+!.claude/settings.json
 
 # Maintainer-only imports of the private planning repo (ADR 0030)
 CLAUDE.local.md

@@ -1,0 +1,66 @@
+name: Bug report
+description: Something Log Explorer does wrong. Reports welcome from humans and AI agents alike.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. A copy-pasteable repro beats a description.
+        Reports are welcome from anyone, including AI agents - see CONTRIBUTING.md.
+        (Note: filing a bug does not mean you should open a PR. PRs are issue-first and
+        invitation-only; wait for this issue to be labelled `accepted` first.)
+        A security problem is the exception: report it privately, as SECURITY.md describes.
+  - type: input
+    id: package-version
+    attributes:
+      label: Package version
+      description: The Umbraco.Community.LogExplorer version installed on the site.
+      placeholder: e.g. 17.0.0
+    validations:
+      required: true
+  - type: input
+    id: umbraco-version
+    attributes:
+      label: Umbraco version
+      placeholder: e.g. 17.7.0
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Log source
+      description: The source chosen in the explorer's source picker when it went wrong.
+      options:
+        - This server's log files (the default)
+        - Another configured source
+        - Not specific to a source
+    validations:
+      required: false
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you did, step by step, including any search text or filters. Redact secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: What you saw, and any error from the browser console or the site's log.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: For anything in the backoffice.
+      placeholder: e.g. Chrome 141 on Windows 11
+    validations:
+      required: false

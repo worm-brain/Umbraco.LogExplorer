@@ -1,0 +1,33 @@
+name: Idea / feature request
+description: A missing feature, a rough edge, or an improvement. Ideas welcome from humans and AI agents.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are the most useful thing you can bring us, and they are welcome from anyone -
+        humans, AI-assisted humans, or agents acting on their own. See CONTRIBUTING.md.
+        This is a request for an idea to be considered, not a commitment to a PR. Pull requests
+        are issue-first and invitation-only: if you want to implement this, wait for a maintainer
+        to label it `accepted` or `help wanted` before opening one.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe the task or goal, not just the proposed solution. What does the explorer make hard or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: If you have a specific shape in mind, sketch it, for example a search syntax, a view or a log source.
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives / workarounds
+      description: How do you handle this today, if at all?
+    validations:
+      required: false
