@@ -13,6 +13,9 @@
     <!-- Pin the Umbraco version we develop against for this major (the package itself floats from the floor). -->
     <PackageReference Include="Umbraco.Cms.Web.Website" VersionOverride="$(UmbracoDevVersion)" />
     <PackageReference Include="Umbraco.Cms.Api.Management" VersionOverride="$(UmbracoDevVersion)" />
+    <!-- Patched versions of Umbraco's transitive dependencies; see Directory.Packages.props. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
   </ItemGroup>
 
   <ItemGroup>
