@@ -1,0 +1,12 @@
+# gitleaks configuration: the default rules, plus a narrow path allowlist.
+# Picked up automatically by .github/scripts/secret-scan.ps1 (`gitleaks detect --source .`).
+# Any other false positive goes in .gitleaksignore, by fingerprint.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Sample-site settings: the development-only unattended install login, and sample keys still in history. None of them guards anything outside a local sample site."
+paths = [
+  '''^samples/(.+/)?appsettings[^/]*\.json$''',
+]
