@@ -28,6 +28,10 @@ $ErrorActionPreference = 'Stop'
 
 # Denylisted file names and types, and secret patterns to look for in shipped text files.
 $denyGlobs = '*.pfx', '*.snk', '*.p12', '*.pem', '*.key', '.env', 'config.json', 'appsettings*.json'
+# Exempt from the denylist: a package's appsettings JSON schema (appsettings-schema.<PackageId>.json),
+# which Umbraco's build merges into the site's appsettings-schema.json. It describes settings and
+# holds no values; the secret patterns below still scan it.
+$allowGlobs = 'appsettings-schema*.json'
 $patterns = 'client_secret', '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----', 'xoxb-[0-9A-Za-z-]+', 'AKIA[0-9A-Z]{16}'
 $textExt = '.json', '.xml', '.txt', '.md', '.nuspec', '.props', '.targets', '.config', '.ps1', '.js', '.mjs', '.map', '.css', '.html'
 
@@ -56,7 +60,8 @@ foreach ($nupkg in $packages) {
 
     # 1) Denylisted file types that should never ship in a package.
     $bad = foreach ($glob in $denyGlobs) {
-        Get-ChildItem -Recurse -File -Path $dest -Filter $glob -ErrorAction SilentlyContinue
+        Get-ChildItem -Recurse -File -Path $dest -Filter $glob -ErrorAction SilentlyContinue |
+            Where-Object { $name = $_.Name; -not ($allowGlobs | Where-Object { $name -like $_ }) }
     }
     if ($bad) {
         Write-Host "::error::denylisted or secret-bearing file(s) in $($nupkg.Name):"
