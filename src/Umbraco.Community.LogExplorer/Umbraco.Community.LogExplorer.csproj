@@ -23,6 +23,8 @@
 
   <ItemGroup>
     <!-- Range per major, set in Directory.Packages.props (ADR 0010). -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" VersionOverride="10.0.14" />
+    <PackageReference Include="System.Security.Cryptography.Xml" VersionOverride="10.0.14" />
     <PackageReference Include="Umbraco.Cms.Web.Website" />
     <PackageReference Include="Umbraco.Cms.Api.Management" />
     <PackageReference Include="Serilog.Formatting.Compact.Reader" />
