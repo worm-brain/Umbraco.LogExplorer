@@ -16,6 +16,7 @@
     <!-- Patched versions of Umbraco's transitive dependencies (Directory.Packages.props). Remove once Umbraco ships them. -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <PackageReference Include="System.Security.Cryptography.Xml" />
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>
