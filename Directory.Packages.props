@@ -13,7 +13,7 @@
   -->
   <PropertyGroup Condition="'$(UmbracoMajor)' == '17'">
     <UmbracoPackageRange>[17.0.0, 18.0.0)</UmbracoPackageRange>
-    <UmbracoDevVersion>17.7.1</UmbracoDevVersion>
+    <UmbracoDevVersion>17.8.2</UmbracoDevVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(UmbracoMajor)' == '18'">
     <UmbracoPackageRange>[18.0.0, 19.0.0)</UmbracoPackageRange>
@@ -48,8 +48,8 @@
       Umbraco 17.7 and 18.2 still resolve. The package does not reference them, because a consuming site
       resolves its own. Remove these and their references once UmbracoDevVersion depends on 10.0.13 or later.
     -->
-    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.13" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.15" />
     <!--
       MessagePack 3.1.12 fixes GHSA-qhrr-8q5h-9q3h (published 2026-10-15), which Umbraco 17.7 and 18.2
       still resolve at 3.1.8. Referenced by the tests and sample sites only. Remove it and its
